@@ -1,0 +1,868 @@
+.noto-sans-egyptian-hieroglyphs-regular {
+    font-family: "Noto Sans Egyptian Hieroglyphs", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+body {
+    font-family: 'Noto Sans Egyptian Hieroglyphs';
+    color: #5d1414;
+    background-color: #ddd6d6;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Base container styles */
+.container {
+    display: flex;
+     justify-content: flex-start;    width: 100vw;
+    height: 100vh;
+    background-color: #636363;
+    padding: 1vh;
+    box-sizing: border-box;
+    gap: 0;
+}
+.color-swatch {
+    width: 30px;
+    height: 30px;
+    border: 1px solid black;
+    cursor: pointer;
+    box-sizing: border-box; /* Ensure consistent box sizing */
+    filter: none !important;
+}
+#colorPopup {
+    position: absolute;
+    bottom: 45px;  /* Adjust this value to move it higher */
+    right: 330px;
+    z-index: 9999;  /* Ensure it's above other content */
+    display: none;  /* Keep it hidden by default */
+    background-color: #998b60;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Main search container - fixed width */
+#searchContainer {
+    width: 400px; /* Fixed width instead of viewport-based */
+    min-width: 400px; /* Ensure minimum width */
+    border: 1px dotted #ffffff;
+    padding: 10px;
+    background-color: #1e1e1e;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    order: 2;
+    height: calc(100vh - 2vh);
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* Character list container */
+#charList {
+    display: grid;
+    grid-template-columns: repeat(5, 70px); /* Fixed width columns */
+    gap: 5px;
+    padding: 10px;
+    width: fit-content; /* Only take needed width */
+    margin: 0 auto; /* Center horizontally */
+}
+
+/* Character item styling */
+.char-container {
+    font-family: 'Noto Sans Egyptian Hieroglyphs', sans-serif !important;
+    border-radius: 9px;
+    border: 2px solid #2730ba;
+    background-color: #131c1d;
+    text-align: center;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 70px; /* Match grid column width */
+}
+
+/* Rest of your styles remain the same */
+#charListContainer {
+    height: 60%;
+    min-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #454444;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5px;
+    gap: 5px;
+}
+
+
+
+.char {
+    font-family: 'Noto Sans Egyptian Hieroglyphs', sans-serif !important;
+    font-size: 30px;
+    /* font-family: 'Arial', sans-serif; */
+    color: #e6a6a6;
+      text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent synthetic font variants */
+  font-synthesis: none;
+}
+
+.name {
+    font-size: 14px;
+    color: #ef1414;
+}
+
+/* Canvas styling */
+canvas {
+    width: 100% !important; /* Force full width */
+    height: calc(100vh - 2vh);
+    border: 1px solid #6565f9;
+    background-color: #f5f5f512 !important;
+    margin: 0;
+}
+#searchInput {
+    width: calc(100% - 13px);
+    margin-bottom: 5px;
+    padding: 5px;
+}
+/* =========load dict========= */
+.file-upload-row {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upload-button {
+    padding: 1px 3px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.upload-button:hover {
+    background-color: #45a049;
+}
+
+.file-status {
+    font-size: 0.5em;
+    color: #666;
+}
+
+.search-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+/* ================== */
+#workspaceContainer {
+    position: relative;
+    width: 100%;
+}
+
+#pastedNamesContainer {
+    width: calc(100% - 24px); /* Subtract padding from total width */
+    min-width: 100px; /* Add minimum width */
+    max-width: 100%; /* Ensure it doesn't overflow */
+    position: absolute;
+    top: 10px;
+    left: 0;
+    background-color: rgba(99, 99, 99, 0.9);
+    color: #d10909;
+    padding: 8px 12px;
+    border-radius: 5px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+#pastedNames {
+    display: inline;
+    color: #e2dfdf;
+    min-width: 50px;
+    overflow-wrap: break-word;
+    flex: 1; /* Allow it to take remaining space */
+    max-width: calc(100% - 100px); /* Adjust based on the space needed for "Gardiner:" label */
+}
+
+#searchContainer {
+    position: relative;
+    margin-top: 0px; /* Add enough margin to prevent overlap with pastedNamesContainer */
+}
+
+
+.dropdown {
+    position: absolute;
+    right: 13px;
+    top: 8px;
+    display: inline-block;
+}
+
+.dropdown-content {
+    
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0px 48px 16px 0px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+.dropdown-content a {
+    color: #0912da;
+    padding: 6px 12px;
+    text-decoration: none;
+    display: block;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.dropdown-content a:hover {
+    background-color: #905900;
+}
+
+.text-input-field {
+    position: absolute;
+    z-index: 10;
+    padding: 8px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #333;
+    background: #fff;
+}
+
+.help-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Iframe styling */
+.help-content-frame {
+    width: 70%;
+    height: 70%;
+    border: none;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#tools {
+    position: fixed;
+    bottom: 20px;
+    left: 20px; /* Align with MDC container */
+    max-width: 740px;
+    width: calc(100% - 40px);
+    background-color: rgba(99, 99, 99, 0.95);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tool-group {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.tool-separator {
+    width: 1px;
+    height: 24px;
+    background-color: #4a4a4a;
+    margin: 0 8px;
+}
+
+#tools span {
+    color: #ffffff;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+#tools button {
+    padding: 8px 8px;
+    border: 1px solid #4a4a4a;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+    min-width: 40px;
+}
+
+#tools button:hover {
+    background-color: #3a3a3a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#tools button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+/* Compact slider controls */
+.slider-controls {
+    display: inline-flex;
+    gap: 8px;
+    height: 80px;
+    align-items: center;
+}
+
+.slider-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.slider-group label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.compact-slider {
+    height: 50px;
+    width: 6px;
+}
+
+/* Thumb styles for both browsers */
+.compact-slider::-webkit-slider-thumb,
+.compact-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #666;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* Hover effect */
+.compact-slider:hover::-webkit-slider-thumb,
+.compact-slider:hover::-moz-range-thumb {
+    background: #444;
+}
+    /* KEYBOARD POPUP */
+/* Base styles */
+.keyboard-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+.keyboard-dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #1a1a1a;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 400px;
+    max-width: 90%;
+    z-index: 1000;
+}
+
+/* Input area */
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.keyboard-input {
+    width: 300px;
+    padding: 8px;
+    background-color: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #fff;
+    border-radius: 4px;
+    resize: none;
+}
+
+.font-size-input {
+    width: 60px;
+    padding: 8px;
+    background-color: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #fff;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Keyboard layout */
+.keyboard-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+
+.key {
+    font-family: 'Noto Sans Egyptian Hieroglyphs';
+    width: 30px;
+    height: 30px;
+    background-color: #2a2a2a;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    font-size: 16px;
+}
+
+.key:hover {
+    background-color: #3a3a3a;
+}
+
+/* Dialog buttons */
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.dialog-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dialog-btn.cancel {
+    background-color: #f44336;
+    color: white;
+}
+
+.dialog-btn.add {
+    background-color: #4CAF50;
+    color: white;
+}
+/* Overlay for the keyboard dialog */
+.keyboard-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+/* ==================== end keyboard =================== */
+/* Ensure proper sizing for workspace elements */
+.workspace-wrapper {
+    flex: 1;
+    display: flex;
+    height: 100%;
+    width: 100%; /* Ensure full width */
+}
+.workspace-container {
+    position: relative;
+    flex: 1;
+    min-height: 500px;
+    border: 1px solid #ccc;
+    background: #f8f9fa;
+    overflow: hidden;
+    padding: 0;
+}
+
+.background-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.background-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: 100%;
+    max-height: 100%;
+    transform: translate(-50%, -50%);
+    opacity: 0.5;
+    display: none;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.main-canvas {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.tools-panel {
+    padding: 10px;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.tool-group {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.tool-btn {
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tool-btn:hover {
+    background: #f0f0f0;
+}
+.rainbow-donate {
+    display: grid;  /* Using grid for perfect centering */
+    place-items: center;  /* Centers in both directions */
+    padding: 0;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    width: 50px;
+    height: 50px;
+    line-height: 1;  /* Prevents line-height from affecting centering */
+}
+
+.rainbow-donate span {
+    display: block;  /* Changed to block */
+    background: linear-gradient(
+        to right,
+        #ff0000,
+        #ffff00,
+        #00ff00,
+        #00ffff,
+        #ff00ff,
+        #ff0000
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow 2s linear infinite;
+    background-size: 200% auto;
+    text-align: center;  /* Center the text inside span */
+}
+
+@keyframes rainbow {
+    0% { background-position: 0 center; }
+    100% { background-position: -200% center; }
+}
+.hidden-input {
+    display: none;
+}
+
+.slider-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.slider-label {
+    font-weight: bold;
+    min-width: 10px;
+}
+
+.compact-slider {
+    width: 70px;
+    height: 6px;
+    -webkit-appearance: none;
+    background: #ddd;
+    border-radius: 3px;
+    outline: none;
+}
+
+.compact-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #007bff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider-value {
+    min-width: 40px;
+    text-align: right;
+    font-family: monospace;
+}
+.workspace-actions {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background: #0056b3;
+}
+/* ============= upgrade */
+.workspace-actions {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background: #0056b3;
+}
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup.hidden {
+    display: none;
+}
+
+.popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.upgrade-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #28a745;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+.upgrade-label:hover {
+    background: #218838;
+    cursor: pointer;
+}
+/* styles for Fygus search */
+.search-row {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+    margin: 0;
+    margin-bottom:5px
+}
+
+.search-input {
+    flex: 1;
+    padding: 2px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #1a1a1a;
+    color: white;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
+
+.search-button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.search-button:hover {
+    background-color: #45a049;
+}
+
+/* Result container styling */
+.result-container {
+    flex: 1;
+    width: 100%;
+    background-color: #1a1a1a;
+    border: 1px solid #b5a9a9;
+    border-radius: 4px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Required for Firefox */
+    max-height: 100%; /* Prevent overflow */
+}
+
+#secondarySearch {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0; /* Required for Firefox */
+}
+/* Adjust the overall container */
+#searchContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+}
+
+/* Highlight styling for Fygus results */
+.highlight {
+    background-color: #ffeb3b;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Result styling */
+.result-header {
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    padding: 8px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+}
+
+.result-matches {
+    color: #af9393;
+    padding: 8px;
+}
+
+.result-separator {
+    border: 0;
+    border-top: 1px solid #333;
+    /* margin: rem 0; */
+}
+
+/* Existing styles for large text */
+.large-text {
+    font-size: 2em;
+    font-weight: normal;
+}
+
+.file-upload-row {
+    margin-bottom: .25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upload-button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.upload-button:hover {
+    background-color: #45a049;
+}
+
+.file-status {
+    font-size: 0.9em;
+    color: #833838;
+}
+
+.search-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+/* Media query for minimum width support */
+@media screen and (max-width: 1200px) {
+    #searchContainer {
+        width: 300px; /* Minimum width when viewport is narrow */
+    }
+}

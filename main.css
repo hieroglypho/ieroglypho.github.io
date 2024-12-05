@@ -17,7 +17,8 @@ body {
 /* Base container styles */
 .container {
     display: flex;
-     justify-content: flex-start;    width: 100vw;
+    justify-content: flex-start;    
+    width: 100vw;
     height: 100vh;
     background-color: #636363;
     padding: 1vh;
@@ -111,12 +112,9 @@ body {
     gap: 5px;
 }
 
-
-
 .char {
     font-family: 'Noto Sans Egyptian Hieroglyphs', sans-serif !important;
     font-size: 30px;
-    /* font-family: 'Arial', sans-serif; */
     color: #e6a6a6;
       text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -152,12 +150,13 @@ canvas {
 }
 
 .upload-button {
-    padding: 1px 3px;
+    padding: 0px 0px;
     background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    line-height: 1;
 }
 
 .upload-button:hover {
@@ -180,7 +179,7 @@ canvas {
 }
 
 #pastedNamesContainer {
-    width: calc(100% - 24px); /* Subtract padding from total width */
+    width: calc(100% - 20px); /* Subtract padding from total width */
     min-width: 100px; /* Add minimum width */
     max-width: 100%; /* Ensure it doesn't overflow */
     position: absolute;
@@ -335,47 +334,7 @@ canvas {
     transform: translateY(0);
     box-shadow: none;
 }
-/* Compact slider controls */
-.slider-controls {
-    display: inline-flex;
-    gap: 8px;
-    height: 80px;
-    align-items: center;
-}
 
-.slider-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.slider-group label {
-    font-size: 0.9em;
-    color: #666;
-}
-
-.compact-slider {
-    height: 50px;
-    width: 6px;
-}
-
-/* Thumb styles for both browsers */
-.compact-slider::-webkit-slider-thumb,
-.compact-slider::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    background: #666;
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-}
-
-/* Hover effect */
-.compact-slider:hover::-webkit-slider-thumb,
-.compact-slider:hover::-moz-range-thumb {
-    background: #444;
-}
     /* KEYBOARD POPUP */
 /* Base styles */
 .keyboard-overlay {
@@ -413,6 +372,7 @@ canvas {
 }
 
 .keyboard-input {
+    font-family: 'Noto Sans Egyptian Hieroglyphs';
     width: 300px;
     padding: 8px;
     background-color: #2a2a2a;
@@ -420,6 +380,7 @@ canvas {
     color: #fff;
     border-radius: 4px;
     resize: none;
+    font-size: 18px;
 }
 
 .font-size-input {
@@ -458,9 +419,21 @@ canvas {
     justify-content: center;
     cursor: pointer;
     user-select: none;
-    font-size: 16px;
+    font-size: 18px;
 }
-
+.divider {
+    width: 100%;
+    height: 2px;
+    background-color: #ccc;
+    margin: 4px 0;
+}
+.coptic-label span {
+    font-size: 0.8em;
+    font-style: italic;
+    color: #666;
+    text-align: center;
+    width: 100%;
+}
 .key:hover {
     background-color: #3a3a3a;
 }
@@ -478,7 +451,7 @@ canvas {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .dialog-btn.cancel {
@@ -616,10 +589,11 @@ canvas {
 .hidden-input {
     display: none;
 }
-
+/* Compact slider controls */
 .slider-controls {
-    display: flex;
-    gap: 15px;
+    display: inline-flex;
+    gap: 8px;
+    height: 80px;
     align-items: center;
 }
 
@@ -627,8 +601,41 @@ canvas {
     display: flex;
     align-items: center;
     gap: 5px;
+    display: flex;
+    flex-direction: column;
 }
 
+.slider-group label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.compact-slider {
+    height: 50px;
+    width: 6px;
+}
+
+/* Thumb styles for both browsers */
+.compact-slider::-webkit-slider-thumb,
+.compact-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #666;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* Hover effect */
+.compact-slider:hover::-webkit-slider-thumb,
+.compact-slider:hover::-moz-range-thumb {
+    background: #444;
+}
+.slider-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
 .slider-label {
     font-weight: bold;
     min-width: 10px;
@@ -657,28 +664,11 @@ canvas {
     text-align: right;
     font-family: monospace;
 }
+
+/* Save As buttons and submenu */
 .workspace-actions {
     display: flex;
-    gap: 5px;
-    margin-left: auto;
-}
-
-.action-btn {
-    padding: 6px 12px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.action-btn:hover {
-    background: #0056b3;
-}
-/* ============= upgrade */
-.workspace-actions {
-    display: flex;
+    position: relative; /* Ensure the submenu is positioned relative to this container */
     gap: 5px;
     margin-left: auto;
 }
@@ -735,7 +725,42 @@ canvas {
     background: #218838;
     cursor: pointer;
 }
-/* styles for Fygus search */
+.save-menu {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    /* box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); */
+    z-index: 100;
+    padding: 2px 2px; /* Reduced vertical padding */
+    border-radius: 4px;
+    bottom: 100%;
+    left: 0;
+    /* margin-bottom: 5px; */
+}
+
+.save-menu button {
+    padding: 8px 10px; /* Adjusted padding */
+    text-align: left;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 12px !important;
+}
+
+.save-menu button:hover {
+    background: #f0f0f0;
+}
+
+
+.hidden {
+    display: none;
+}
+
+
+/* stules for Fygus search */
 .search-row {
     display: flex;
     gap: 5px;

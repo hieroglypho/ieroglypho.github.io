@@ -603,7 +603,7 @@ canvas.on('object:rotating', function(options) {
 
 // ============================ change bg color ===========================
 
-=========================== Undo function ===============================
+// =========================== Undo function ===============================
 
 function undoLastAction() {
     if (undoHistory.length === 0) return;

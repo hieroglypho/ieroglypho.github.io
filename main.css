@@ -12,6 +12,10 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /* Base container styles */
@@ -202,7 +206,7 @@ canvas {
     min-width: 50px;
     overflow-wrap: break-word;
     flex: 1; /* Allow it to take remaining space */
-    max-width: calc(100% - 100px); /* Adjust based on the space needed for "Gardiner:" label */
+    max-width: 100%; /* Adjust based on the space needed for "Gardiner:" label */
 }
 
 #searchContainer {

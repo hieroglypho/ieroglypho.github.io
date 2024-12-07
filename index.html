@@ -103,5 +103,45 @@
         <a href="tryout.html">Try it Out</a>
         <a href="https://buy.stripe.com/cN2eWL3PRekZgmsbJb">Purchase</a>
     </div>
+    <!-- Add this to your <head> section -->
+<style>
+    /* Disable text selection */
+    body {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+</style>
+
+<!-- Add this to your <script> section -->
+<script>
+    // Disable right click
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Prevent F12 key (Dev Tools)
+        if (event.keyCode === 123) {
+            event.preventDefault();
+        }
+        
+        // Prevent Ctrl+Shift+I (Dev Tools)
+        if (event.ctrlKey && event.shiftKey && event.keyCode === 73) {
+            event.preventDefault();
+        }
+        
+        // Prevent Ctrl+Shift+J (Dev Tools)
+        if (event.ctrlKey && event.shiftKey && event.keyCode === 74) {
+            event.preventDefault();
+        }
+        
+        // Prevent Ctrl+U (View Source)
+        if (event.ctrlKey && event.keyCode === 85) {
+            event.preventDefault();
+        }
+    });
+
+</script>
 </body>
 </html>

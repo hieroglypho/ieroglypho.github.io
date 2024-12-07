@@ -605,15 +605,7 @@ canvas.on('object:rotating', function(options) {
 // ================================== end =============================
 
 // ============================ change bg color ===========================
-function toggleColorPopup() {
-    const popup = document.getElementById('colorPopup');
-    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
-}
 
-function setCanvasColor(color) {
-    canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
-    document.getElementById('colorPopup').style.display = 'none';
-}
 //=========================== Undo function ===============================
 
 function undoLastAction() {
@@ -971,12 +963,7 @@ function closeKeyboard() {
     document.getElementById('keyboardInput').value = '';
     activeTextObject = null;
 }
-document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-}, false);
 
-// Or if you want to be extra thorough:
 document.oncontextmenu = function(e) {
     e.preventDefault();
     return false;
@@ -1595,41 +1582,40 @@ canvas.getElement().addEventListener('contextmenu', function (e) {
 });
 // ================================== Autosave config option ======================================
 
-// // Autosave configuration
-// const AUTOSAVE_INTERVAL = 90000;
-// const SAVE_KEY = 'canvas_autosave';
-// const DEBOUNCE_WAIT = 2000; // Increased from 1000ms to reduce save frequency
-// const BATCH_SIZE = 10; // Number of changes before forcing a save
+    document.addEventListener('contextmenu', event => event.preventDefault());
 
-// // Performance optimization: Track number of changes
-// let changeCount = 0;
-// let lastSaveTime = Date.now();
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Prevent F12 key (Dev Tools)
+        if (event.keyCode === 123) {
+            event.preventDefault();
+        }
+        
+        // Prevent Ctrl+Shift+I (Dev Tools)
+        if (event.ctrlKey && event.shiftKey && event.keyCode === 73) {
+            event.preventDefault();
+        }
+        
+        // Prevent Ctrl+Shift+J (Dev Tools)
+        if (event.ctrlKey && event.shiftKey && event.keyCode === 74) {
+            event.preventDefault();
+        }
+        
+        // Prevent Ctrl+U (View Source)
+        if (event.ctrlKey && event.keyCode === 85) {
+            event.preventDefault();
+        }
+    });
 
-// // Optimized debounce with maximum wait time
-// function debounce(func, wait, maxWait) {
-//     let timeout;
-//     let lastCallTime;
+    // Optional: Display custom message on right click
+    document.addEventListener('contextmenu', function(event) {
+        event.preventDefault();
+        alert('Right click is disabled');
+        return false;
+    });
+<
 
-//     return function executedFunction(...args) {
-//         const now = Date.now();
-
-//         // Force save if max wait time exceeded
-//         if (lastCallTime && (now - lastCallTime) > maxWait) {
-//             clearTimeout(timeout);
-//             func.apply(this, args);
-//             lastCallTime = now;
-//             return;
-//         }
-
-//         lastCallTime = now;
-
-//         clearTimeout(timeout);
-//         timeout = setTimeout(() => {
-//             func.apply(this, args);
-//         }, wait);
-//     };
-// }
-
+    
 // Create and add program title/watermark -- DO NOT DELETE --
 const programTitle = document.createElement('div');
 programTitle.textContent = 'ΙΕΡΟΓΛΥΦΩ';
@@ -1661,6 +1647,7 @@ updateDivWidth();
 document.getElementById('saveWorkspaceBtn').addEventListener('click', () => showPopup());
 document.getElementById('loadWorkspaceBtn').addEventListener('click', () => showPopup());
 document.getElementById('uploadDictionaryButton').addEventListener('click', () => showPopup());
+
 document.getElementById('popup').addEventListener('click', (e) => {
     // Close the popup when clicking outside the content area
     if (e.target === document.getElementById('popup')) {

@@ -1925,25 +1925,37 @@ function setCanvasColor(color) {
 // =========================================================================
 // ================================== Autosave config option ======================================
 // ===============================================================================================
-// Create and add program title/watermark -- DO NOT DELETE --
-const programTitle = document.createElement('div');
-programTitle.textContent = 'ΙΕΡΟΓΛΥΦΩ 1.5';
-programTitle.style.cssText = `
-    position: absolute;
-    top: 53px;
-    left: 11px;
-    font-size: 22px;
-    font-family: 'Arial', sans-serif;
-    font-weight: bold;
-    color: rgba(255, 255, 255, 0.13);
-    pointer-events: none;
-    user-select: none;
-    z-index: 1000;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    letter-spacing: 3px;
-`;
-document.getElementById('backgroundContainer').appendChild(programTitle);
-// ============================================ kick it! ===================================================
+// ===============================Title/watermark -- DO NOT DELETE -- ============
+// Create the shadow text (placed behind)
+const shadowText = new fabric.Text('ΙΕΡΟΓΛΥΦΩ 1.5', {
+    left: 13,  // offset by 2px
+    top: 55,   // offset by 2px
+    fontSize: 22,
+    fontFamily: 'Arial',
+    fontWeight: 'bold',
+    fill: 'rgba(0, 0, 0, 0.2)',  // dark shadow color
+    selectable: false,
+    evented: false,
+    letterSpacing: 3
+});
+
+// Create the main text (placed in front)
+const programTitle = new fabric.Text('ΙΕΡΟΓΛΥΦΩ 1.5', {
+    left: 11,
+    top: 53,
+    fontSize: 22,
+    fontFamily: 'Arial',
+    fontWeight: 'bold',
+    fill: 'rgba(255, 255, 255, 0.13)',
+    selectable: false,
+    evented: false,
+    letterSpacing: 3
+});
+
+// Add both to canvas (order matters - shadow first)
+canvas.add(shadowText);
+canvas.add(programTitle);
+// ============================================ COPYRIGHTS ===================================================
 function updateDivWidth() {
     const canvasWidth = getCanvasDimensions().width;
     document.getElementById('pastedNamesContainer').style.width = `${canvasWidth}px`;

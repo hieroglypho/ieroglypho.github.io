@@ -2011,6 +2011,8 @@ window.addEventListener('beforeunload', function(e) {
         return e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
     }
 });
+document.addEventListener('contextmenu', event => event.preventDefault());
+
 window.addEventListener('keydown', function (e) {
     const activeObject = canvas.getActiveObject();
     const activeGroup = canvas.getActiveObjects();

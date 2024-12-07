@@ -78,7 +78,7 @@
             <button title="Enter text" onclick="openKeyboard()">⌨</button>
             <button onclick="document.getElementById('bgImageInput').click()"
                 title="Upload background img. Ctrl+b to remove">BG</button>
-            <!-- <button title="Choose canvas color" onclick="toggleColorPopup()">🎨</button> -->
+            <button title="Choose canvas color" onclick="toggleColorPopup()">🎨</button>
         </div>
         <div id="colorPopup"
             style="display: none; position: absolute; background: white; padding: 10px; border: 1px solid black;">
@@ -97,10 +97,10 @@
         <!-- Background Controls -->
         <div class="slider-controls">
             <div class="slider-group">
-    <label class="slider-label" title="Background Opacity" for="bgOpacity">BG α:</label>
-    <input type="range" id="bgOpacity" min="0" max="100" value="50" class="compact-slider">
-    <span class="slider-value" id="opacityValue">50%</span>
-</div>
+                <label class="slider-label" title="Background Opacity" for="bgOpacity">BG α:</label>
+                <input type="range" id="bgOpacity" min="0" max="100" value="100" class="compact-slider">
+                <span class="slider-value" id="opacityValue">50%</span>
+            </div>
 
             <!-- Workspace Actions -->
             <div class="workspace-actions">

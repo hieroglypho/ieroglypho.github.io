@@ -1912,7 +1912,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 });
+// ============================ change bg color ===========================
+function toggleColorPopup() {
+    const popup = document.getElementById('colorPopup');
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+}
 
+function setCanvasColor(color) {
+    canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
+    document.getElementById('colorPopup').style.display = 'none';
+}
+// =========================================================================
 // ================================== Autosave config option ======================================
 // ===============================================================================================
 // Create and add program title/watermark -- DO NOT DELETE --

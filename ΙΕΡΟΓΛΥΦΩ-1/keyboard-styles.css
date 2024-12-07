@@ -1,0 +1,75 @@
+/* /* Dark theme keyboard styles */
+.modal {
+    padding: 2px; /* Reduce padding inside the modal */
+    border-radius: 6px; /* Adjust the rounding for a smaller appearance */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Adjust shadow for a more compact look */
+}
+/* 
+.modal textarea {
+    width: 90%; /* Decrease width of the textarea */
+    height: 30px; /* Reduce height */
+    margin: 2px 0 10px 0; /* Reduce the top margin */
+    padding: 3px; /* Reduce padding */
+    font-size: 12px; /* Reduce font size */
+        transform: translateY(-5px); /* Raise both elements by 5px */
+
+}
+
+.keyboard-container {
+    margin: 5px 0; /* Reduce container margin */
+}
+
+.keyboard-row {
+    gap: 2px; /* Reduce spacing between keys */
+    margin: 2px 0; /* Decrease row margins */
+}
+ */
+.key {
+    width: 24px; /* Decrease key width */
+    height: 24px; /* Decrease key height */
+    font-size: 12px; /* Decrease font size */
+}
+.key:hover {
+    background-color: #3a3a3a;
+}
+
+.special-chars {
+    margin-top: 5px; /* Reduce top margin */
+    padding-top: 5px; /* Decrease padding */
+}
+
+.modal-buttons {
+    gap: 6px; /* Reduce gap between buttons */
+    margin-top: 10px; /* Decrease top margin */
+}
+
+.modal-button {
+    padding: 4px 8px; /* Reduce button size */
+    font-size: 12px; /* Adjust font size */
+}
+
+.modal-button.confirm {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-button.cancel {
+    background-color: #f44336;
+    color: white;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 999;
+}
+
+/* Placeholder text color */
+.modal textarea::placeholder {
+    color: #666;
+} */

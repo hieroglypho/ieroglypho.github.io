@@ -56,16 +56,15 @@ function getCanvasDimensions() {
 }
 
 // Initialize canvas with viewport dimensions
-
 const initialDimensions = getCanvasDimensions();
 var canvas = new fabric.Canvas('c', {
     isDrawingMode: false,
     selection: true,
+    preserveObjectStacking: true,  // Use colon, not equals
     width: initialDimensions.width,
-    height: initialDimensions.height
+    height: initialDimensions.height,
+    subTargetCheck: true  // Include this in the initial options
 });
-canvas.selection = true;
-canvas.subTargetCheck = true;
 
 function drawGrid() {
     const GRID_SIZE = 20;
@@ -959,12 +958,12 @@ function loadWorkspace() {
                         bgOffsetX = workspace.backgroundImage.offsetX || 0;
                         bgOffsetY = workspace.backgroundImage.offsetY || 0;
 
-                        // Update zoom slider if it exists
-                        const zoomSlider = document.getElementById('bgZoom');
-                        if (zoomSlider) {
-                            const scale = parseFloat(workspace.backgroundImage.scale) || 1;
-                            zoomSlider.value = scale * 100;
-                        }
+                        // // Update zoom slider if it exists
+                        // const zoomSlider = document.getElementById('bgZoom');
+                        // if (zoomSlider) {
+                        //     const scale = parseFloat(workspace.backgroundImage.scale) || 1;
+                        //     zoomSlider.value = scale * 100;
+                        // }
 
                         // Update opacity slider if it exists
                         const opacitySlider = document.getElementById('bgOpacity');
@@ -1007,115 +1006,100 @@ function loadWorkspace() {
 }
 
 // ====================  Save as PDF =================
-let jsPDF;
-if (window.jspdf) {
-    jsPDF = window.jspdf.jsPDF;
-}
-
-function getCanvasBounds() {
-    const objects = canvas.getObjects();
-    if (!objects.length) return null;
-
-    const bounds = {
-        left: Infinity,
-        top: Infinity,
-        right: -Infinity,
-        bottom: -Infinity
-    };
-
-    objects.forEach(obj => {
-        const objBounds = obj.getBoundingRect();
-        bounds.left = Math.min(bounds.left, objBounds.left);
-        bounds.top = Math.min(bounds.top, objBounds.top);
-        bounds.right = Math.max(bounds.right, objBounds.left + objBounds.width);
-        bounds.bottom = Math.max(bounds.bottom, objBounds.top + objBounds.height);
-    });
-
-    // Add padding
-    const padding = 50;
-    bounds.left = Math.max(0, bounds.left - padding);
-    bounds.top = Math.max(0, bounds.top - padding);
-    bounds.right = Math.min(canvas.width, bounds.right + padding);
-    bounds.bottom = Math.min(canvas.height, bounds.bottom + padding);
-
-    return bounds;
-}
-
-function saveToPDF() {
-    if (!jsPDF) {
-        console.error('jsPDF not initialized');
-        return;
-    }
-
-    const bounds = getCanvasBounds();
-    if (!bounds) {
-        alert('No elements found on canvas');
-        return;
-    }
-
-    const width = bounds.right - bounds.left;
-    const height = bounds.bottom - bounds.top;
-
-    // Create PDF instance with portrait/landscape orientation
-    const pdf = new jsPDF({
-        orientation: width > height ? 'landscape' : 'portrait',
-        unit: 'px',
-        format: [width, height],
-    });
-
-    // Create a temporary canvas to render only the cropped area
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
-
-    // Draw background image (if visible)
-    const bgImage = document.getElementById('bgImage');
-    if (bgImage?.style.display !== 'none') {
-        tempCtx.drawImage(
-            bgImage,
-            bounds.left, bounds.top, width, height,
-            0, 0, width, height
-        );
-    }
-
-    // Render canvas content to temporary canvas
-    tempCtx.drawImage(
-        canvas.getElement(),
-        bounds.left, bounds.top, width, height,
-        0, 0, width, height
-    );
-
-    // Convert temporary canvas to a Base64 image
-    const dataURL = tempCanvas.toDataURL('image/png');
-
-    // Add the image to the PDF
+async function saveToPDF() {
     try {
-        pdf.addImage(
-            dataURL,
-            'PNG',
-            0,
-            0,
-            width,
-            height
-        );
+        // Create a temporary canvas for the combined image
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const ctx = tempCanvas.getContext('2d');
 
-        const timestamp = new Date()
-            .toISOString()
-            .replace(/[-:]/g, '')
-            .split('.')[0]
-            .replace('T', '_');
+        // Draw background if exists
+        const bgImage = document.getElementById('bgImage');
+        if (bgImage && bgImage.style.display !== 'none') {
+            await new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    // Apply background opacity
+                    ctx.globalAlpha = parseFloat(bgImage.style.opacity) || 0.5;
+                    
+                    // Get transform values from original background
+                    const transform = bgImage.style.transform;
+                    const scaleMatch = transform.match(/scale\(([\d.]+)\)/);
+                    const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+                    
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1;
+                    resolve();
+                };
+                img.src = bgImage.src;
+            });
+        }
 
-        pdf.save(`workspace_${timestamp}.pdf`);
+        // Draw canvas content over background
+        ctx.drawImage(canvas.getElement(), 0, 0);
+
+        // Get the combined image as data URL
+        const combinedImage = tempCanvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: 2
+        });
+
+        // Create image element with combined screenshot
+        const img = new Image();
+        img.src = combinedImage;
+
+        // Configure html2pdf options
+        const opt = {
+            margin: 0,
+            filename: `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: true,
+                width: canvas.width,
+                height: canvas.height
+            },
+            jsPDF: { 
+                unit: 'px', 
+                format: [canvas.width, canvas.height]
+            }
+        };
+
+        // Generate PDF
+        await html2pdf()
+            .set(opt)
+            .from(img)
+            .save();
+
+        // Show success message
+        const indicator = document.createElement('div');
+        indicator.textContent = 'PDF Saved!';
+        indicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            z-index: 1000;
+        `;
+        document.body.appendChild(indicator);
+        setTimeout(() => indicator.remove(), 2000);
+
     } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('Error generating PDF. Please try again.');
+        console.error('Error saving PDF:', error);
+        alert('Error saving PDF. Please try again.');
     }
 }
-document.getElementById('saveAsPDF')?.addEventListener('click', saveToPDF);
-// =============== end of save as pdf ===================
 
-// Add event listener to button
+// Add click handler
+document.getElementById('saveAsPDF')?.addEventListener('click', saveToPDF);
+
 // =============================================== filter hieros =============================================
 // dropdown logic
 const dropdownContent = document.getElementById("dropdownContent");
@@ -1788,36 +1772,113 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, false);
 });
-// ===================== BG load =================================
-// Background image handling
-document.addEventListener('DOMContentLoaded', function() {
-    const bgImageInput = document.getElementById('bgImageInput');
-    const bgImage = document.getElementById('bgImage');
-    const opacitySlider = document.getElementById('bgOpacity');
-    const zoomSlider = document.getElementById('bgZoom');
-    
-    // Add transition style for smooth transformations
-    bgImage.style.transition = 'transform 0.2s, opacity 0.2s';
-
-    // Function to reset image state
-    function resetImageState() {
-        bgImage.style.transform = 'translate(-50%, -50%) scale(1)';
-        bgImage.style.opacity = '0.5';
-        bgImage.style.position = 'absolute';
-        bgImage.style.left = '50%';
-        bgImage.style.top = '50%';
-        bgImage.style.objectFit = 'contain';
-        bgImage.style.maxWidth = '100%';
-        bgImage.style.maxHeight = '100%';
-        opacitySlider.value = 50;
-        zoomSlider.value = 100;
+// ===================== Background image load =================================
+canvas.on('selection:created', function(e) {
+    const selectedObject = e.selected && e.selected[0];
+    if (selectedObject && selectedObject.type === 'image' && !selectedObject.selectable) {
+        canvas.discardActiveObject();
+        canvas.sendToBack(selectedObject);
+        canvas.requestRenderAll();
     }
-
+});
+document.addEventListener('DOMContentLoaded', function() {
+   const opacitySlider = document.getElementById('bgOpacity');
+    const opacityValue = document.getElementById('opacityValue');
+    
+    if (opacitySlider && opacityValue) {
+        opacitySlider.addEventListener('input', function() {
+            const opacity = this.value / 100;
+            // Get all image objects from canvas
+            const images = canvas.getObjects().filter(obj => obj.type === 'image');
+            
+            // Update opacity for all background images
+            images.forEach(img => {
+                img.set('opacity', opacity);
+            });
+            
+            // Update the display value
+            opacityValue.textContent = `${this.value}%`;
+            
+            // Render the canvas to show changes
+            canvas.requestRenderAll();
+        });
+    }
+    const bgImageInput = document.getElementById('bgImageInput');
+    
     // Function to handle image loading
     function handleImageLoad(imageUrl) {
-        resetImageState();
-        bgImage.src = imageUrl;
-        bgImage.style.display = 'block';
+        fabric.Image.fromURL(imageUrl, function(img) {
+            // Store original dimensions
+            const imgWidth = img.width;
+            const imgHeight = img.height;
+            
+            // Calculate scaling to fit canvas while maintaining aspect ratio
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const scale = Math.min(
+                canvasWidth / imgWidth,
+                canvasHeight / imgHeight
+            ) * 0.8; // 80% of max size for padding
+            
+            // Set image properties
+            img.set({
+                left: canvasWidth / 2,
+                top: canvasHeight / 2,
+                originX: 'center',
+                originY: 'center',
+                scaleX: scale,
+                scaleY: scale,
+                selectable: true,
+                hasControls: true,
+                hasBorders: true,
+                id: generateUniqueId()
+            });
+
+            // Add to canvas and ensure it stays in back
+            canvas.add(img);
+            enforceBackgroundPosition();
+            
+            // Check if other background images are locked and match the state
+            const existingImages = canvas.getObjects().filter(obj => obj.type === 'image');
+            if (existingImages.length > 1 && !existingImages[0].selectable) {
+                img.selectable = false;
+                img.evented = false;
+            }
+            
+            // Add event listeners to ensure image stays in back
+            img.on('moving', enforceBackgroundPosition);
+            img.on('scaling', enforceBackgroundPosition);
+            img.on('rotating', enforceBackgroundPosition);
+            
+            // Function to ensure background images stay in back
+            function enforceBackgroundPosition() {
+                const objects = canvas.getObjects();
+                const images = objects.filter(obj => obj.type === 'image');
+                
+                // Move all images to back
+                images.forEach(image => {
+                    canvas.sendToBack(image);
+                });
+                
+                // Redraw grid if it exists
+                if (typeof drawGrid === 'function') {
+                    drawGrid();
+                }
+            }
+            
+            // Add canvas event listeners
+            canvas.on('object:added', enforceBackgroundPosition);
+            canvas.on('object:modified', enforceBackgroundPosition);
+
+            // Add to undo history
+            undoHistory.push({
+                type: 'add',
+                object: img.toJSON(['id']),
+                id: img.id
+            });
+
+            canvas.requestRenderAll();
+        });
     }
 
     // Background image handling
@@ -1827,7 +1888,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const reader = new FileReader();
             reader.onload = function(event) {
                 handleImageLoad(event.target.result);
-                
                 // Clear the input value to allow the same file to be selected again
                 bgImageInput.value = '';
             };
@@ -1835,81 +1895,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Opacity control with debounce
-    let opacityTimeout;
-    opacitySlider.addEventListener('input', function(e) {
-        clearTimeout(opacityTimeout);
-        opacityTimeout = setTimeout(() => {
-            bgImage.style.opacity = e.target.value / 100;
-        }, 5); // 5ms debounce
-    });
-
-    // Zoom control with debounce and maintained center position
-    let zoomTimeout;
-    zoomSlider.addEventListener('input', function(e) {
-        clearTimeout(zoomTimeout);
-        zoomTimeout = setTimeout(() => {
-            const scale = e.target.value / 100;
-            bgImage.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        }, 5); // 5ms debounce
-    });
-
-    // Enhanced remove background function
+    // Modified remove background function
     window.removeBackground = function() {
-        bgImage.style.display = 'none';
-        
-        // Clear the source after a short delay to ensure proper cleanup
-        setTimeout(() => {
-            bgImage.src = '';
-            // resetImageState();
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && activeObject.type === 'image') {
+            // Store the removal in undo history
+            undoHistory.push({
+                type: 'delete',
+                object: activeObject.toJSON(['id']),
+                id: activeObject.id
+            });
             
-            // Clear the file input
-            bgImageInput.value = '';
-        }, 50);
+            // Remove the image
+            canvas.remove(activeObject);
+            canvas.requestRenderAll();
+        }
     };
-
-    // Initial reset
-    // resetImageState();
 });
 
-
 // ================================== Autosave config option ======================================
-
-// // Autosave configuration
-// const AUTOSAVE_INTERVAL = 90000;
-// const SAVE_KEY = 'canvas_autosave';
-// const DEBOUNCE_WAIT = 2000; // Increased from 1000ms to reduce save frequency
-// const BATCH_SIZE = 10; // Number of changes before forcing a save
-
-// // Performance optimization: Track number of changes
-// let changeCount = 0;
-// let lastSaveTime = Date.now();
-
-// // Optimized debounce with maximum wait time
-// function debounce(func, wait, maxWait) {
-//     let timeout;
-//     let lastCallTime;
-
-//     return function executedFunction(...args) {
-//         const now = Date.now();
-
-//         // Force save if max wait time exceeded
-//         if (lastCallTime && (now - lastCallTime) > maxWait) {
-//             clearTimeout(timeout);
-//             func.apply(this, args);
-//             lastCallTime = now;
-//             return;
-//         }
-
-//         lastCallTime = now;
-
-//         clearTimeout(timeout);
-//         timeout = setTimeout(() => {
-//             func.apply(this, args);
-//         }, wait);
-//     };
-// }
-
+// ===============================================================================================
 // Create and add program title/watermark -- DO NOT DELETE --
 const programTitle = document.createElement('div');
 programTitle.textContent = 'ΙΕΡΟΓΛΥΦΩ 1.5';
@@ -1988,10 +1993,10 @@ window.addEventListener('keydown', function (e) {
     const activeObject = canvas.getActiveObject();
     const activeGroup = canvas.getActiveObjects();
     const isInSearchInput = e.target.id === 'searchInput';
+    
     // Handle cycling through objects (Ctrl + Arrow Keys)
-    if (e.shiftKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+    if (e.ctrlKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
         e.preventDefault(); // Prevent default browser behavior
-
         const objects = canvas.getObjects();
         let currentIndex = objects.indexOf(activeObject);
         
@@ -2005,16 +2010,53 @@ window.addEventListener('keydown', function (e) {
         // Set the new active object
         canvas.setActiveObject(objects[currentIndex]);
         canvas.requestRenderAll();
+        return; // Exit early to prevent other handlers
     }
+// Toggle background lock with Ctrl + L
+if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+    e.preventDefault();
+    const images = canvas.getObjects().filter(obj => obj.type === 'image');
+    images.forEach(img => {
+        img.selectable = !img.selectable;
+        img.evented = !img.evented;
+        img.subTargetCheck = img.selectable;
+        if (!img.selectable) {
+            canvas.discardActiveObject();
+            canvas.sendToBack(img);  // Also send to back when locking
+        }
+    });
+    
+    // Show visual feedback
+    const lockStatus = !images[0]?.selectable ? 'locked' : 'unlocked';
+    const indicator = document.createElement('div');
+    indicator.textContent = `Background ${lockStatus}`;
+    indicator.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        z-index: 1000;
+    `;
+    document.body.appendChild(indicator);
+    setTimeout(() => indicator.remove(), 2000);
+    
+    canvas.requestRenderAll();
+}
+
+
+    // Rest of your keyboard handlers...
     // Handle Save (Ctrl+S)
     if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault(); // Prevent browser's save dialog
+        e.preventDefault();
         saveWorkspace();
     }
 
     // Handle Background Remove (Ctrl+B)
     if (e.ctrlKey && (e.key === 'b' || e.key === 'B')) {
-        e.preventDefault(); // Prevent browser's bold command
+        e.preventDefault();
         if (canvas.backgroundImage) {
             removeBackground();
             canvas.requestRenderAll();
@@ -2023,17 +2065,8 @@ window.addEventListener('keydown', function (e) {
 
     // Handling Delete or Backspace
     if (e.key === 'Delete' || e.key === 'Backspace') {
-        // If we're in the search input, let it handle backspace naturally
-        if (isInSearchInput) {
-            return; // Let the default backspace behavior work
-        }
-        
-        // Prevent backspace from navigating back only when not in search input
+        if (isInSearchInput) return;
         e.preventDefault();
-        
-        // Handle your canvas/workspace deletion logic here
-        const activeObject = canvas.getActiveObject();
-        const activeGroup = canvas.getActiveObjects();
         
         if (activeGroup && activeGroup.length > 0) {
             activeGroup.forEach(object => {
@@ -2048,29 +2081,29 @@ window.addEventListener('keydown', function (e) {
         }
     }
 
-    // Alignment shortcuts
-    if (e.key === 'h' || e.key === 'H') {
-        alignObjects('horizontal');
-    }
-    if (e.key === 't' || e.key === 'T') {
-        alignObjects('top');
-    }
-    if (e.key === 'b' || e.key === 'B') {
-        if (!e.ctrlKey) { // Only align if Ctrl isn't pressed
+    // Alignment shortcuts (without Ctrl key)
+    if (!e.ctrlKey) {
+        if (e.key === 'h' || e.key === 'H') {
+            alignObjects('horizontal');
+        }
+        if (e.key === 't' || e.key === 'T') {
+            alignObjects('top');
+        }
+        if (e.key === 'b' || e.key === 'B') {
             alignObjects('bottom');
         }
-    }
-    if (e.key === 'r' || e.key === 'R') {
-        mirrorTextObject(activeObject);
-    }
-    if (e.key === 'l' || e.key === 'L') {
-        alignObjects('left');
+        if (e.key === 'r' || e.key === 'R') {
+            mirrorTextObject(activeObject);
+        }
+        if (e.key === 'l' || e.key === 'L') {
+            alignObjects('left');
+        }
     }
 
-    // Handling Arrow Keys
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+    // Handling Arrow Keys (without Ctrl)
+    if (!e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         if (activeObject) {
-            const moveAmount = e.shiftKey ? 1 : 5; // Smaller movements with Shift key
+            const moveAmount = e.shiftKey ? 1 : 5;
             switch (e.key) {
                 case 'ArrowLeft': activeObject.set('left', activeObject.left - moveAmount); break;
                 case 'ArrowRight': activeObject.set('left', activeObject.left + moveAmount); break;

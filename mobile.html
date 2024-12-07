@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΙΕΡΟΓΛΥΦΩ - Desktop Only</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: #f1f1f1;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #16a085;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .desktop-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #16a085;
+        }
+
+        .link {
+            color: #16a085;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="desktop-icon">🖥️</div>
+        <h1>Desktop Experience Recommended</h1>
+        <p>ΙΕΡΟΓΛΥΦΩ is designed to provide the best experience on desktop computers. For optimal use of our hieroglyphic writing tools, please visit us on a desktop or laptop computer.</p>
+        <p>Thank you for your interest in exploring ancient Egyptian writing with us!</p>
+        <p><a href="mailto:ieroglypho@hierogliphica.org" class="link">Contact Support</a></p>
+    </div>
+
+    <script>
+        // Add this to prevent mobile users from bypassing by going back
+        if (!isMobile()) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

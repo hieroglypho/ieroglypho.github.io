@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ΙΕΡΟΓΛΥΦΩ - Hieroglyphic Writing Tool</title>
-    <meta name="description" content="ΙΕΡΟΓΛΥΦΩ is an innovative tool that allows users to explore and write in ancient Egyptian Hieroglyphs. Try out this unique writing system and bring the symbols of the past to life in an interactive and user-friendly interface.">
+    <meta name="description" content="Discover ΙΕΡΟΓΛΥΦΩ, the interactive tool for exploring and creating with Egyptian Hieroglyphs. Dive into the ancient script and unleash your creativity today!">
     <meta name="keywords" content="Hieroglyphs, Egyptian writing, ancient script, Hieroglyphic tool, writing tool, tryout, purchase">
-    <meta name="author" content="Your Name or Company Name">
+    <meta name="author" content="Hieroglyphica.org">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,30 +19,30 @@
             color: white;
             padding: 20px;
             text-align: center;
-            font-size: 36px;
+            font-size: 28px;
             text-transform: uppercase;
         }
+        .product-image {
+            display: block;
+            margin: 20px auto;
+            width: 90%;
+            max-width: 576px;
+            height: auto;
+            border: 5px solid #34495e;
+        }
         .subparagraph {
-            padding: 10px;
-            font-size: 18px;
+            padding: 15px;
+            font-size: 16px;
             background-color: #ecf0f1;
             color: #34495e;
             text-align: center;
             line-height: 1.5;
         }
-        .product-image {
-            display: block;
-            margin: 40px auto;
-            width: 576px;  /* 8 inches = 576px */
-            height: 324px; /* 4.5 inches = 324px */
-            border: 5px solid #34495e;
-            margin-top: 5;
-        }
         .video-container {
             position: relative;
             width: 100%;
             max-width: 800px;
-            margin: 40px auto;
+            margin: 20px auto;
             padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
             height: 0;
             overflow: hidden;
@@ -58,18 +58,20 @@
         .video-title {
             text-align: center;
             color: #34495e;
-            font-size: 24px;
-            margin: 20px 0;
+            font-size: 20px;
+            margin: 10px 0;
         }
         .links {
-            text-align: center;
-            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px;
         }
         .links a {
             text-decoration: none;
-            font-size: 18px;
-            margin: 10px 20px;
-            padding: 10px 20px;
+            font-size: 16px;
+            padding: 10px 15px;
             border-radius: 5px;
             color: white;
             background-color: #16a085;
@@ -78,18 +80,35 @@
         .links a:hover {
             background-color: #1abc9c;
         }
+        @media (max-width: 768px) {
+            header {
+                font-size: 24px;
+            }
+            .subparagraph {
+                font-size: 14px;
+                padding: 10px;
+            }
+            .video-title {
+                font-size: 18px;
+            }
+            .links a {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
     </style>
 </head>
 <body>
     <header>ΙΕΡΟΓΛΥΦΩ</header>
-    
-    <div class="subparagraph">
-        <p>Welcome to ΙΕΡΟΓΛΥΦΩ, the newest tool for writing Hieroglyphs! This tool allows you to easily create and explore ancient symbols in an intuitive way. Try it out today to see how you can bring the ancient script to life.</p>
-        <p>Simply type or select the Hieroglyphs you want to use, and start creating your inscriptions with ease. Experience the power of ancient writing at your fingertips!</p>
-    </div>
+
+    <!-- Splashscreen image at the beginning -->
     <img src="splashscreen.jpg" alt="Product Image" class="product-image">
+
+    <div class="subparagraph">
+        <p>Welcome to ΙΕΡΟΓΛΥΦΩ, your gateway to the ancient world of Hieroglyphs! Craft inscriptions effortlessly and explore the symbols of a timeless language. Dive in today!</p>
+    </div>
     
-    <h2 class="video-title">Watch Tutorial SoonR</h2>
+    <h2 class="video-title">Watch the Tutorial</h2>
     <div class="video-container">
         <iframe 
             src="https://www.youtube.com/embed/YOUR_VIDEO_ID_HERE"
@@ -103,45 +122,5 @@
         <a href="tryout.html">Try it Out</a>
         <a href="https://buy.stripe.com/cN2eWL3PRekZgmsbJb">Purchase</a>
     </div>
-    <!-- Add this to your <head> section -->
-<style>
-    /* Disable text selection */
-    body {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-</style>
-
-<!-- Add this to your <script> section -->
-<script>
-    // Disable right click
-    document.addEventListener('contextmenu', event => event.preventDefault());
-
-    // Disable keyboard shortcuts
-    document.addEventListener('keydown', function(event) {
-        // Prevent F12 key (Dev Tools)
-        if (event.keyCode === 123) {
-            event.preventDefault();
-        }
-        
-        // Prevent Ctrl+Shift+I (Dev Tools)
-        if (event.ctrlKey && event.shiftKey && event.keyCode === 73) {
-            event.preventDefault();
-        }
-        
-        // Prevent Ctrl+Shift+J (Dev Tools)
-        if (event.ctrlKey && event.shiftKey && event.keyCode === 74) {
-            event.preventDefault();
-        }
-        
-        // Prevent Ctrl+U (View Source)
-        if (event.ctrlKey && event.keyCode === 85) {
-            event.preventDefault();
-        }
-    });
-
-</script>
 </body>
 </html>

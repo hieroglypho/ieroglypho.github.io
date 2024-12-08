@@ -1124,7 +1124,7 @@ function addMdCInterface() {
         position: fixed;
         bottom: 130px;
         left: 20px;
-        background: white;
+        background: gray;
         padding: 8px;
         border: 1px solid #ccc;
         border-radius: 4px;

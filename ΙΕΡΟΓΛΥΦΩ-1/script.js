@@ -1926,36 +1926,7 @@ function setCanvasColor(color) {
 // ================================== Autosave config option ======================================
 // ===============================================================================================
 // ===============================Title/watermark -- DO NOT DELETE -- ============
-// Create the shadow text (placed behind)
-const shadowText = new fabric.Text('ΙΕΡΟΓΛΥΦΩ 1.5', {
-    left: 13,  // offset by 2px
-    top: 55,   // offset by 2px
-    fontSize: 22,
-    fontFamily: 'Arial',
-    fontWeight: 'bold',
-    fill: 'rgba(0, 0, 0, 0.2)',  // dark shadow color
-    selectable: false,
-    evented: false,
-    letterSpacing: 3
-});
-
-// Create the main text (placed in front)
-const programTitle = new fabric.Text('ΙΕΡΟΓΛΥΦΩ 1.5', {
-    left: 11,
-    top: 53,
-    fontSize: 22,
-    fontFamily: 'Arial',
-    fontWeight: 'bold',
-    fill: 'rgba(255, 255, 255, 0.13)',
-    selectable: false,
-    evented: false,
-    letterSpacing: 3
-});
-
-// Add both to canvas (order matters - shadow first)
-canvas.add(shadowText);
-canvas.add(programTitle);
-// ============================================ COPYRIGHTS ===================================================
+// ============================================ end COPYRIGHTS ===================================================
 function updateDivWidth() {
     const canvasWidth = getCanvasDimensions().width;
     document.getElementById('pastedNamesContainer').style.width = `${canvasWidth}px`;

@@ -61,6 +61,17 @@ body {
     transform: scale(1.1);
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
+/* ============= WATERMARKS - DO NOT REMOVE ========================== */
+#fixedTextOverlay {
+    position: absolute;
+    top: 53px; /* Adjust as needed */
+    left: 10px; /* Adjust as needed */
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.13); /* Main text color */
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2); /* Shadow effect */
+}
 
 
 /* Main search container - fixed width */

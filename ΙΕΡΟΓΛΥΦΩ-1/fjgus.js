@@ -20,7 +20,8 @@ function initializeFileUpload() {
             fileStatus.textContent = 'Loading dictionary...';
             const content = await file.text();
             loadedDictionary = content;
-            fileStatus.textContent = `loaded: ${file.name}`;
+            totalLines = content.split('\n').length;  // Count the lines
+            fileStatus.textContent = `Loaded: ${file.name} (${totalLines.toLocaleString()} lines)`;
             
             // Enable search functionality
             searchButton.disabled = false;
@@ -56,34 +57,27 @@ async function searchFygusFile() {
     try {
         const lines = loadedDictionary.split('\n');
         
-        // Clean and prepare search terms
-        const searchTerms = searchInput.toLowerCase().split(/\s+/).map(term => 
-            term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        );
+        // Create a single regex pattern that matches the exact sequence of characters
+        const searchPattern = searchInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(searchPattern, 'u');
 
         const matchingLines = lines.filter(line => {
-            const lowerLine = line.toLowerCase();
-            return searchTerms.every(term => {
-                // Use lookaround assertions instead of word boundaries
-                // This matches terms surrounded by spaces, start/end of line, or punctuation
-                const regex = new RegExp(`(?:^|\\s|[^\\p{L}\\p{N}])(${term})(?=$|\\s|[^\\p{L}\\p{N}])`, 'iu');
-                return regex.test(lowerLine);
-            });
+            return searchRegex.test(line);
         }).map(line => {
             let highlightedLine = line;
             
-            // Highlight search terms
-            searchTerms.forEach(term => {
-                const regex = new RegExp(`(${term})`, 'gi');
-                highlightedLine = highlightedLine.replace(regex, '<span class="highlight">$1</span>');
-            });
+            // Highlight the exact sequence
+            const regex = new RegExp(`(${searchPattern})`, 'gu');
+            highlightedLine = highlightedLine.replace(regex, '<span class="highlight">$1</span>');
 
-            // Process line segments
-            let segments = highlightedLine.split(/(\|[^|]+\|)/);
+            // Process line segments for time tags and other special text
+            let segments = highlightedLine.split(/(<time>[^<]+<\/time>|<i>[^<]+<\/i>)/);
             
             segments = segments.map(segment => {
-                if (segment.startsWith('|') && segment.endsWith('|')) {
-                    return segment.replace(/\|(.+)\|/, '|<span class="large-text">$1</span>|');
+                if (segment.startsWith('<time>') && segment.endsWith('</time>')) {
+                    return segment;
+                } else if (segment.startsWith('<i>') && segment.endsWith('</i>')) {
+                    return segment;
                 } else {
                     return segment.replace(/([^\x00-\x7F]+)/g, '<span class="large-text">$1</span>');
                 }

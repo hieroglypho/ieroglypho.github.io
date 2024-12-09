@@ -850,6 +850,13 @@ canvas {
     border-radius: 3px;
     font-weight: bold;
 }
+.gardiner-highlight {
+    background-color: #ffeb3b;  /* Light yellow */
+}
+
+.hieroglyph-highlight {
+    background-color: #698faa57;  /* Light blue */
+}
 
 /* Result styling */
 .result-header {
@@ -862,7 +869,7 @@ canvas {
 }
 
 .result-matches {
-    color: #af9393;
+    color: #292626;
     padding: 8px;
 }
 
@@ -870,6 +877,11 @@ canvas {
     border: 0;
     border-top: 1px solid #333;
     /* margin: rem 0; */
+}
+time {
+    /* Add any special styling you want for era/provenance references */
+    color: #a03636; 
+    /* font-style: italic;  */
 }
 
 /* Existing styles for large text */

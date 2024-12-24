@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΙΕΡΟΓΛΥΦΩ - Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+    <style>
+        /* Base Variables - matching your existing theme */
+        :root {
+            --primary-bg: #f1f1f1;
+            --header-bg: #2c3e50;
+            --feature-bg: #ffffff;
+            --text-color: #333333;
+            --button-bg: #16a085;
+            --button-hover: #1abc9c;
+            --border-color: #2c3e50;
+            --check-color: #2ecc71;
+            --font-main: 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-hieroglyph: 'Noto Sans Egyptian Hieroglyphs', serif;
+            --update-date: #16a085;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-bg: #1a1a1a;
+                --header-bg: #1c2e3f;
+                --feature-bg: #2d2d2d;
+                --text-color: #e0e0e0;
+                --button-bg: #147d6c;
+                --button-hover: #1a9882;
+                --border-color: #3c4e60;
+                --update-date: #1abc9c;
+            }
+        }
+
+        /* Core styles matching your existing theme */
+        body {
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0 0 60px 0;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        header {
+            font-family: var(--font-hieroglyph);
+            background-color: var(--header-bg);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background-color: var(--header-bg);
+            padding: 5px 0;
+            justify-content: center;
+            gap: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-tabs a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 20px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .nav-tabs a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Content container */
+        .content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Section styling */
+        .section {
+            background-color: var(--feature-bg);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        /* Dictionary download section */
+        .dictionary-download {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background-color: rgba(22, 160, 133, 0.1);
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .download-button {
+            background-color: var(--button-bg);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+
+        .download-button:hover {
+            background-color: var(--button-hover);
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--feature-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-submit {
+            background-color: var(--button-bg);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .form-submit:hover {
+            background-color: var(--button-hover);
+        }
+
+        /* Update log styling */
+        .update-entry {
+            border-left: 3px solid var(--button-bg);
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+
+        .update-date {
+            color: var(--update-date);
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .update-title {
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        footer {
+            background-color: var(--header-bg);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>ΙΕΡΟΓΛΥΦΩ</header>
+
+    <nav class="nav-tabs">
+        <a href="about.html">ABOUT</a>
+        <a href="index.html">HOME</a>
+        <a href="tutorials.html">TUTORIAL</a>
+        <a href="research.html">RESEARCH</a>
+    </nav>
+
+    <div class="content">
+        <!-- Dictionary Download Section -->
+        <div class="section">
+            <h2>Dictionary Access</h2>
+            <p>Access our comprehensive hieroglyphic dictionary for offline use. This file is regularly updated with new entries and improvements.</p>
+            <div class="dictionary-download">
+                <div>
+                    <strong>Latest Version:</strong> December 2024
+                    <br>
+                    <small>Format: .txt | Size: 2.3MB</small>
+                </div>
+                <a href="dictionary.txt" class="download-button" download>Download Dictionary</a>
+            </div>
+        </div>
+
+        <!-- Submission Form Section -->
+        <div class="section">
+            <h2>Submit New Hieroglyph</h2>
+            <p>Help expand our dictionary by submitting new hieroglyphs for consideration. Please provide as much detail as possible to assist with verification.</p>
+            <form target="_blank" action="https://formsubmit.co/08cd06e3ca775e2d66f6b732292a0b54" method="POST">
+                <div class="form-group">
+                    <input type="text" name="gardiner_code" class="form-control" placeholder="Gardiner Code (e.g., A1)" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="transliteration" class="form-control" placeholder="Transliteration" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="translation" class="form-control" placeholder="Translation (English meaning)" required>
+                </div>
+                <div class="form-group">
+                    <input type="url" name="source" class="form-control" placeholder="Source URL (Images, references, etc.)" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="name" class="form-control" placeholder="Your Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" name="email" class="form-control" placeholder="Email for Follow-up" required>
+                </div>
+                <div class="form-group">
+                    <textarea placeholder="Additional notes, context, or special considerations" class="form-control" name="notes" rows="5"></textarea>
+                </div>
+                <input type="text" name="_honey" style="display:none">
+                <button type="submit" class="btn form-submit">Submit Hieroglyph</button>
+            </form>
+        </div>
+
+        <!-- Update Log Section -->
+        <div class="section">
+            <h2>Update Log</h2>
+            <div class="update-entry">
+                <div class="update-date">December 23, 2024</div>
+                <div class="update-title">Dictionary Expansion</div>
+                <p>Added 50 new entries from Middle Kingdom texts. Updated transliterations for accuracy.</p>
+            </div>
+            <div class="update-entry">
+                <div class="update-date">December 21, 2024</div>
+                <div class="update-title">GOING LIVE!/div>
+                <p>Improved mobile responsiveness and dark mode support across all features.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>© 2024 ΙΕΡΟΓΛΥΦΩ. All rights reserved.</footer>
+</body>
+</html>

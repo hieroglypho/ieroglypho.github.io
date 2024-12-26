@@ -47,7 +47,7 @@ let resizeTimeout;
 function getCanvasDimensions() {
     const searchContainer = document.getElementById('searchContainer');
     const searchWidth = searchContainer ? searchContainer.offsetWidth : 400; // 400 is default width
-    
+
     return {
         // Calculate width by subtracting search container width and padding
         width: Math.floor(window.innerWidth - searchWidth - 25), // 40 accounts for container padding
@@ -107,14 +107,13 @@ function drawGrid() {
 }
 
 drawGrid();
-// ===================== test decode characters from list of glyphs ==================
+// ===================== Decode characters from list of glyphs ==================
 
 function loadCharacters(encoded) {
-    // Reverse the character shift
     const unshifted = encoded.split('').map(char =>
         String.fromCharCode(char.charCodeAt(0) - 1)
     ).join('');
-    
+
     // Decode base64 back to JSON string
     const jsonStr = decodeURIComponent(escape(atob(unshifted)));
     return JSON.parse(jsonStr);
@@ -167,7 +166,7 @@ function displayCharactersInRows(charList) {
     charList.forEach(([code, char], index) => {
         // Extract category from code (e.g., 'NU' from 'NU1' or 'A' from 'A1')
         const category = horizontalGlyphs.includes(code) ? 'Hrz' : code.match(/[A-Z]+/)[0];
-        
+
         content += `
             <div class="char-container" 
                  draggable="true" 
@@ -323,27 +322,27 @@ canvas.on('mouse:move', function (options) {
         const vpt = canvas.viewportTransform;
         const deltaX = options.e.clientX - lastPosX;
         const deltaY = options.e.clientY - lastPosY;
-        
+
         // Update canvas viewport transform
         vpt[4] += deltaX;
         vpt[5] += deltaY;
-        
+
         // Update background image position if it exists
         const bgImage = document.getElementById('bgImage');
         if (bgImage && bgImage.style.display !== 'none') {
             // Accumulate the offsets
             bgOffsetX += deltaX;
             bgOffsetY += deltaY;
-            
+
             // Get current scale
             const currentTransform = bgImage.style.transform;
             const matches = currentTransform.match(/scale\(([\d.]+)\)/);
             const scale = matches ? parseFloat(matches[1]) : 1;
-            
+
             // Apply accumulated offsets
             bgImage.style.transform = `translate(calc(-50% + ${bgOffsetX}px), calc(-50% + ${bgOffsetY}px)) scale(${scale})`;
         }
-        
+
         lastPosX = options.e.clientX;
         lastPosY = options.e.clientY;
         canvas.requestRenderAll();
@@ -362,7 +361,7 @@ canvas.on('mouse:up', function (options) {
         const obj = options.target;
         if (obj) {
             undoHistory.push({
-                type: 'modify',
+                type: 'modify',  // Changed from 'move' to 'modify' to match switch case
                 actionType: 'moving',
                 state: initialMoveState
             });
@@ -380,18 +379,6 @@ canvas.on('mouse:up', function (options) {
     }
 });
 
-// Add this function to reset background position when needed
-function resetBackgroundPosition() {
-    const bgImage = document.getElementById('bgImage');
-    if (bgImage && bgImage.style.display !== 'none') {
-        bgOffsetX = 0;
-        bgOffsetY = 0;
-        const currentTransform = bgImage.style.transform;
-        const matches = currentTransform.match(/scale\(([\d.]+)\)/);
-        const scale = matches ? parseFloat(matches[1]) : 1;
-        bgImage.style.transform = `translate(-50%, -50%) scale(${scale})`;
-    }
-}
 canvas.on('mouse:wheel', function (opt) {
     var delta = opt.e.deltaY;
     var zoom = canvas.getZoom();
@@ -406,24 +393,24 @@ canvas.on('drop', function (options) {
     options.e.preventDefault();
     canvasModified = true;
     const droppedData = options.e.dataTransfer.getData('text/plain');
-    
+
     // Find the character entry by the dropped data
     const characterEntry = characters.find(([, char]) => char === droppedData);
-    
+
     if (characterEntry) {
         // Check if this is a three-element entry (alphabet case)
         const characterKey = characterEntry.length === 3 ? characterEntry[2] : characterEntry[0];
-        
+
         // Calculate position relative to the canvas
         const pointer = canvas.getPointer(options.e);
         const mouseX = pointer.x;
         const mouseY = pointer.y;
-        
+
         // Add character to canvas, using the correct key for pastedNames
         addCharacterToCanvas(droppedData, characterKey, mouseX, mouseY);
     }
 });
-canvas.on('mouse:dblclick', function(options) {
+canvas.on('mouse:dblclick', function (options) {
     if (options.target && (options.target.type === 'i-text' || options.target.type === 'text')) {
         activeTextObject = options.target;
         openKeyboard();
@@ -433,7 +420,7 @@ canvas.on('mouse:dblclick', function(options) {
 });
 
 // Event handlers for rotation and scaling
-canvas.on('object:moving', function(options) {
+canvas.on('object:moving', function (options) {
     const obj = options.target;
     if (obj && initialMoveState === null) {
         if (obj.type !== 'activeSelection') {
@@ -446,7 +433,7 @@ canvas.on('object:moving', function(options) {
             // For groups, store the relative positions of objects
             const groupLeft = obj.left;
             const groupTop = obj.top;
-            
+
             initialMoveState = {
                 type: 'group',
                 groupState: {
@@ -476,7 +463,7 @@ canvas.on('object:moving', function(options) {
             };
         }
     }
-    
+
     // Apply grid snapping
     if (obj.type !== 'activeSelection') {
         obj.set({
@@ -488,7 +475,7 @@ canvas.on('object:moving', function(options) {
         const snappedTop = snapToGrid(obj.top);
         const deltaX = snappedLeft - obj.left;
         const deltaY = snappedTop - obj.top;
-        
+
         obj.getObjects().forEach(o => {
             o.set({
                 left: snapToGrid(o.left + deltaX),
@@ -501,7 +488,7 @@ canvas.on('object:moving', function(options) {
         });
     }
 });
-canvas.on('object:rotating', function(options) {
+canvas.on('object:rotating', function (options) {
     const obj = options.target;
     if (obj && initialRotationState === null) {
         if (obj.type !== 'activeSelection') {
@@ -530,7 +517,7 @@ canvas.on('object:rotating', function(options) {
         // console.log('Rotation started. Initial state:', initialRotationState);
     }
 });
-canvas.on('object:scaling', function(options) {
+canvas.on('object:scaling', function (options) {
     const obj = options.target;
     if (obj && initialScaleState === null) {
         if (obj.type !== 'activeSelection') {
@@ -557,12 +544,11 @@ canvas.on('object:scaling', function(options) {
                 }))
             };
         }
-        console.log('Scaling started. Initial state:', initialScaleState);
     }
 });
-canvas.on('object:modified', function(options) {
+canvas.on('object:modified', function (options) {
     canvasModified = true;
-    
+
     if (initialRotationState !== null) {
         undoHistory.push({
             type: 'modify',
@@ -571,7 +557,7 @@ canvas.on('object:modified', function(options) {
         });
         initialRotationState = null;
     }
-    
+
     if (initialScaleState !== null) {
         undoHistory.push({
             type: 'modify',
@@ -580,7 +566,7 @@ canvas.on('object:modified', function(options) {
         });
         initialScaleState = null;
     }
-    
+
     if (initialMoveState !== null) {
         undoHistory.push({
             type: 'modify',
@@ -590,7 +576,7 @@ canvas.on('object:modified', function(options) {
         initialMoveState = null;
     }
 });
-canvas.on('object:rotating', function(options) {
+canvas.on('object:rotating', function (options) {
     const obj = options.target;
     if (obj && initialRotationState === null) {
         // Store the complete initial state when rotation starts
@@ -622,50 +608,50 @@ function undoLastAction() {
             }
             break;
 
-case 'modify':
-    if (['rotation', 'scaling', 'moving'].includes(lastAction.actionType)) {
-        if (lastAction.state.type === 'group') {
-            const objectsToGroup = [];
-            
-            // First pass: Reset all objects to their individual states
-            lastAction.state.objects.forEach(obj => {
-                const fabricObj = canvas.getObjects().find(o => o.id === obj.id);
-                if (fabricObj) {
-                    fabricObj.set({
-                        left: obj.state.left,
-                        top: obj.state.top,
-                        scaleX: obj.state.scaleX,
-                        scaleY: obj.state.scaleY,
-                        angle: obj.state.angle,
-                        flipX: obj.state.flipX,
-                        flipY: obj.state.flipY
-                    });
-                    fabricObj.setCoords();
-                    objectsToGroup.push(fabricObj);
-                }
-            });
+        case 'modify':
+            if (['rotation', 'scaling', 'moving'].includes(lastAction.actionType)) {
+                if (lastAction.state.type === 'group') {
+                    const objectsToGroup = [];
 
-            if (objectsToGroup.length > 0) {
-                canvas.discardActiveObject();
-                
-                // Create new group with objects in their original states
-                const group = new fabric.ActiveSelection(objectsToGroup, {
-                    canvas: canvas,
-                    ...lastAction.state.groupState  // Apply all group properties at once
-                });
-                
-                canvas.setActiveObject(group);
-                canvas.requestRenderAll();
+                    // First pass: Reset all objects to their individual states
+                    lastAction.state.objects.forEach(obj => {
+                        const fabricObj = canvas.getObjects().find(o => o.id === obj.id);
+                        if (fabricObj) {
+                            fabricObj.set({
+                                left: obj.state.left,
+                                top: obj.state.top,
+                                scaleX: obj.state.scaleX,
+                                scaleY: obj.state.scaleY,
+                                angle: obj.state.angle,
+                                flipX: obj.state.flipX,
+                                flipY: obj.state.flipY
+                            });
+                            fabricObj.setCoords();
+                            objectsToGroup.push(fabricObj);
+                        }
+                    });
+
+                    if (objectsToGroup.length > 0) {
+                        canvas.discardActiveObject();
+
+                        // Create new group with objects in their original states
+                        const group = new fabric.ActiveSelection(objectsToGroup, {
+                            canvas: canvas,
+                            ...lastAction.state.groupState  // Apply all group properties at once
+                        });
+
+                        canvas.setActiveObject(group);
+                        canvas.requestRenderAll();
+                    }
+                } else if (lastAction.state.type === 'single') {
+                    const objectToModify = canvas.getObjects().find(obj => obj.id === lastAction.state.id);
+                    if (objectToModify) {
+                        objectToModify.set(lastAction.state.state);
+                        objectToModify.setCoords();
+                    }
+                }
             }
-        } else if (lastAction.state.type === 'single') {
-            const objectToModify = canvas.getObjects().find(obj => obj.id === lastAction.state.id);
-            if (objectToModify) {
-                objectToModify.set(lastAction.state.state);
-                objectToModify.setCoords();
-            }
-        }
-    }
-    break;
+            break;
 
         case 'delete':
             const deletedObj = new fabric.Text(lastAction.object.characterKey || '', {
@@ -673,7 +659,7 @@ case 'modify':
                 id: lastAction.id
             });
             canvas.add(deletedObj);
-            
+
             const pastedNamesDiv = document.getElementById('pastedNames');
             if (pastedNamesDiv && lastAction.object.characterKey) {
                 const nameSpan = document.createElement('span');
@@ -688,7 +674,7 @@ case 'modify':
             undoHistory.push(lastAction);
             return;
     }
-    
+
     canvas.requestRenderAll();
 }
 
@@ -699,20 +685,20 @@ function deleteSelectedObjects() {
             // Store the complete object state before deletion
             const objectState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
             objectState.characterKey = obj.characterKey; // Preserve the character key if it exists
-            
+
             undoHistory.push({
                 type: 'delete',
                 id: obj.id,
                 object: objectState
             });
-            
+
             canvas.remove(obj);
             const nameSpan = document.getElementById(`name-${obj.id}`);
             if (nameSpan) {
                 nameSpan.remove();
             }
         });
-        
+
         canvas.discardActiveObject();
         canvas.renderAll();
     }
@@ -756,50 +742,105 @@ function storeAndRemoveCharacter(obj) {
     // Call the existing remove function
     removeCharacterFromCanvas(obj);
 }
+// ======================================== Mirror text ========================
 function mirrorTextObject() {
-    // Get active selection or active object
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
 
     try {
         const objects = activeObject.type === 'activeSelection'
-            ? activeObject.getObjects()  // Multiple objects selected
-            : [activeObject];             // Single object
+            ? activeObject.getObjects()
+            : [activeObject];
 
-        // Iterate over each object to mirror and record state for undo
-        objects.forEach(obj => {
+        if (objects.length > 1) {
+            // Determine if the text is arranged vertically
+            const isVertical = isArrangedVertically(objects);
+
+            if (isVertical) {
+                // For vertical text, just mirror in place
+                objects.forEach(obj => {
+                    const prevState = obj.toObject(['left', 'top', 'flipX']);
+                    undoHistory.push({
+                        type: 'modify',
+                        id: obj.id,
+                        prevState: prevState
+                    });
+                    obj.set('flipX', !obj.flipX);
+                    obj.setCoords();
+                });
+            } else {
+                // For horizontal text, mirror and reverse positions
+                const originalPositions = objects.map(obj => ({
+                    left: obj.left,
+                    top: obj.top
+                }));
+
+                const reversedObjects = [...objects].reverse();
+                
+                reversedObjects.forEach((obj, i) => {
+                    const prevState = obj.toObject(['left', 'top', 'flipX']);
+                    undoHistory.push({
+                        type: 'modify',
+                        id: obj.id,
+                        prevState: prevState
+                    });
+
+                    obj.set({
+                        left: originalPositions[i].left,
+                        top: originalPositions[i].top,
+                        flipX: !obj.flipX
+                    });
+                    obj.setCoords();
+                });
+            }
+        } else {
+            // Single object handling
+            const obj = objects[0];
             const prevState = obj.toObject(['left', 'top', 'flipX']);
+            
             undoHistory.push({
                 type: 'modify',
                 id: obj.id,
                 prevState: prevState
             });
 
-            // Toggle the flipX state to mirror
             obj.set('flipX', !obj.flipX);
-
-            // Maintain position based on alignment
-            const width = obj.getScaledWidth();
-            if (obj.originX === 'left') {
-                obj.set({ left: obj.flipX ? prevState.left + width : prevState.left });
-            } else if (obj.originX === 'right') {
-                obj.set({ left: obj.flipX ? prevState.left - width : prevState.left });
-            } else {
-                obj.set({ left: prevState.left, top: prevState.top });
-            }
-
             obj.setCoords();
-        });
+        }
 
-        // Update selection and render changes
         if (activeObject.type === 'activeSelection') activeObject.setCoords();
         canvas.requestRenderAll();
-
     } catch (error) {
         console.error('Error mirroring object(s):', error);
     }
 }
 
+// Helper function to determine if objects are arranged vertically
+function isArrangedVertically(objects) {
+    if (objects.length < 2) return false;
+
+    // Calculate average horizontal and vertical distances between objects
+    let totalHorizDist = 0;
+    let totalVertDist = 0;
+    let count = 0;
+
+    for (let i = 0; i < objects.length - 1; i++) {
+        const currObj = objects[i];
+        const nextObj = objects[i + 1];
+        
+        totalHorizDist += Math.abs(nextObj.left - currObj.left);
+        totalVertDist += Math.abs(nextObj.top - currObj.top);
+        count++;
+    }
+
+    const avgHorizDist = totalHorizDist / count;
+    const avgVertDist = totalVertDist / count;
+
+    // If vertical distance is significantly larger than horizontal distance,
+    // consider it a vertical arrangement
+    return avgVertDist > avgHorizDist * 1.5;
+}
+// =========================================== end mirror =========================
 function alignObjects(direction = 'horizontal') {
     const activeObjects = canvas.getActiveObjects();
     if (activeObjects.length === 0) return;
@@ -855,14 +896,14 @@ function saveWorkspace() {
 
         // Get background image state if it exists
         const bgImage = document.getElementById('bgImage');
-        const bgImageState = bgImage && bgImage.style.display !== 'none' ? {
+        const bgImageState = bgImage ? {
             src: bgImage.src,
             opacity: bgImage.style.opacity || 0.5,
             transform: bgImage.style.transform,
             display: bgImage.style.display,
-            offsetX: bgOffsetX || 0,
-            offsetY: bgOffsetY || 0,
-            // Get scale from transform string
+            offsetX: bgImage.offsetLeft || 0,
+            offsetY: bgImage.offsetTop || 0,
+            // Extract scale from transform string
             scale: (bgImage.style.transform.match(/scale\(([\d.]+)\)/) || [null, 1])[1]
         } : null;
 
@@ -911,6 +952,30 @@ function saveWorkspace() {
         alert('Error saving workspace');
     }
 }
+
+function syncPastedNamesWithCanvas() {
+    const pastedNames = document.getElementById('pastedNames');
+    if (!pastedNames) {
+        console.error('pastedNames container not found');
+        return;
+    }
+
+    const canvasObjects = canvas.getObjects();
+    console.log('Canvas objects:', canvasObjects);
+    console.log('Canvas objects with characterKey:', canvasObjects.filter(obj => obj.characterKey));
+
+    pastedNames.innerHTML = '';
+
+    canvasObjects.forEach(obj => {
+        if (obj.characterKey) {
+            const span = document.createElement('span');
+            span.id = `name-${obj.id}`;
+            span.textContent = `${obj.characterKey} - `;
+            pastedNames.appendChild(span);
+            console.log('Added span for:', obj.characterKey);
+        }
+    });
+}
 function loadWorkspace() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -941,6 +1006,12 @@ function loadWorkspace() {
             // Load canvas data
             canvas.loadFromJSON(canvasData, () => {
                 // Restore viewport transform
+                // Restore characterKey for each object
+                canvas.getObjects().forEach((obj, index) => {
+                    if (workspace.pastedNames[index]) {
+                        obj.characterKey = workspace.pastedNames[index].text.replace(' - ', '');
+                    }
+                });
                 if (canvasData.viewportTransform) {
                     canvas.setViewportTransform(canvasData.viewportTransform);
                 }
@@ -953,7 +1024,7 @@ function loadWorkspace() {
                         bgImage.style.opacity = workspace.backgroundImage.opacity;
                         bgImage.style.transform = workspace.backgroundImage.transform;
                         bgImage.style.display = workspace.backgroundImage.display;
-                        
+
                         // Restore global offset variables
                         bgOffsetX = workspace.backgroundImage.offsetX || 0;
                         bgOffsetY = workspace.backgroundImage.offsetY || 0;
@@ -993,6 +1064,13 @@ function loadWorkspace() {
 
                 drawGrid();
                 canvas.requestRenderAll();
+                console.log('Final canvas objects:', canvas.getObjects());
+                console.log('PastedNames content:', pastedNames?.innerHTML);
+                syncPastedNamesWithCanvas();
+                if (pastedNames && canvas.getObjects().length !== pastedNames.children.length) {
+                    console.warn('Mismatch between canvas objects and pasted names');
+                }
+                canvas.requestRenderAll();
             });
 
         } catch (error) {
@@ -1023,12 +1101,12 @@ async function saveToPDF() {
                 img.onload = () => {
                     // Apply background opacity
                     ctx.globalAlpha = parseFloat(bgImage.style.opacity) || 0.5;
-                    
+
                     // Get transform values from original background
                     const transform = bgImage.style.transform;
                     const scaleMatch = transform.match(/scale\(([\d.]+)\)/);
                     const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-                    
+
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     ctx.globalAlpha = 1;
                     resolve();
@@ -1056,15 +1134,15 @@ async function saveToPDF() {
             margin: 0,
             filename: `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`,
             image: { type: 'jpeg', quality: 1 },
-            html2canvas: { 
+            html2canvas: {
                 scale: 2,
                 useCORS: true,
                 logging: true,
                 width: canvas.width,
                 height: canvas.height
             },
-            jsPDF: { 
-                unit: 'px', 
+            jsPDF: {
+                unit: 'px',
                 format: [canvas.width, canvas.height]
             }
         };
@@ -1133,8 +1211,8 @@ function addMdCInterface() {
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.id="mdcInput";
-    input.name="mdcInput";
+    input.id = "mdcInput";
+    input.name = "mdcInput";
     input.placeholder = 'Paste series (e.g., A1-D21-N35)';
     input.style.marginRight = '8px';
     input.style.width = '200px';
@@ -1142,7 +1220,7 @@ function addMdCInterface() {
 
 
     // Add keydown event listener for input
-    input.addEventListener('keydown', function(e) {
+    input.addEventListener('keydown', function (e) {
         if (e.key === 'Backspace') {
             e.stopPropagation(); // Prevent the global backspace handler
         }
@@ -1157,7 +1235,7 @@ function addMdCInterface() {
 
     const button = document.createElement('button');
     button.textContent = 'Add Glyphs';
-    button.style.transform = 'translateY(-2px)'; 
+    button.style.transform = 'translateY(-2px)';
     button.onclick = () => {
         handleMdCInput(input.value);
         input.value = ''; // Clear input after adding glyphs
@@ -1183,27 +1261,27 @@ function setupTextSubmission(x, y) {
         cornerSize: 6,
         transparentCorners: false
     });
-    
+
     textBox.id = textBox.id || generateUniqueId();
     canvas.add(textBox);
     canvas.setActiveObject(textBox);
-    
+
     // Show keyboard dialog when entering edit mode
-    textBox.on('editing:entered', function() {
+    textBox.on('editing:entered', function () {
         openKeyboard();
         const keyboardInput = document.getElementById('keyboardInput');
         keyboardInput.value = this.text;
-        
+
         // Update IText content as user types in keyboard dialog
-        keyboardInput.addEventListener('input', function() {
+        keyboardInput.addEventListener('input', function () {
             textBox.text = this.value;
             canvas.renderAll();
         });
     });
-    
+
     textBox.enterEditing();
     textBox.selectAll();
-    
+
     undoHistory.push({
         type: 'add',
         object: textBox.toJSON(),
@@ -1540,9 +1618,9 @@ function openKeyboard() {
     document.getElementById('keyboardOverlay').style.display = 'block';
     const keyboardInput = document.getElementById('keyboardInput');
     keyboardInput.focus();
-    
+
     // Add keydown event listener for backspace handling
-    keyboardInput.addEventListener('keydown', function(e) {
+    keyboardInput.addEventListener('keydown', function (e) {
         if (e.key === 'Backspace') {
             e.stopPropagation(); // Prevent the global backspace handler
         }
@@ -1584,7 +1662,7 @@ function addKeyboardText() {
             textBox.id = textBox.id || generateUniqueId();
             canvas.add(textBox);
             canvas.setActiveObject(textBox);
-            
+
             undoHistory.push({
                 type: 'add',
                 object: textBox.toJSON(),
@@ -1605,20 +1683,20 @@ function closeKeyboard() {
     document.getElementById('keyboardDialog').style.display = 'none';
     document.getElementById('keyboardOverlay').style.display = 'none';
 }
-document.addEventListener('DOMContentLoaded', function() {
-    const keyboardInput = document.getElementById('keyboardInput');    
+document.addEventListener('DOMContentLoaded', function () {
+    const keyboardInput = document.getElementById('keyboardInput');
     // Handle search input filtering
-    searchInput.addEventListener('input', e => 
+    searchInput.addEventListener('input', e =>
         filterAndDisplayCharacters(characters, e.target.value)
     );
     // Handle clicking keyboard buttons
     document.querySelectorAll('.key').forEach(key => {
-        key.addEventListener('click', function() {
+        key.addEventListener('click', function () {
             const char = this.textContent;
             const cursorPos = keyboardInput.selectionStart;
             const textBefore = keyboardInput.value.substring(0, cursorPos);
             const textAfter = keyboardInput.value.substring(keyboardInput.selectionEnd);
-            
+
             keyboardInput.value = textBefore + char + textAfter;
             keyboardInput.focus();
             const newPos = cursorPos + char.length;
@@ -1669,17 +1747,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // =========================== Place MdC glyphs in rows  ===========================
 function handleMdCInput(mdcString) {
     const glyphs = mdcString.split('-');
-    const glyphWidth = 60;     
-    const startX = 100;        
-    const startY = 100;        
-    const lineHeight = 30;     
-    const margin = 50;         
-    const maxLines = 14;       
-    
+    const glyphWidth = 60;
+    const startX = 100;
+    const startY = 100;
+    const lineHeight = 30;
+    const margin = 50;
+    const maxLines = 14;
+
     // Calculate how many glyphs can fit in one line
     const usableWidth = canvas.width - (2 * margin);
     const glyphsPerLine = Math.floor(usableWidth / glyphWidth);
-    
+
     // Find existing objects to determine starting position
     const existingObjects = canvas.getObjects();
     let highestY = startY;
@@ -1689,16 +1767,16 @@ function handleMdCInput(mdcString) {
         }, startY);
         highestY += lineHeight;
     }
-    
+
     let xOffset = startX;
     let yPos = highestY;
-    
+
     // Calculate available vertical space
     const usableHeight = canvas.height - margin;
     const availableLines = Math.floor((usableHeight - highestY) / lineHeight);
     let currentLine = 1;
     let glyphsInCurrentLine = 0;
-    
+
     // Check if we have room for more lines
     if (availableLines <= 0) {
         alert('Canvas is full. Cannot add more glyphs.');
@@ -1712,23 +1790,23 @@ function handleMdCInput(mdcString) {
             alert(`Reached line limit of ${Math.min(maxLines, availableLines)}`);
             return; // This will actually exit the function
         }
-        
+
         const trimmedGlyph = glyph.trim();
         const match = characters.find(([code]) => code === trimmedGlyph.toUpperCase());
-        
+
         if (match) {
             if (glyphsInCurrentLine >= glyphsPerLine) {
                 xOffset = startX;
                 yPos += lineHeight;
                 currentLine++;
                 glyphsInCurrentLine = 0;
-                
+
                 if (currentLine > Math.min(maxLines, availableLines)) {
                     alert(`Reached line limit of ${Math.min(maxLines, availableLines)}`);
                     return; // This will actually exit the function
                 }
             }
-            
+
             addCharacterToCanvas(match[1], match[0], xOffset, yPos);
             xOffset += glyphWidth;
             glyphsInCurrentLine++;
@@ -1766,14 +1844,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('charListContainer');
     container.addEventListener('dragstart', (event) => {
         // Check if className exists and is a string
-        if (event.target.className && typeof event.target.className === 'string' && 
+        if (event.target.className && typeof event.target.className === 'string' &&
             event.target.className.includes('char-container')) {
             event.dataTransfer.setData('text/plain', event.target.querySelector('.char').textContent);
         }
     }, false);
 });
 // ===================== Background image load =================================
-canvas.on('selection:created', function(e) {
+canvas.on('selection:created', function (e) {
     const selectedObject = e.selected && e.selected[0];
     if (selectedObject && selectedObject.type === 'image' && !selectedObject.selectable) {
         canvas.discardActiveObject();
@@ -1781,122 +1859,129 @@ canvas.on('selection:created', function(e) {
         canvas.requestRenderAll();
     }
 });
-document.addEventListener('DOMContentLoaded', function() {
-   const opacitySlider = document.getElementById('bgOpacity');
+document.addEventListener('DOMContentLoaded', function () {
+    const opacitySlider = document.getElementById('bgOpacity');
     const opacityValue = document.getElementById('opacityValue');
-    
+
     if (opacitySlider && opacityValue) {
-        opacitySlider.addEventListener('input', function() {
+        opacitySlider.addEventListener('input', function () {
             const opacity = this.value / 100;
             // Get all image objects from canvas
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
-            
+
             // Update opacity for all background images
             images.forEach(img => {
                 img.set('opacity', opacity);
             });
-            
+
             // Update the display value
             opacityValue.textContent = `${this.value}%`;
-            
+
             // Render the canvas to show changes
             canvas.requestRenderAll();
         });
     }
     const bgImageInput = document.getElementById('bgImageInput');
-    
+
     // Function to handle image loading
     function handleImageLoad(imageUrl) {
-        fabric.Image.fromURL(imageUrl, function(img) {
-            // Store original dimensions
-            const imgWidth = img.width;
-            const imgHeight = img.height;
-            
-            // Calculate scaling to fit canvas while maintaining aspect ratio
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const scale = Math.min(
-                canvasWidth / imgWidth,
-                canvasHeight / imgHeight
-            ) * 0.8; // 80% of max size for padding
-            
-            // Set image properties
-            img.set({
-                left: canvasWidth / 2,
-                top: canvasHeight / 2,
-                originX: 'center',
-                originY: 'center',
-                scaleX: scale,
-                scaleY: scale,
-                selectable: true,
-                hasControls: true,
-                hasBorders: true,
-                id: generateUniqueId()
-            });
+    // Create a new fabric Image object from the URL
+    fabric.Image.fromURL(imageUrl, function(img) {
+        // Get the original image dimensions
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+        
+        // Calculate appropriate scaling to fit within the canvas
+        // Using 80% of the canvas size to leave some padding
+        const scale = Math.min(
+            (canvas.width / imgWidth) * 0.8,
+            (canvas.height / imgHeight) * 0.8
+        );
 
-            // Add to canvas and ensure it stays in back
-            canvas.add(img);
-            enforceBackgroundPosition();
-            
-            // Check if other background images are locked and match the state
-            const existingImages = canvas.getObjects().filter(obj => obj.type === 'image');
-            if (existingImages.length > 1 && !existingImages[0].selectable) {
-                img.selectable = false;
-                img.evented = false;
-            }
-            
-            // Add event listeners to ensure image stays in back
-            img.on('moving', enforceBackgroundPosition);
-            img.on('scaling', enforceBackgroundPosition);
-            img.on('rotating', enforceBackgroundPosition);
-            
-            // Function to ensure background images stay in back
-            function enforceBackgroundPosition() {
-                const objects = canvas.getObjects();
-                const images = objects.filter(obj => obj.type === 'image');
-                
-                // Move all images to back
-                images.forEach(image => {
-                    canvas.sendToBack(image);
-                });
-                
-                // Redraw grid if it exists
-                if (typeof drawGrid === 'function') {
-                    drawGrid();
-                }
-            }
-            
-            // Add canvas event listeners
-            canvas.on('object:added', enforceBackgroundPosition);
-            canvas.on('object:modified', enforceBackgroundPosition);
-
-            // Add to undo history
-            undoHistory.push({
-                type: 'add',
-                object: img.toJSON(['id']),
-                id: img.id
-            });
-
-            canvas.requestRenderAll();
+        // Configure the image properties
+        img.set({
+            left: canvas.width / 2,
+            top: canvas.height / 2,
+            originX: 'center',
+            originY: 'center',
+            scaleX: scale,
+            scaleY: scale,
+            id: generateUniqueId()
         });
+
+        // Add the image to the canvas
+        canvas.add(img);
+        
+        // Send the image to the back of all other objects
+        canvas.sendToBack(img);
+        
+        // Redraw grid if it exists
+        if (typeof drawGrid === 'function') {
+            drawGrid();
+        }
+
+        // Add to undo history
+        undoHistory.push({
+            type: 'add',
+            object: img.toJSON(['id']),
+            id: img.id
+        });
+
+        canvas.requestRenderAll();
+    });
+}
+    // Background image handling
+// Background image handling with privacy safeguards
+bgImageInput.addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    
+    // Validate file type before processing
+    if (!file.type.startsWith('image/')) {
+        console.error('Please select an image file');
+        bgImageInput.value = '';
+        return;
     }
 
-    // Background image handling
-    bgImageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                handleImageLoad(event.target.result);
-                // Clear the input value to allow the same file to be selected again
-                bgImageInput.value = '';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+    // Create a privacy-conscious file reader setup
+    const reader = new FileReader();
+    
+    reader.onload = function (event) {
+        // Create a temporary URL that will be revoked after loading
+        const tempUrl = URL.createObjectURL(file);
+        
+        // Handle the image loading with the temporary URL
+        handleImageLoad(tempUrl);
+        
+        // Clean up: revoke the temporary URL after a short delay
+        // to ensure the image has loaded
+        setTimeout(() => {
+            URL.revokeObjectURL(tempUrl);
+        }, 1000);
+        
+        // Clear the input value for security
+        bgImageInput.value = '';
+        
+        // Clear the FileReader's memory
+        reader.abort();
+    };
+    
+    reader.onerror = function () {
+        console.error('Error reading file');
+        // Clean up on error
+        bgImageInput.value = '';
+        reader.abort();
+    };
+
+    // Read the file as a blob instead of data URL for better memory management
+    reader.readAsArrayBuffer(file);
+});
+
+// Add these attributes to your input element for additional security
+bgImageInput.setAttribute('accept', 'image/*');
+bgImageInput.setAttribute('capture', 'environment');
 
     // Modified remove background function
-    window.removeBackground = function() {
+    window.removeBackground = function () {
         const activeObject = canvas.getActiveObject();
         if (activeObject && activeObject.type === 'image') {
             // Store the removal in undo history
@@ -1905,7 +1990,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 object: activeObject.toJSON(['id']),
                 id: activeObject.id
             });
-            
+
             // Remove the image
             canvas.remove(activeObject);
             canvas.requestRenderAll();
@@ -1938,17 +2023,17 @@ updateDivWidth();
 // Update on window resize
 
 window.addEventListener('load', () => window.outerWidth < screen.availWidth && alert('Please maximize your window for the best experience'));
-window.addEventListener('resize', function() {
+window.addEventListener('resize', function () {
     // Clear the timeout if it exists
     if (resizeTimeout) {
         clearTimeout(resizeTimeout);
     }
 
     // Set a timeout to prevent excessive resizing
-    resizeTimeout = setTimeout(function() {
+    resizeTimeout = setTimeout(function () {
         // Get new dimensions
         const dimensions = getCanvasDimensions();
-        
+
         // Update canvas dimensions
         canvas.setDimensions({
             width: dimensions.width,
@@ -1956,26 +2041,26 @@ window.addEventListener('resize', function() {
         }, {
             cssOnly: false
         });
-        
+
         // Recalculate the grid
         clearExistingGrid();
         drawGrid();
-        
+
         // Update viewport transform to maintain zoom and pan
         const zoom = canvas.getZoom();
         const vpt = canvas.viewportTransform;
         canvas.setViewportTransform([
-            zoom, 0, 0, zoom, 
+            zoom, 0, 0, zoom,
             vpt[4], vpt[5]
         ]);
-        
+
         // Force a full re-render
         canvas.requestRenderAll();
     }, 200); // 200ms delay to debounce resize events
 });
 
 // Add window beforeunload event
-window.addEventListener('beforeunload', function(e) {
+window.addEventListener('beforeunload', function (e) {
     if (canvasModified) {
         e.preventDefault();
         // Most modern browsers ignore custom messages and show their own
@@ -1988,130 +2073,209 @@ window.addEventListener('keydown', function (e) {
     const activeObject = canvas.getActiveObject();
     const activeGroup = canvas.getActiveObjects();
     const isInSearchInput = e.target.id === 'searchInput';
-    
-    // Handle cycling through objects (Ctrl + Arrow Keys)
-    if (e.ctrlKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
-        e.preventDefault(); // Prevent default browser behavior
+
+    // Utility to display feedback
+    const showIndicator = (message) => {
+        const indicator = document.createElement('div');
+        indicator.textContent = message;
+        indicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            z-index: 1000;
+        `;
+        document.body.appendChild(indicator);
+        setTimeout(() => indicator.remove(), 2000);
+    };
+
+    // Cycle through objects (Ctrl + Arrow Keys)
+    if (e.ctrlKey && ['ArrowRight', 'ArrowLeft'].includes(e.key)) {
+        e.preventDefault();
         const objects = canvas.getObjects();
         let currentIndex = objects.indexOf(activeObject);
-        
-        // Determine the next or previous index
-        if (e.key === 'ArrowRight') {
-            currentIndex = (currentIndex + 1) % objects.length;
-        } else if (e.key === 'ArrowLeft') {
-            currentIndex = (currentIndex - 1 + objects.length) % objects.length;
-        }
 
-        // Set the new active object
+        currentIndex = (e.key === 'ArrowRight')
+            ? (currentIndex + 1) % objects.length
+            : (currentIndex - 1 + objects.length) % objects.length;
+
         canvas.setActiveObject(objects[currentIndex]);
         canvas.requestRenderAll();
-        return; // Exit early to prevent other handlers
+        return;
     }
-// Toggle background lock with Ctrl + L
-if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
-    e.preventDefault();
-    const images = canvas.getObjects().filter(obj => obj.type === 'image');
-    images.forEach(img => {
-        img.selectable = !img.selectable;
-        img.evented = !img.evented;
-        img.subTargetCheck = img.selectable;
-        if (!img.selectable) {
-            canvas.discardActiveObject();
-            canvas.sendToBack(img);  // Also send to back when locking
+
+    // Lock/unlock objects (Ctrl + L)
+    if (e.ctrlKey && (e.key.toLowerCase() === 'l')) {
+        e.preventDefault();
+        const selectedObjects = canvas.getActiveObjects();
+        const objects = canvas.getObjects();
+
+        const lockObject = (obj) => {
+            if (!obj.locked) {
+                obj._originalProps = {
+                    selectable: obj.selectable,
+                    evented: obj.evented,
+                    hasControls: obj.hasControls,
+                    hasBorders: obj.hasBorders,
+                    lockMovementX: obj.lockMovementX,
+                    lockMovementY: obj.lockMovementY,
+                    lockRotation: obj.lockRotation,
+                    lockScalingX: obj.lockScalingX,
+                    lockScalingY: obj.lockScalingY,
+                };
+                obj.set({
+                    selectable: false,
+                    evented: false,
+                    hasControls: false,
+                    hasBorders: false,
+                    lockMovementX: true,
+                    lockMovementY: true,
+                    lockRotation: true,
+                    lockScalingX: true,
+                    lockScalingY: true,
+                });
+                obj.locked = true;
+            }
+        };
+
+        const unlockObject = (obj) => {
+            if (obj.locked && obj._originalProps) {
+                obj.set(obj._originalProps);
+                delete obj._originalProps;
+                obj.locked = false;
+            }
+        };
+
+        if (!selectedObjects.length) {
+            let unlockedCount = 0;
+            objects.forEach((obj) => {
+                if (obj.locked) {
+                    unlockObject(obj);
+                    unlockedCount++;
+                }
+            });
+            if (unlockedCount > 0) {
+                showIndicator(`Unlocked ${unlockedCount} object${unlockedCount > 1 ? 's' : ''}`);
+            }
+        } else {
+            selectedObjects.forEach((obj) => {
+                obj.locked ? unlockObject(obj) : lockObject(obj);
+            });
+            showIndicator(
+                `${selectedObjects.length} object${selectedObjects.length > 1 ? 's' : ''} ${
+                    selectedObjects[0].locked ? 'locked' : 'unlocked'
+                }`
+            );
         }
-    });
-    
-    // Show visual feedback
-    const lockStatus = !images[0]?.selectable ? 'locked' : 'unlocked';
-    const indicator = document.createElement('div');
-    indicator.textContent = `Background ${lockStatus}`;
-    indicator.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: rgba(0,0,0,0.8);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
-        z-index: 1000;
-    `;
-    document.body.appendChild(indicator);
-    setTimeout(() => indicator.remove(), 2000);
-    
-    canvas.requestRenderAll();
-}
 
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+        return;
+    }
 
-    // Rest of your keyboard handlers...
-    // Handle Save (Ctrl+S)
-    if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+    // Save workspace (Ctrl + S)
+    if (e.ctrlKey && (e.key.toLowerCase() === 's')) {
         e.preventDefault();
         saveWorkspace();
+        return;
     }
 
-    // Handle Background Remove (Ctrl+B)
-    if (e.ctrlKey && (e.key === 'b' || e.key === 'B')) {
+    // Remove background (Ctrl + B)
+    if (e.ctrlKey && (e.key.toLowerCase() === 'b')) {
         e.preventDefault();
         if (canvas.backgroundImage) {
             removeBackground();
             canvas.requestRenderAll();
         }
+        return;
     }
 
-    // Handling Delete or Backspace
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (isInSearchInput) return;
+    // Distribute objects equally (Ctrl + D)
+    if (e.ctrlKey && (e.key.toLowerCase() === 'd')) {
         e.preventDefault();
-        
-        if (activeGroup && activeGroup.length > 0) {
-            activeGroup.forEach(object => {
-                storeAndRemoveCharacter(object);
-            });
-            canvas.discardActiveObject();
-            canvas.requestRenderAll();
+        const selectedObjects = canvas.getActiveObjects();
+        if (selectedObjects.length < 2) {
+            alert("Select at least two objects to distribute them.");
+            return;
+        }
+
+        // Sort and calculate equal spacing
+        selectedObjects.sort((a, b) => a.left - b.left);
+        const spacing =
+            (selectedObjects[selectedObjects.length - 1].left - selectedObjects[0].left) /
+            (selectedObjects.length - 1);
+
+        selectedObjects.forEach((obj, index) => {
+            obj.set('left', selectedObjects[0].left + index * spacing);
+            obj.setCoords();
+        });
+
+        canvas.requestRenderAll();
+        return;
+    }
+
+    // Delete objects (Delete/Backspace)
+    if (!isInSearchInput && (e.key === 'Delete' || e.key === 'Backspace')) {
+        e.preventDefault();
+        if (activeGroup.length) {
+            activeGroup.forEach(storeAndRemoveCharacter);
         } else if (activeObject) {
             storeAndRemoveCharacter(activeObject);
-            canvas.discardActiveObject();
-            canvas.requestRenderAll();
         }
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+        return;
     }
 
-    // Alignment shortcuts (without Ctrl key)
+    // Alignment shortcuts
     if (!e.ctrlKey) {
-        if (e.key === 'h' || e.key === 'H') {
-            alignObjects('horizontal');
+        const alignMap = {
+            h: 'horizontal',
+            t: 'top',
+            b: 'bottom',
+            l: 'left',
+        };
+        if (alignMap[e.key.toLowerCase()]) {
+            alignObjects(alignMap[e.key.toLowerCase()]);
+            return;
         }
-        if (e.key === 't' || e.key === 'T') {
-            alignObjects('top');
-        }
-        if (e.key === 'b' || e.key === 'B') {
-            alignObjects('bottom');
-        }
-        if (e.key === 'r' || e.key === 'R') {
+        if (e.key.toLowerCase() === 'r') {
             mirrorTextObject(activeObject);
-        }
-        if (e.key === 'l' || e.key === 'L') {
-            alignObjects('left');
+            return;
         }
     }
 
-    // Handling Arrow Keys (without Ctrl)
+    // Move objects with arrow keys
+    
     if (!e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-        if (activeObject) {
+        if (activeObject && !activeObject.locked) { // Add check for locked property
             const moveAmount = e.shiftKey ? 1 : 5;
             switch (e.key) {
-                case 'ArrowLeft': activeObject.set('left', activeObject.left - moveAmount); break;
-                case 'ArrowRight': activeObject.set('left', activeObject.left + moveAmount); break;
-                case 'ArrowUp': activeObject.set('top', activeObject.top - moveAmount); break;
-                case 'ArrowDown': activeObject.set('top', activeObject.top + moveAmount); break;
+                case 'ArrowLeft': 
+                    activeObject.set('left', activeObject.left - moveAmount); 
+                    break;
+                case 'ArrowRight': 
+                    activeObject.set('left', activeObject.left + moveAmount); 
+                    break;
+                case 'ArrowUp': 
+                    activeObject.set('top', activeObject.top - moveAmount); 
+                    break;
+                case 'ArrowDown': 
+                    activeObject.set('top', activeObject.top + moveAmount); 
+                    break;
             }
             activeObject.setCoords();
             canvas.requestRenderAll();
         }
     }
-
-    // Undo (Ctrl+Z)
-    if (e.ctrlKey && e.key === 'z') {
-        undoLastAction();
-    }
-});
+    
+    
+        // Undo (Ctrl + Z)
+        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+            undoLastAction();
+            return;
+        }
+    });

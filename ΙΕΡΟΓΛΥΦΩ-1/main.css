@@ -61,16 +61,21 @@ body {
     transform: scale(1.1);
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
+
 /* ============= WATERMARKS - DO NOT REMOVE ========================== */
 #fixedTextOverlay {
     position: absolute;
-    top: 53px; /* Adjust as needed */
-    left: 10px; /* Adjust as needed */
+    top: 53px;
+    /* Adjust as needed */
+    left: 10px;
+    /* Adjust as needed */
     font-family: Arial, sans-serif;
     font-size: 22px;
     font-weight: bold;
-    color: rgba(255, 255, 255, 0.13); /* Main text color */
-    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2); /* Shadow effect */
+    color: rgba(255, 255, 255, 0.13);
+    /* Main text color */
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+    /* Shadow effect */
 }
 
 
@@ -181,13 +186,18 @@ canvas {
 }
 
 .upload-button {
-    padding: 0px 0px;
+    /* padding: 0px 0px; */
     background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    line-height: 1;
+    font-size: 12px;
+    height: 20px;
+    width: ;
+    white-space: nowrap;
+    line-height: 0;
+    display: inline-block;
 }
 
 .upload-button:hover {
@@ -195,7 +205,7 @@ canvas {
 }
 
 .file-status {
-    font-size: 0.5em;
+    font-size: 0.2em;
     color: #666;
 }
 
@@ -238,6 +248,7 @@ canvas {
     min-width: 50px;
     overflow-wrap: break-word;
     flex: 1;
+    user-select: text; /* Allow text selection */
     /* Allow it to take remaining space */
     max-width: 100%;
     /* Adjust based on the space needed for "Gardiner:" label */
@@ -809,7 +820,7 @@ canvas {
 }
 
 .search-button {
-    padding: 8px 16px;
+    /* padding: 8px px; */
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -861,12 +872,18 @@ canvas {
     border-radius: 3px;
     font-weight: bold;
 }
+#resultDisplay {
+  user-select: text;
+  -webkit-user-select: text;
+}
 .gardiner-highlight {
-    background-color: #ffeb3b;  /* Light yellow */
+    background-color: #ffeb3b;
+    /* Light yellow */
 }
 
 .hieroglyph-highlight {
-    background-color: #698faa57;  /* Light blue */
+    background-color: #698faa57;
+    /* Light blue */
 }
 
 /* Result styling */
@@ -889,9 +906,10 @@ canvas {
     border-top: 1px solid #333;
     /* margin: rem 0; */
 }
+
 time {
     /* Add any special styling you want for era/provenance references */
-    color: #a03636; 
+    color: #a03636;
     /* font-style: italic;  */
 }
 
@@ -909,7 +927,7 @@ time {
 }
 
 .upload-button {
-    padding: 8px 16px;
+    /* padding: 8px 16px; */
     background-color: #4CAF50;
     color: white;
     border: none;

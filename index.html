@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ΙΕΡΟΓΛΥΦΩ - Hieroglyphic Writing Tool</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <style>
         :root {
             --primary-bg: #f1f1f1;
@@ -32,17 +32,12 @@
                 --check-color: #2ecc71;
             }
         }
-        @media (max-width: 600px) {
-        .welcome-text {
-                text-align: left; /* Justified text can look odd on mobile */
-                padding: 0 25px;
-            }
-        }
+
         body {
             font-family: var(--font-main);
             letter-spacing: 0.5px;
             margin: 0;
-            padding: 0 0 60px 0;
+            padding: 0 0 100px 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
         }
@@ -78,6 +73,28 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
 
+        .welcome-text {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+            text-align: justify;
+            line-height: 1.8;
+            font-size: 17px;
+            color: var(--text-color);
+            letter-spacing: 0.2px;
+            hyphens: auto;
+        }
+
+        .dropcap {
+            float: left;
+            font-family: var(--font-hieroglyph);
+            font-size: 4em;
+            padding: 0 0.1em 0 0;
+            line-height: 0.65;
+            color: var(--button-bg);
+            margin-bottom: -0.1em;
+        }
+
         .image-container {
             text-align: center;
             margin: 20px auto;
@@ -108,7 +125,6 @@
         }
 
         .feature-column h3 {
-            /* font-family: var(--font-main); */
             font-weight: 400;
             text-align: center;
             color: var(--text-color);
@@ -148,65 +164,45 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
-            text-align: center;  /* Added for anchor alignment */
-            box-sizing: border-box;  /* Added to maintain width with padding */
+            text-align: center;
+            box-sizing: border-box;
         }
         
         .action-button:hover {
             background-color: var(--button-hover);
-            color: white;  /* Added to maintain text color on hover */
-            text-decoration: none;  /* Added to prevent underline on hover */
-        }
-
-        .welcome-text {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 0 20px;
-            text-align: justify;  /* Changed from center to justify */
-            line-height: 1.8;    /* Increased from 1.6 for better readability */
-            font-size: 17px;     /* Slightly increased font size */
-            color: var(--text-color);
-            letter-spacing: 0.2px; /* Added slight letter spacing */
-            hyphens: auto;       /* Enable hyphenation for better justified text */
-        }
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            color: white;
+            text-decoration: none;
         }
 
         footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
             text-align: center;
             background-color: #1a1a1a;
             padding: 20px;
             border-top: 1px solid #333;
+            box-sizing: border-box;
         }
 
         .social-buttons {
             display: flex;
             justify-content: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .social-btn {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            padding: 12px 10px;
+            padding: 8px 12px;
             font-size: 14px;
             font-weight: bold;
             text-decoration: none;
             border-radius: 5px;
             color: #fff;
             transition: background-color 0.3s ease;
+            min-width: 90px;
         }
 
         .social-btn i {
@@ -216,7 +212,6 @@
         .facebook {
             background-color: #3b5998;
         }
-
         .facebook:hover {
             background-color: #324d84;
         }
@@ -224,7 +219,6 @@
         .twitter {
             background-color: #1da1f2;
         }
-
         .twitter:hover {
             background-color: #178cd1;
         }
@@ -232,7 +226,6 @@
         .tumblr {
             background-color: #35465c;
         }
-
         .tumblr:hover {
             background-color: #2c3b4d;
         }
@@ -240,7 +233,6 @@
         .linkedin {
             background-color: #0077b5;
         }
-
         .linkedin:hover {
             background-color: #005f93;
         }
@@ -248,7 +240,6 @@
         .reddit {
             background-color: #ff4500;
         }
-
         .reddit:hover {
             background-color: #cc3700;
         }
@@ -256,9 +247,20 @@
         .telegram {
             background-color: #0088cc;
         }
-
         .telegram:hover {
             background-color: #0072a1;
+        }
+
+        @media (max-width: 600px) {
+            .welcome-text {
+                text-align: left;
+                padding: 0 25px;
+            }
+            .social-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+                min-width: 80px;
+            }
         }
     </style>
 </head>
@@ -273,7 +275,7 @@
     </nav>
 
     <div class="welcome-text">
-        Whether you're taking your first steps into hieroglyphic writing or working on complex academic translations, this browser-based tool makes the ancient art of Egyptian writing accessible to everyone. Think of it as your digital scribe's palette - a place where you can experiment, learn, and create at your own pace. The ancient scribes developed their craft through practice and patience, and now you have a modern platform to do the same. Join our growing community of modern-day scribes and start your journey into the fascinating world of hieroglyphs.
+        <span class="dropcap">W</span>elcome. Whether you're taking your first steps into hieroglyphic writing or working on complex academic translations, this browser-based tool makes the ancient art of Egyptian writing accessible to everyone. Think of it as your digital scribe's palette - a place where you can experiment, learn, and create at your own pace. The ancient scribes developed their craft through practice and patience, and now you have a modern platform to do the same. Join our growing community of modern-day scribes and start your journey into the fascinating world of hieroglyphs.
     </div>
 
     <div class="image-container">
@@ -311,7 +313,11 @@
             <a href="https://buy.stripe.com/cN2eWL3PRekZgmsbJb" class="action-button" style="text-decoration: none">Purchase</a>
         </div>
     </div>
+
     <footer>
+                <div style="margin-bottom: 15px;">© 2024 ΙΕΡΟΓΛΥΦΩ. All rights reserved.</div>
+        <div style="margin-bottom: 15px;">show ❤️ by sharing us on:</div>
+
         <div class="social-buttons">
             <a href="https://facebook.com/share" class="social-btn facebook" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-facebook-f"></i>Facebook

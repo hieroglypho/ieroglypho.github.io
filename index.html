@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ΙΕΡΟΓΛΥΦΩ - Hieroglyphic Writing Tool</title>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <style>
         :root {
             --primary-bg: #f1f1f1;
@@ -168,15 +169,96 @@
             letter-spacing: 0.2px; /* Added slight letter spacing */
             hyphens: auto;       /* Enable hyphenation for better justified text */
         }
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
 
         footer {
-            background-color: var(--header-bg);
-            color: white;
             text-align: center;
-            padding: 15px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        .social-btn i {
+            margin-right: 8px;
+        }
+
+        .facebook {
+            background-color: #3b5998;
+        }
+
+        .facebook:hover {
+            background-color: #324d84;
+        }
+
+        .twitter {
+            background-color: #1da1f2;
+        }
+
+        .twitter:hover {
+            background-color: #178cd1;
+        }
+
+        .tumblr {
+            background-color: #35465c;
+        }
+
+        .tumblr:hover {
+            background-color: #2c3b4d;
+        }
+
+        .linkedin {
+            background-color: #0077b5;
+        }
+
+        .linkedin:hover {
+            background-color: #005f93;
+        }
+
+        .reddit {
+            background-color: #ff4500;
+        }
+
+        .reddit:hover {
+            background-color: #cc3700;
+        }
+
+        .telegram {
+            background-color: #0088cc;
+        }
+
+        .telegram:hover {
+            background-color: #0072a1;
         }
     </style>
 </head>
@@ -186,7 +268,7 @@
     <nav class="nav-tabs">
         <a href="about.html">ABOUT</a>
         <a href="index.html">HOME</a>
-        <a href="tutorials.html">TUTORIALS</a>
+        <a href="tutorials.html">TUTORIAL</a>
         <a href="research.html">RESEARCH</a>
     </nav>
 
@@ -229,9 +311,27 @@
             <a href="https://buy.stripe.com/cN2eWL3PRekZgmsbJb" class="action-button" style="text-decoration: none">Purchase</a>
         </div>
     </div>
-
     <footer>
-        © 2024 ΙΕΡΟΓΛΥΦΩ. All rights reserved.
+        <div class="social-buttons">
+            <a href="https://facebook.com/share" class="social-btn facebook" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-facebook-f"></i>Facebook
+            </a>
+            <a href="https://twitter.com/share" class="social-btn twitter" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-twitter"></i>Twitter
+            </a>
+            <a href="https://www.tumblr.com/share" class="social-btn tumblr" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-tumblr"></i>Tumblr
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-linkedin-in"></i>LinkedIn
+            </a>
+            <a href="https://reddit.com/submit" class="social-btn reddit" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-reddit-alien"></i>Reddit
+            </a>
+            <a href="https://t.me/share/url" class="social-btn telegram" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-telegram-plane"></i>Telegram
+            </a>
+        </div>
     </footer>
 
     <script>

@@ -4,7 +4,7 @@
  * A script for working with Hieroglyphs
  * 
  * @author   Massimo Mazzon
- * @version  1.0.0
+ * @version  1.5.0
  * @license  none
  * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
  */

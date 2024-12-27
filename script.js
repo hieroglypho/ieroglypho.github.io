@@ -1613,8 +1613,6 @@ canvas.getElement().addEventListener('contextmenu', function (e) {
         alert('Right click is disabled');
         return false;
     });
-<
-
     
 // Create and add program title/watermark -- DO NOT DELETE --
 const programTitle = document.createElement('div');

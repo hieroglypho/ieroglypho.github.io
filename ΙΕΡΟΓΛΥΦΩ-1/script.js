@@ -2183,16 +2183,6 @@ window.addEventListener('keydown', function (e) {
         return;
     }
 
-    // Remove background (Ctrl + B)
-    if (e.ctrlKey && (e.key.toLowerCase() === 'b')) {
-        e.preventDefault();
-        if (canvas.backgroundImage) {
-            removeBackground();
-            canvas.requestRenderAll();
-        }
-        return;
-    }
-
     // Distribute objects equally (Ctrl + D)
     if (e.ctrlKey && (e.key.toLowerCase() === 'd')) {
         e.preventDefault();

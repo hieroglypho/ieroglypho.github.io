@@ -305,6 +305,7 @@ canvas {
     background: #fff;
 }
 
+/* Help overlay styling */
 .help-overlay {
     display: none;
     /* Hidden by default */
@@ -320,11 +321,11 @@ canvas {
     z-index: 1000;
 }
 
-/* Iframe styling */
 .help-content-frame {
     width: 70%;
-    height: 70%;
+    height: 75%;
     border: none;
+    transform: translate(-16%, -12%); 
     background-color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }

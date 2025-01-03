@@ -216,7 +216,7 @@
                 <div>
                     <strong>Latest Version:</strong> December 2024
                     <br>
-                    <small>Format: .txt | Size: 4MB</small>
+                    <small>Format: .txt | Size: 3.8MB</small>
                 </div>
                 <a href="dictionary.txt" class="download-button"  id="downloadLink">Download Dictionary</a>
             </div>
@@ -228,27 +228,27 @@
             <p>Help expand our dictionary by submitting new hieroglyphs for consideration. Please provide as much detail as possible to assist with verification.</p>
             <form target="_blank" action="https://formsubmit.co/08cd06e3ca775e2d66f6b732292a0b54" method="POST">
                 <div class="form-group">
-                    <input type="text" name="gardiner_code" class="form-control" placeholder="Gardiner Code (e.g., A1)" required>
+                    <input type="text" name="gardiner_code" class="form-control" placeholder="Gardiner Code (e.g., A1)" required autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <input type="text" name="transliteration" class="form-control" placeholder="Transliteration" required>
+                    <input type="text" name="transliteration" class="form-control" placeholder="Transliteration" required autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <input type="text" name="translation" class="form-control" placeholder="Translation (English meaning)" required>
+                    <input type="text" name="translation" class="form-control" placeholder="Translation (English meaning)" required autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <input type="url" name="source" class="form-control" placeholder="Source URL (Images, references, etc.)" required>
+                    <input type="url" name="source" class="form-control" placeholder="Source URL (Images, references, etc.)" required autocomplete="url">
                 </div>
                 <div class="form-group">
-                    <input type="text" name="name" class="form-control" placeholder="Your Full Name" required>
+                    <input type="text" name="name" class="form-control" placeholder="Your Full Name" required autocomplete="name">
                 </div>
                 <div class="form-group">
-                    <input type="email" name="email" class="form-control" placeholder="Email for Follow-up" required>
+                    <input type="email" name="email" class="form-control" placeholder="Email for Follow-up" required autocomplete="email">
                 </div>
                 <div class="form-group">
-                    <textarea placeholder="Additional notes, context, or special considerations" class="form-control" name="notes" rows="5"></textarea>
+                    <textarea placeholder="Additional notes, context, or special considerations" class="form-control" name="notes" rows="5" autocomplete="off"></textarea>
                 </div>
-                <input type="text" name="_honey" style="display:none">
+                <input type="text" name="_honey" style="display:none" autocomplete="off">
                 <button type="submit" class="btn form-submit">Submit Hieroglyph</button>
             </form>
         </div>

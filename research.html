@@ -218,7 +218,7 @@
                     <br>
                     <small>Format: .txt | Size: 2.3MB</small>
                 </div>
-                <a href="dictionary.txt" class="download-button" download>Download Dictionary</a>
+                <a href="dictionary.txt" class="download-button"  id="downloadLink">Download Dictionary</a>
             </div>
         </div>
 
@@ -268,6 +268,17 @@
             </div>
         </div>
     </div>
+    <script>
+    document.getElementById('downloadLink').addEventListener('click', function (event) {
+        event.preventDefault();
+        const link = document.createElement('a');
+        link.href = 'dictionary.txt';
+        link.download = 'dictionary.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+    </script>
 
     <footer>© 2024 ΙΕΡΟΓΛΥΦΩ. All rights reserved.</footer>
 </body>

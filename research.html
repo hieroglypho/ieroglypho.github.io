@@ -4,9 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ΙΕΡΟΓΛΥΦΩ - Research</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+    <!-- Essential Open Graph tags for LinkedIn -->
+    <meta property="og:title" content="ΙΕΡΟΓΛΥΦΩ - Egyptian Hieroglyphs Tool" />
+    <meta property="og:description" content="Explore the ultimate tool for writing, studying, and creating Egyptian hieroglyphs. Features include drag-and-drop functionality, cartouche creation, and a comprehensive hieroglyph search tool for Egyptology enthusiasts." />
+    <meta property="og:url" content="https://www.hieroglyphica.org" />
+    <meta property="og:image" content="https://www.hieroglyphica.org/path-to-your-image.jpg" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Meta tags for search engines -->
+    <meta name="title" content="ΙΕΡΟΓΛΥΦΩ - Hieroglyphic Writing Tool">
+    <meta name="description" content="Professional tool for writing and studying Egyptian hieroglyphs. Features include drag & drop interface, cartouche creation, and comprehensive hieroglyph search.">
+    <meta name="keywords" content="hieroglyphs, Egyptian hieroglyphs, ancient Egyptian, cartouche, hieroglyphics tool, Egyptian writing, Egyptology">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.hieroglyphica.org">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Robot directives -->
+    <meta name="robots" content="index, follow">   
+    <!-- Language alternatives -->
+    <link rel="alternate" hreflang="en" href="https://www.hieroglyphica.org">
+    
     <style>
         /* Base Variables - matching your existing theme */
         :root {
@@ -20,7 +38,6 @@
             --check-color: #2ecc71;
             --font-main: 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             --font-hieroglyph: 'Noto Sans Egyptian Hieroglyphs', serif;
-            --update-date: #16a085;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -32,18 +49,18 @@
                 --button-bg: #147d6c;
                 --button-hover: #1a9882;
                 --border-color: #3c4e60;
-                --update-date: #1abc9c;
+                --check-color: #2ecc71;
             }
         }
 
         /* Core styles matching your existing theme */
         body {
             font-family: var(--font-main);
+            letter-spacing: 0.5px;
             margin: 0;
-            padding: 0 0 60px 0;
+            padding: 0 0 100px 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
-            line-height: 1.6;
         }
 
         header {
@@ -53,24 +70,25 @@
             padding: 10px;
             text-align: center;
             font-size: 24px;
-            letter-spacing: 0.5px;
         }
 
         .nav-tabs {
+            font-family: var(--font-main);
+            font-weight: 500;
             display: flex;
             background-color: var(--header-bg);
             padding: 5px 0;
             justify-content: center;
             gap: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
         }
 
         .nav-tabs a {
             color: white;
             text-decoration: none;
-            padding: 5px 20px;
+            padding: 5px 10px;
             font-size: 16px;
-            font-weight: 500;
         }
 
         .nav-tabs a:hover {
@@ -187,13 +205,92 @@
         }
 
         footer {
-            background-color: var(--header-bg);
-            color: white;
-            text-align: center;
-            padding: 15px;
             position: fixed;
             bottom: 0;
             width: 100%;
+            text-align: center;
+            background-color: #1a1a1a;
+            padding:10px;
+            border-top: 1px solid #333;
+            box-sizing: border-box;
+        }
+
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            color: #fff;
+            transition: background-color 0.3s ease;
+            min-width: 90px;
+        }
+
+        .social-btn i {
+            margin-right: 8px;
+        }
+
+        .facebook {
+            background-color: #3b5998;
+        }
+        .facebook:hover {
+            background-color: #324d84;
+        }
+
+        .twitter {
+            background-color: #1da1f2;
+        }
+        .twitter:hover {
+            background-color: #178cd1;
+        }
+
+        .tumblr {
+            background-color: #35465c;
+        }
+        .tumblr:hover {
+            background-color: #2c3b4d;
+        }
+
+        .linkedin {
+            background-color: #0077b5;
+        }
+        .linkedin:hover {
+            background-color: #005f93;
+        }
+
+        .reddit {
+            background-color: #ff4500;
+        }
+        .reddit:hover {
+            background-color: #cc3700;
+        }
+
+        .telegram {
+            background-color: #0088cc;
+        }
+        .telegram:hover {
+            background-color: #0072a1;
+        }
+
+        @media (max-width: 600px) {
+            .welcome-text {
+                text-align: left;
+                padding: 0 25px;
+            }
+            .social-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+                min-width: 80px;
+            }
         }
     </style>
 </head>
@@ -263,7 +360,7 @@
             </div>
             <div class="update-entry">
                 <div class="update-date">December 21, 2024</div>
-                <div class="update-title">GOING LIVE!/div>
+                <div class="update-title">GOING LIVE!</div>
                 <p>Improved mobile responsiveness and dark mode support across all features.</p>
             </div>
         </div>
@@ -280,6 +377,33 @@
     });
     </script>
 
-    <footer>© 2024 ΙΕΡΟΓΛΥΦΩ. All rights reserved.</footer>
+
+        <footer>
+            <div style="margin-bottom: 15px;">
+                © 2024 ΙΕΡΟΓΛΥΦΩ. All rights reserved. • 
+                <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
+            </div>            <div style="margin-bottom: 15px;">show ❤️ by sharing us on:</div>
+            <div class="social-buttons">
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.hieroglyphica.org" class="social-btn facebook" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-facebook-f"></i>Facebook
+                </a>
+                <a href="https://x.com/intent/tweet?url=https://www.hieroglyphica.org&text=Check%20out%20ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn twitter" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-twitter"></i>Twitter
+                </a>
+                <a href="https://www.tumblr.com/share/link?url=https://www.hieroglyphica.org&name=ΙΕΡΟΓΛΥΦΩ&description=Egyptian%20Hieroglyphs%20Tool" class="social-btn tumblr" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-tumblr"></i>Tumblr
+                </a>
+                <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-linkedin-in"></i>LinkedIn
+                </a>
+                <a href="https://reddit.com/submit?url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn reddit" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-reddit-alien"></i>Reddit
+                </a>
+                <a href="https://t.me/share/url?url=https://www.hieroglyphica.org&text=Check%20out%20ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn telegram" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-telegram-plane"></i>Telegram
+                </a>
+            </div>
+        </footer>
+
 </body>
 </html>

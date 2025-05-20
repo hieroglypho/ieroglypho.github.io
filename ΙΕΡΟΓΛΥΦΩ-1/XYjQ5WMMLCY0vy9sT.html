@@ -8,7 +8,7 @@
     <!-- mobiles redirects -->
     <script>
         if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            window.location.href = "https://www.hieroglyphica.org/mobile.html";
+        window.location.href = "https://www.hieroglyphica.org/mobile.html";
         }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,10 +36,6 @@
                 <h4 style="margin: 0; display: inline-block;">Gardiner:</h4>
                 <div id="pastedNames"></div>
             </div>
-            <div id="fixedTextOverlay">
-                ΙΕΡΟΓΛΥΦΩ 1.5
-            </div>
-
         </div>
 
         <div id="searchContainer" style="position: relative;">
@@ -87,7 +83,7 @@
             <input type="file" id="bgImageInput" accept="image/*" style="display: none">
             <button title="Enter text" onclick="openKeyboard()">⌨</button>
             <button onclick="document.getElementById('bgImageInput').click()"
-                title="Upload background image">BG</button>
+                title="Upload background img. Ctrl+b to remove">BG</button>
             <button title="Choose canvas color" onclick="toggleColorPopup()">🎨</button>
         </div>
         <div id="colorPopup"
@@ -100,7 +96,7 @@
             </div>
         </div>
         <!-- ======== DONATE ============ -->
-        <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')"
+        <button onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=FLR49G2DRY2SL', '_blank')"
             class="rainbow-donate" title="Donate!">
             <span>$:)</span>
         </button>

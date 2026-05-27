@@ -667,7 +667,6 @@ canvas {
 .slider-controls {
     display: inline-flex;
     gap: 8px;
-    height: 80px;
     align-items: center;
 }
 

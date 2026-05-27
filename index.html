@@ -51,9 +51,13 @@
             font-family: var(--font-main);
             letter-spacing: 0.5px;
             margin: 0;
-            padding: 0;
+            padding: 0 0 120px 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
+        }
+
+        @media (max-width: 600px) {
+            body { padding-bottom: 220px; }
         }
 
         header {
@@ -193,8 +197,12 @@
         footer {
             text-align: center;
             background-color: #1a1a1a;
-            padding: 20px 10px;
+            padding: 10px;
             border-top: 1px solid #333;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 100;
             box-sizing: border-box;
         }
 

@@ -742,19 +742,24 @@ function undoLastAction() {
             break;
 
         case 'delete':
-            const deletedObj = new fabric.Text(lastAction.object.characterKey || '', {
-                ...lastAction.object,
-                id: lastAction.id
-            });
-            canvas.add(deletedObj);
+            fabric.util.enlivenObjects([lastAction.object], (enlivened) => {
+                const restored = enlivened && enlivened[0];
+                if (!restored) return;
+                restored.id = lastAction.id;
+                if (lastAction.object.characterKey) {
+                    restored.characterKey = lastAction.object.characterKey;
+                }
+                canvas.add(restored);
 
-            const pastedNamesDiv = document.getElementById('pastedNames');
-            if (pastedNamesDiv && lastAction.object.characterKey) {
-                const nameSpan = document.createElement('span');
-                nameSpan.id = `name-${lastAction.id}`;
-                nameSpan.textContent = lastAction.object.characterKey + ', ';
-                pastedNamesDiv.appendChild(nameSpan);
-            }
+                const pastedNamesDiv = document.getElementById('pastedNames');
+                if (pastedNamesDiv && lastAction.object.characterKey) {
+                    const nameSpan = document.createElement('span');
+                    nameSpan.id = `name-${lastAction.id}`;
+                    nameSpan.textContent = lastAction.object.characterKey + ', ';
+                    pastedNamesDiv.appendChild(nameSpan);
+                }
+                canvas.requestRenderAll();
+            });
             break;
 
         default:
@@ -842,6 +847,21 @@ function mirrorTextObject() {
             ? activeObject.getObjects()
             : [activeObject];
 
+        // Snapshot every involved object before mutation so undo can restore.
+        const capturedObjects = objects.map(o => ({
+            id: o.id,
+            state: o.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
+        }));
+        const capturedGroupState = activeObject.type === 'activeSelection' ? {
+            left: activeObject.left,
+            top: activeObject.top,
+            angle: activeObject.angle,
+            scaleX: activeObject.scaleX,
+            scaleY: activeObject.scaleY,
+            width: activeObject.width,
+            height: activeObject.height
+        } : null;
+
         if (objects.length > 1) {
             // Determine if the text is arranged vertically
             const isVertical = isArrangedVertically(objects);
@@ -849,12 +869,6 @@ function mirrorTextObject() {
             if (isVertical) {
                 // For vertical text, just mirror in place
                 objects.forEach(obj => {
-                    const prevState = obj.toObject(['left', 'top', 'flipX']);
-                    undoHistory.push({
-                        type: 'modify',
-                        id: obj.id,
-                        prevState: prevState
-                    });
                     obj.set('flipX', !obj.flipX);
                     obj.setCoords();
                 });
@@ -866,15 +880,8 @@ function mirrorTextObject() {
                 }));
 
                 const reversedObjects = [...objects].reverse();
-                
-                reversedObjects.forEach((obj, i) => {
-                    const prevState = obj.toObject(['left', 'top', 'flipX']);
-                    undoHistory.push({
-                        type: 'modify',
-                        id: obj.id,
-                        prevState: prevState
-                    });
 
+                reversedObjects.forEach((obj, i) => {
                     obj.set({
                         left: originalPositions[i].left,
                         top: originalPositions[i].top,
@@ -883,19 +890,31 @@ function mirrorTextObject() {
                     obj.setCoords();
                 });
             }
+
+            undoHistory.push({
+                type: 'modify',
+                actionType: 'moving',
+                state: {
+                    type: 'group',
+                    groupState: capturedGroupState,
+                    objects: capturedObjects
+                }
+            });
         } else {
             // Single object handling
             const obj = objects[0];
-            const prevState = obj.toObject(['left', 'top', 'flipX']);
-            
-            undoHistory.push({
-                type: 'modify',
-                id: obj.id,
-                prevState: prevState
-            });
-
             obj.set('flipX', !obj.flipX);
             obj.setCoords();
+
+            undoHistory.push({
+                type: 'modify',
+                actionType: 'moving',
+                state: {
+                    type: 'single',
+                    id: obj.id,
+                    state: capturedObjects[0].state
+                }
+            });
         }
 
         if (activeObject.type === 'activeSelection') activeObject.setCoords();
@@ -937,11 +956,21 @@ function alignObjects(direction = 'horizontal') {
     // Cache scaled heights once — getScaledHeight() can be expensive on groups.
     const scaledHeights = activeObjects.map(obj => obj.getScaledHeight());
 
-    // Store the initial states before alignment
-    const prevState = activeObjects.map(obj => ({
+    // Snapshot pre-align state for undo, shaped to match the 'moving' undo branch.
+    const capturedObjects = activeObjects.map(obj => ({
         id: obj.id,
-        prevState: obj.toJSON(['left', 'top', 'angle'])
+        state: obj.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
     }));
+    const activeSel = canvas.getActiveObject();
+    const capturedGroupState = (activeSel && activeSel.type === 'activeSelection') ? {
+        left: activeSel.left,
+        top: activeSel.top,
+        angle: activeSel.angle,
+        scaleX: activeSel.scaleX,
+        scaleY: activeSel.scaleY,
+        width: activeSel.width,
+        height: activeSel.height
+    } : null;
 
     const getRefPoint = {
         horizontal: () => {
@@ -969,11 +998,27 @@ function alignObjects(direction = 'horizontal') {
         obj.setCoords();
     });
 
-    // Simply store as a 'modify' action
-    undoHistory.push({
-        type: 'modify',
-        objects: prevState
-    });
+    if (activeObjects.length > 1 || capturedGroupState) {
+        undoHistory.push({
+            type: 'modify',
+            actionType: 'moving',
+            state: {
+                type: 'group',
+                groupState: capturedGroupState,
+                objects: capturedObjects
+            }
+        });
+    } else {
+        undoHistory.push({
+            type: 'modify',
+            actionType: 'moving',
+            state: {
+                type: 'single',
+                id: activeObjects[0].id,
+                state: capturedObjects[0].state
+            }
+        });
+    }
 
     canvas.requestRenderAll();
 }
@@ -1313,7 +1358,6 @@ function addMdCInterface() {
     container.id = 'mdcContainer';
     container.style.cssText = `
         position: fixed;
-        bottom: 20px;
         background: gray;
         padding: 6px;
         border: 1px solid #ccc;
@@ -1330,6 +1374,10 @@ function addMdCInterface() {
     input.name = "mdcInput";
     input.placeholder = 'e.g. A1 D21 or 𓀀𓏏';
     input.style.width = '200px';
+    input.style.padding = '2px 4px';
+    input.style.margin = '0';
+    input.style.height = '22px';
+    input.style.boxSizing = 'border-box';
 
     input.addEventListener('keydown', function (e) {
         if (e.key === 'Backspace') {
@@ -1344,6 +1392,11 @@ function addMdCInterface() {
 
     const button = document.createElement('button');
     button.textContent = 'Add';
+    button.style.padding = '2px 8px';
+    button.style.margin = '0';
+    button.style.height = '22px';
+    button.style.lineHeight = '1';
+    button.style.boxSizing = 'border-box';
     button.onclick = () => {
         handleMdCInput(input.value);
         input.value = '';
@@ -1351,26 +1404,39 @@ function addMdCInterface() {
 
     container.appendChild(input);
     container.appendChild(button);
-    document.body.appendChild(container);
 
-    // Anchor the widget just to the right of the toolbar at the same vertical
-    // level. Recomputes when the toolbar resizes (e.g. menu opens) or the
-    // viewport resizes, so it stays glued to #tools' right edge.
+    // Embed inside #tools: stack the existing button row below and the MdC row
+    // above. Wrap the existing children into a row container so the toolbar
+    // can become a 2-row column flex without restructuring the HTML.
     const toolbar = document.getElementById('tools');
-    const gap = 8;
-    const reposition = () => {
-        if (!toolbar) {
-            container.style.left = '20px';
-            return;
-        }
-        const r = toolbar.getBoundingClientRect();
-        container.style.left = (r.right + gap) + 'px';
-    };
-    reposition();
-    if (toolbar && typeof ResizeObserver !== 'undefined') {
-        new ResizeObserver(reposition).observe(toolbar);
+    if (toolbar) {
+        const buttonRow = document.createElement('div');
+        buttonRow.id = 'toolsButtonRow';
+        buttonRow.style.cssText = `
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            align-items: center;
+        `;
+        while (toolbar.firstChild) buttonRow.appendChild(toolbar.firstChild);
+        toolbar.appendChild(container);
+        toolbar.appendChild(buttonRow);
+
+        toolbar.style.flexDirection = 'column';
+        toolbar.style.alignItems = 'flex-start';
+        toolbar.style.gap = '0';
+        toolbar.style.paddingTop = '2px';
+        toolbar.style.paddingBottom = '2px';
+
+        // Inside-toolbar styling: drop the floating background/border so the
+        // MdC row inherits the dark toolbar look.
+        container.style.position = 'static';
+        container.style.background = 'transparent';
+        container.style.border = 'none';
+        container.style.padding = '0';
+    } else {
+        document.body.appendChild(container);
     }
-    window.addEventListener('resize', reposition);
 }
 // Initialize the interface
 addMdCInterface();
@@ -1417,7 +1483,16 @@ function setupTextSubmission(x, y) {
         id: textBox.id
     });
 }
+// Cumulative offset for tool spawns so repeated clicks don't stack on top of
+// each other. Steps diagonally and wraps after 10 placements.
+let toolSpawnCounter = 0;
+function nextToolOffset(step = 25, wrap = 10) {
+    const idx = toolSpawnCounter++ % wrap;
+    return { dx: idx * step, dy: idx * step };
+}
+
 function addCartouche() {
+    const off = nextToolOffset();
     var rect = new fabric.Rect({
         left: 0,
         top: 0,
@@ -1442,8 +1517,8 @@ function addCartouche() {
     });
 
     var cartouche = new fabric.Group([rect, line], {
-        left: 100 + rect.width / 2,
-        top: 100 + rect.height / 2,
+        left: 100 + rect.width / 2 + off.dx,
+        top: 100 + rect.height / 2 + off.dy,
         originX: 'center',
         originY: 'center'
     });
@@ -1465,9 +1540,10 @@ function addCartouche() {
     return cartouche;
 }
 function addCircle() {
+    const off = nextToolOffset();
     var circle = new fabric.Circle({
-        left: 150,
-        top: 150,
+        left: 150 + off.dx,
+        top: 150 + off.dy,
         stroke: 'black',
         fill: 'transparent', // No fill color
         // fill: 'green',
@@ -1488,13 +1564,14 @@ function addCircle() {
     return circle;
 }
 function addLine() {
+    const off = nextToolOffset();
     var x1 = 50, y1 = 100, x2 = 50, y2 = 400;
     var midX = (x1 + x2) / 2;
     var midY = (y1 + y2) / 2;
 
     var line = new fabric.Line([x1 - midX, y1 - midY, x2 - midX, y2 - midY], {
-        left: 700 + midX,
-        top: 100 + midY,
+        left: 700 + midX + off.dx,
+        top: 100 + midY + off.dy,
         stroke: 'black',
         strokeWidth: 3,
         originX: 'center',
@@ -1518,6 +1595,7 @@ function addLine() {
     return line; // Changed from rect to line
 }
 function addArrow() {
+    const off = nextToolOffset();
     // Create a line from (100, 200) to (300, 200)
     var line = new fabric.Line([100 - 200, 200 - 200, 300 - 200, 200 - 200], {
         stroke: 'black',
@@ -1541,8 +1619,8 @@ function addArrow() {
 
     // Create a group with the line and triangle
     var group = new fabric.Group([line, arrowhead], {
-        left: 400 + 200,  // Matching the example's positioning
-        top: 100 + 200,   // Matching the example's positioning
+        left: 400 + 200 + off.dx,  // Matching the example's positioning
+        top: 100 + 200 + off.dy,   // Matching the example's positioning
         originX: 'center',
         originY: 'center'
     });
@@ -1563,6 +1641,7 @@ function addArrow() {
     return group;
 }
 function addSquareBracket() {
+    const off = nextToolOffset();
     // Create the main vertical line
     const line = new fabric.Line([0, -50, 0, 50], {
         stroke: 'black',
@@ -1589,8 +1668,8 @@ function addSquareBracket() {
 
     // Create a group with all lines
     const group = new fabric.Group([line, topLine, bottomLine], {
-        left: 400,
-        top: 300,
+        left: 400 + off.dx,
+        top: 300 + off.dy,
         originX: 'center',
         originY: 'center'
     });
@@ -1612,6 +1691,7 @@ function addSquareBracket() {
     return group;
 }
 function addCustomRect(options = {}) {
+    const off = nextToolOffset();
     const defaults = {
         width: 200,
         height: 100,
@@ -1620,8 +1700,8 @@ function addCustomRect(options = {}) {
         strokeWidth: 3,
         rx: 10,
         ry: 10,
-        left: canvas.width / 2,
-        top: canvas.height / 2,
+        left: canvas.width / 2 + off.dx,
+        top: canvas.height / 2 + off.dy,
         originX: 'center',
         originY: 'center',
         strokeUniform: true,
@@ -1701,9 +1781,10 @@ function addSpeechBubble() {
         'L -10 50 ' +             // Back to bubble
         'A 50 50 0 1 1 0 -50 Z';  // Complete left arc and close
 
+    const off = nextToolOffset();
     const bubble = new fabric.Path(path, {
-        left: 150,
-        top: 150,
+        left: 150 + off.dx,
+        top: 150 + off.dy,
         stroke: 'black',
         fill: 'transparent',
         scaleX: 1.5,
@@ -1763,13 +1844,18 @@ function addKeyboardText() {
 
     if (text || text === '') {
         if (activeTextObject) {
+            const prevState = activeTextObject.toJSON(['text', 'fontSize', 'left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY']);
             activeTextObject.text = text;
             activeTextObject.fontSize = fontSize;
             canvas.renderAll();
             undoHistory.push({
                 type: 'modify',
-                object: activeTextObject.toJSON(),
-                id: activeTextObject.id
+                actionType: 'moving',
+                state: {
+                    type: 'single',
+                    id: activeTextObject.id,
+                    state: prevState
+                }
             });
         } else {
             var textBox = new fabric.IText(text, {

@@ -51,7 +51,7 @@
             font-family: var(--font-main);
             letter-spacing: 0.5px;
             margin: 0;
-            padding: 0 0 100px 0;
+            padding: 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
         }
@@ -190,18 +190,12 @@
             text-decoration: none;
         }
 
-        /* Update footer styles to ensure proper display */
         footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
             text-align: center;
             background-color: #1a1a1a;
-            padding: 10px;
+            padding: 20px 10px;
             border-top: 1px solid #333;
             box-sizing: border-box;
-            z-index: 100;
-            /* Ensure footer stays above other content */
         }
 
         .social-buttons {
@@ -286,13 +280,6 @@
                 padding: 6px 10px;
                 font-size: 12px;
                 min-width: 80px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding-bottom: 200px;
-                /* Increase padding further on smaller screens where footer might be taller */
             }
         }
 

@@ -8,7 +8,7 @@
     <!-- mobiles redirects -->
     <script>
         if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = "https://www.hieroglyphica.org/mobile.html";
+            window.location.href = "https://www.hieroglyphica.org/mobile.html";
         }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="main.css">
 
     <!-- 3rd party Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+    <!-- html2pdf is lazy-loaded on first Save-as-PDF click (see script.js). -->
 
 </head>
 
@@ -36,6 +36,10 @@
                 <h4 style="margin: 0; display: inline-block;">Gardiner:</h4>
                 <div id="pastedNames"></div>
             </div>
+            <div id="fixedTextOverlay">
+                ΙΕΡΟΓΛΥΦΩ 1.5
+            </div>
+
         </div>
 
         <div id="searchContainer" style="position: relative;">
@@ -50,10 +54,13 @@
                 <div id="charList"></div>
             </div>
 
+            <!-- Drag handle to resize the dictionary results panel -->
+            <div id="resultsResizer" title="Drag to resize results panel"></div>
+
             <!-- Modified search section -->
             <div id="secondarySearch">
                 <div class="file-upload-row">
-                    <input type="file" id="dictionaryFileInput" accept=".txt" class="file-input" style="display: none;">
+                    <input type="file" id="dictionaryFileInput" accept=".txt" class="hidden-input">
                     <button onclick="triggerFileInput()" class="upload-button">Upload Dictionary</button>
                     <span id="fileStatus" class="file-status"></span>
                 </div>
@@ -70,36 +77,30 @@
 
     <!-- Workspace Control Buttons -->
     <div id="tools">
+        <div class="workspace-actions" style="position: relative;">
+            <button id="mainMenuBtn" class="action-btn" title="File menu">≡</button>
+            <div id="mainMenu" class="save-menu hidden">
+                <button id="saveAsJsonBtn">Save as JSON</button>
+                <button id="saveAsPdfBtn">Save as PDF</button>
+                <button id="loadWorkspaceBtn">Open JSON…</button>
+                <button id="wikiBtn">Gardiner signs (Wiki)</button>
+            </div>
+        </div>
         <div class="tool-group">
             <button onclick="addCartouche()" title="Add a Cartouche">Cartouche</button>
             <button onclick="addLine()" title="Add a Line">──</button>
-            <button onclick="addArrow()" title="Add an Arrow">⟶</button>
+            <button onclick="addArrow()" title="Add an Arrow">→</button>
             <button onclick="addCustomRect()" title="Add a Rectangle">▭</button>
             <button onclick="addCircle()" title="Add a Circle">◯</button>
             <button onclick="addPencilLine()" title="Add a Freehand Line">✎</button>
             <button onclick="addSquareBracket()" title="Add Square Brackets">[</button>
             <button onclick="addSpeechBubble()" title="Add a Speech Bubble">💬</button>
 
-            <input type="file" id="bgImageInput" accept="image/*" style="display: none">
+            <input type="file" id="bgImageInput" accept="image/*" class="hidden-input">
             <button title="Enter text" onclick="openKeyboard()">⌨</button>
             <button onclick="document.getElementById('bgImageInput').click()"
-                title="Upload background img. Ctrl+b to remove">BG</button>
-            <button title="Choose canvas color" onclick="toggleColorPopup()">🎨</button>
+                title="Upload background image">BG</button>
         </div>
-        <div id="colorPopup"
-            style="display: none; position: absolute; background: white; padding: 10px; border: 1px solid black;">
-            <div style="display: flex; gap: 5px;">
-                <div class="color-swatch" style="background: #636363;" onclick="setCanvasColor('#636363')"></div>
-                <div class="color-swatch" style="background: #998b60;" onclick="setCanvasColor('#998b60')"></div>
-                <div class="color-swatch" style="background: #8F9D91;" onclick="setCanvasColor('#8F9D91')"></div>
-                <div class="color-swatch" style="background: #4F4A45;" onclick="setCanvasColor('#4F4A45')"></div>
-            </div>
-        </div>
-        <!-- ======== DONATE ============ -->
-        <button onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=FLR49G2DRY2SL', '_blank')"
-            class="rainbow-donate" title="Donate!">
-            <span>$:)</span>
-        </button>
         <!-- Background Controls -->
         <div class="slider-controls">
             <div class="slider-group">
@@ -110,24 +111,33 @@
 
             <!-- Workspace Actions -->
             <div class="workspace-actions">
-                <button id="saveWorkspaceBtn" class="action-btn" title="Save document to json">Save</button>
-                <div id="saveMenu" class="save-menu hidden">
-                    <button id="saveAsJsonBtn">Save as JSON</button>
-                    <button id="saveAsPdfBtn">Save as PDF</button>
+                <button id="colorPopupBtn" title="Choose canvas color" onclick="toggleColorPopup(event)">🎨</button>
+                <div id="colorPopup"
+                    style="display: none; position: absolute; background: white; padding: 10px; border: 1px solid black;">
+                    <div style="display: flex; gap: 5px;">
+                        <div class="color-swatch" style="background: #636363;" onclick="setCanvasColor('#636363')"></div>
+                        <div class="color-swatch" style="background: #998b60;" onclick="setCanvasColor('#998b60')"></div>
+                        <div class="color-swatch" style="background: #8F9D91;" onclick="setCanvasColor('#8F9D91')"></div>
+                        <div class="color-swatch" style="background: #4F4A45;" onclick="setCanvasColor('#4F4A45')"></div>
+                    </div>
                 </div>
-                <button id="loadWorkspaceBtn" class="action-btn" title="Open exhisting json file">Open</button>
                 <button id="help" class="action-btn" title="Help Documentation">𓏞</button>
-                <button class="action-btn" title="All Gardiner signs"
-                    onclick="window.open('https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner', '_blank')">Wiki</button>
             </div>
         </div>
+        <!-- ======== DONATE ============ -->
+        <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')"
+            class="rainbow-donate" title="Donate!">
+            <span>$:)</span>
+        </button>
+    </div>
+    <!-- /#tools -->
 
-        <!-- Help overlay -->
-        <div class="help-overlay" id="helpOverlay">
-            <iframe src="help-content.html" class="help-content-frame" id="helpContent"></iframe>
-        </div>
+    <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
+    <div class="help-overlay" id="helpOverlay">
+        <iframe src="help-content.html" class="help-content-frame" id="helpContent"></iframe>
+    </div>
 
-        <!-- POPUP KEYBOARD -->
+    <!-- POPUP KEYBOARD -->
         <div class="keyboard-overlay" id="keyboardOverlay"></div>
         <div class="keyboard-dialog" id="keyboardDialog">
             <div class="input-container">
@@ -186,8 +196,8 @@
             </div>
         </div>
 
-        <script src="chars.js"></script>
-        <script src="script.js"></script>
-        <script src="fjgus.js"></script>
+        <script defer src="chars.js"></script>
+        <script defer src="script.js"></script>
+        <script defer src="fjgus.js"></script>
 
 </body>

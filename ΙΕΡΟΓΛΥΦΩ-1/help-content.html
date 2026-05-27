@@ -4,125 +4,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help Content</title>
+    <title>ΙΕΡΟΓΛΥΦΩ — Help</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            font-size: 12px;
+        @font-face {
+            font-family: 'Hieroglyphica Extended';
+            src: url('fonts/HieroglyphicaExtended-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+            unicode-range: U+13460-143FF;
         }
 
-        h3 {
-            color: #333;
+        :root {
+            --bg: #1a1a1a;
+            --panel: #232323;
+            --panel-2: #2a2a2a;
+            --border: #3a3a3a;
+            --text: #e0d8c8;
+            --muted: #a89e8c;
+            --accent: #e6a6a6;
+            --accent-strong: #5d1414;
+            --kbd-bg: #3a3a3a;
+            --kbd-border: #555;
         }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, "Helvetica Neue", sans-serif;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        body { padding: 24px 28px 40px; }
+
+        h1, h2, h3 {
+            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
+            color: var(--accent);
+            margin: 0 0 10px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        h1 {
+            font-size: 22px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+        }
+
+        h1 .glyph {
+            color: var(--accent);
+            font-size: 26px;
+            margin-right: 8px;
+            vertical-align: -2px;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin-top: 26px;
+            padding-bottom: 4px;
+            border-bottom: 1px dotted #444;
+        }
+
+        p { margin: 6px 0 10px; color: var(--text); }
+        strong { color: #fff; }
+        em { color: var(--muted); font-style: normal; }
 
         ul {
-            padding-left: 20px;
+            padding-left: 18px;
+            margin: 6px 0 12px;
+        }
+        li { margin-bottom: 6px; }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent);
+        }
+        a:hover { color: #fff; border-bottom-color: #fff; }
+
+        kbd {
+            display: inline-block;
+            background: var(--kbd-bg);
+            color: #fff;
+            border: 1px solid var(--kbd-border);
+            border-bottom-width: 2px;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            min-width: 16px;
+            text-align: center;
         }
 
-        li {
-            margin-bottom: 10px;
+        /* Shortcut table */
+        table.shortcuts {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 4px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
         }
+        table.shortcuts th,
+        table.shortcuts td {
+            padding: 7px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        table.shortcuts tr:last-child td { border-bottom: none; }
+        table.shortcuts th {
+            background: var(--panel-2);
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        table.shortcuts td.keys { white-space: nowrap; width: 200px; }
+        table.shortcuts td.keys kbd + kbd { margin-left: 2px; }
+
+        /* Tool legend grid */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 6px 18px;
+            padding: 4px 0 0;
+            margin: 4px 0 8px;
+        }
+        .tool-grid div {
+            padding: 3px 0;
+            border-bottom: 1px solid #2e2e2e;
+        }
+        .tool-grid .icon {
+            display: inline-block;
+            width: 26px;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .tip {
+            border-left: 3px solid var(--accent-strong);
+            background: rgba(93, 20, 20, 0.18);
+            padding: 8px 12px;
+            margin: 10px 0;
+            color: var(--text);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .outro {
+            margin-top: 28px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+            text-align: center;
+        }
+        .outro .big {
+            display: block;
+            color: var(--accent);
+            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', sans-serif;
+            font-size: 16px;
+            letter-spacing: 0.3em;
+            margin-bottom: 4px;
+        }
+
+        /* Custom scrollbar inside the iframe */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 5px;
+            border: 2px solid var(--bg);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 
 <body>
-    <h3><u>HIERO Help Guide</u></h3>
-    
-    <h3>Keyboard Shortcuts</h3>
+    <h1><span class="glyph">𓏞</span>ΙΕΡΟΓΛΥΦΩ — Help Guide</h1>
+
+    <p>A compact reference for building, editing, and exporting hieroglyphic
+    compositions. The toolbar sits at the bottom; the character/dictionary
+    panel is on the right; the canvas fills everything else.</p>
+
+    <h2>1. Placing glyphs on the canvas</h2>
     <ul>
-        <li><strong>Ctrl + Arrow Keys:</strong> Cycle through objects on the canvas</li>
-        <li><strong>Ctrl + L:</strong> Lock/unlock selected objects</li>
-        <li><strong>Ctrl + S:</strong> Save workspace</li>
-        <li><strong>Ctrl + D:</strong> Distribute selected objects equally (minimum 2 objects)</li>
-        <li><strong>Delete/Backspace:</strong> Remove selected object(s)</li>
-        <li><strong>Arrow Keys:</strong> Move selected object (hold Shift for fine control - 1px)</li>
-        <li><strong>Ctrl + Z:</strong> Undo last action</li>
-        <li><strong>Alignment Shortcuts:</strong>
+        <li><strong>Drag &amp; drop</strong> any glyph from the character list on the right onto the canvas — it snaps to the nearest grid point.</li>
+        <li><strong>Search</strong> by Gardiner code or name in the top field of the right panel.</li>
+        <li><strong>Browse</strong> by Gardiner category from the <em>or A, B, C..</em> dropdown.</li>
+        <li>Each placed glyph also appears in the <strong>Gardiner:</strong> strip above the canvas, building a running transliteration.</li>
+    </ul>
+
+    <h2>2. Pasting a series (MdC)</h2>
+    <ul>
+        <li>The small <strong>Paste series</strong> box (lower-left, above the toolbar) accepts either:
             <ul>
-                <li>H: Horizontal alignment</li>
-                <li>T: Top alignment</li>
-                <li>B: Bottom alignment</li>
-                <li>L: Left alignment</li>
-                <li>R: Mirror/reverse text object</li>
+                <li>Gardiner codes separated by <code>-</code>, space or comma — e.g. <code>A1-D21-N35</code>.</li>
+                <li>A run of raw hieroglyph characters — e.g. <code>𓂀𓏏𓊵</code> — pasted from any text.</li>
+                <li>A mix of the two.</li>
             </ul>
         </li>
+        <li>Press <kbd>Enter</kbd> or click <strong>Add Glyphs</strong> to drop the whole sequence onto the canvas in order.</li>
     </ul>
 
-    <h3>1. Placing Characters on the Canvas</h3>
-    <p>To place characters on the canvas:</p>
+    <h2>3. Toolbar (bottom of the screen)</h2>
+    <div class="tool-grid">
+        <div><span class="icon">▭</span>Cartouche — royal-name oval</div>
+        <div><span class="icon">──</span>Line</div>
+        <div><span class="icon">⟶</span>Arrow</div>
+        <div><span class="icon">▭</span>Rectangle</div>
+        <div><span class="icon">◯</span>Circle</div>
+        <div><span class="icon">✎</span>Freehand pencil</div>
+        <div><span class="icon">[</span>Square brackets</div>
+        <div><span class="icon">💬</span>Speech bubble</div>
+        <div><span class="icon">⌨</span>Text input (incl. transliteration &amp; Coptic)</div>
+        <div><span class="icon">BG</span>Upload a background image</div>
+        <div><span class="icon">🎨</span>Set the canvas color</div>
+        <div><span class="icon">BG&nbsp;α</span>Background opacity slider</div>
+    </div>
+
+    <h2>4. Selecting and moving objects</h2>
     <ul>
-        <li><strong>Drag and Drop:</strong> Click on any character from the character list and drag it onto the canvas.
-            The character will snap to the nearest grid point on the canvas.</li>
+        <li><strong>Select:</strong> click a glyph or shape. Drag to move; drag a corner to scale; drag the top handle to rotate.</li>
+        <li><strong>Multi-select:</strong> <kbd>Shift</kbd> + click, or marquee-drag an empty area.</li>
+        <li><strong>Fine move:</strong> select, then use arrow keys (hold <kbd>Shift</kbd> for 1px steps).</li>
+        <li><strong>Edit text:</strong> double-click a text object.</li>
+        <li><strong>Pan canvas:</strong> hold <kbd>Alt</kbd> and drag.</li>
+        <li><strong>Zoom:</strong> mouse wheel over the canvas.</li>
     </ul>
 
-    <h3>2. Selecting and Moving Text</h3>
-    <p>To select and move text around the canvas:</p>
+    <h2>5. Keyboard shortcuts</h2>
+    <table class="shortcuts">
+        <thead>
+            <tr><th>Keys</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            <tr><td class="keys"><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td><td>Move selection by 5&nbsp;px</td></tr>
+            <tr><td class="keys"><kbd>Shift</kbd> + arrow</td><td>Fine move by 1&nbsp;px</td></tr>
+            <tr><td class="keys"><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selection</td></tr>
+            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo last action</td></tr>
+            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>Cycle through objects on the canvas</td></tr>
+            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>Lock / unlock selected object(s)</td></tr>
+            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Distribute selection evenly (needs ≥&nbsp;2 objects)</td></tr>
+            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save workspace as JSON</td></tr>
+            <tr><td class="keys"><kbd>H</kbd></td><td>Horizontal align</td></tr>
+            <tr><td class="keys"><kbd>T</kbd></td><td>Align tops</td></tr>
+            <tr><td class="keys"><kbd>B</kbd></td><td>Align bottoms</td></tr>
+            <tr><td class="keys"><kbd>L</kbd></td><td>Align lefts</td></tr>
+            <tr><td class="keys"><kbd>R</kbd></td><td>Mirror / reverse selected glyph(s)</td></tr>
+            <tr><td class="keys"><kbd>Alt</kbd> + drag</td><td>Pan canvas</td></tr>
+        </tbody>
+    </table>
+    <p><em>Alignment keys also operate on multi-selections.</em></p>
+
+    <h2>6. Custom text and transliteration</h2>
     <ul>
-        <li><strong>Selecting Text:</strong> Click on a text element on the canvas to select it. The selected text will
-            be highlighted. You can now rotate and resize it</li>
-        <li><strong>Moving Text:</strong> With the text selected, use the arrow keys on your keyboard to move the text
-            up, down, left, or right. Each key press will move the text by a set increment.</li>
-        <li><strong>Panning Canvas</strong>Press Alt key and use mouse to drag</li>
+        <li>Click <kbd>⌨</kbd> to open the text dialog.</li>
+        <li>The dialog includes special-character keys for Egyptological transliteration (<em>ꜣ ꜥ ḥ ḫ ẖ š ḳ ṯ ḏ</em>) and a Coptic row.</li>
+        <li>Set the font size before inserting, or double-click the text on the canvas to edit it later.</li>
     </ul>
 
-    <h3>3. Deleting Text</h3>
-    <p>To delete text from the canvas:</p>
+    <h2>7. Dictionary search (Fjgus)</h2>
     <ul>
-        <li><strong>Deleting:</strong> Select the text you wish to delete and press the 'Delete' or 'Backspace' key on
-            your keyboard. This will remove the text from the canvas.</li>
+        <li>Click <strong>Upload Dictionary</strong> and choose your <code>fjgus.txt</code> file.</li>
+        <li>Search by Gardiner codes separated by spaces (e.g. <code>A1 Z2</code>) or by transliteration (e.g. <code>rHty</code>).</li>
+        <li>Matches are highlighted; non-ASCII text is enlarged for readability.</li>
+        <li><strong>Resize results:</strong> drag the small horizontal handle just below the character list to grow or shrink the results panel.</li>
+        <li><strong>Drag to canvas:</strong> highlight glyphs in a result (e.g. <code>𓀀𓁐𓏥</code>) and drag the selection onto the canvas — they're placed as a bottom-aligned row.</li>
     </ul>
 
-    <h3>4. Inputting Custom Text</h3>
-    <p>To add your own text to the canvas:</p>
+    <h2>8. File menu (≡) — save, load, export, wiki</h2>
+    <p>The <strong>≡</strong> button on the right side of the toolbar opens a single menu:</p>
     <ul>
-        <li><strong>Inputting Text:</strong> CLick the keyboard icon to insert text input box. Double-click inserted
-            text to edit</li>
+        <li><strong>Save as JSON</strong>: full workspace snapshot (canvas + Gardiner strip).</li>
+        <li><strong>Save as PDF</strong>: rasterized export (the PDF library loads lazily on first click).</li>
+        <li><strong>Open JSON…</strong>: load a previously saved workspace.</li>
+        <li><strong>Gardiner signs (Wiki)</strong>: opens the Wikipedia sign list in a new tab.</li>
+        <li><strong>Right-click</strong> the canvas to use the browser's native save / copy on the rendered image.</li>
     </ul>
 
-    <h3>5. Searching and Filtering Characters</h3>
-    <p>To search and filter characters on the canvas:</p>
+    <div class="tip">
+        <strong>Tip — workflow:</strong> build the line of glyphs first, then use
+        <kbd>H</kbd> or <kbd>T</kbd> to snap them to a shared baseline, and
+        <kbd>Ctrl</kbd>+<kbd>D</kbd> to distribute them evenly.
+    </div>
+
+    <h2>9. Background image</h2>
     <ul>
-        <li><strong>Search Field:</strong> Use the search field to filter characters alphabetically. Type any character
-            or keyword into the search box to narrow down the list to relevant symbols.</li>
-        <li><strong>Dropdown A,B,C:</strong> Use the dropdown menu to filter characters based on Gardiner's hieroglyphic
-            categories. Select a category to view only the characters that fall under it.</li>
+        <li><strong>BG</strong> uploads a reference image behind the canvas.</li>
+        <li><strong>BG α</strong> sets its opacity (0–100%).</li>
+        <li>Pan offsets reset when the background is hidden or replaced.</li>
     </ul>
 
-    <h3>7. Saving and Loading Workspaces</h3>
-    <p>To save your current workspace:</p>
-    <ul>
-        <li><strong>Save Workspace:</strong> Click the 'Save' button to download a snapshot of your current workspace,
-            including all characters and texts positioned on the canvas. This creates a JSON file that can be saved to
-            your computer.</li>
-    </ul>
+    <h2>10. Learn more</h2>
+    <p>The <strong>Gardiner signs (Wiki)</strong> entry in the <strong>≡</strong> menu opens the
+        <a href="https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner" target="_blank" rel="noopener">Gardiner sign list on Wikipedia</a> —
+        a useful reference for codes, categories, and meanings.</p>
 
-    <p>To load a previously saved workspace:</p>
-    <ul>
-        <li><strong>Load Workspace:</strong> Click the 'Load' button and select the JSON file you previously saved. This
-            will restore all the texts and characters to their positions as they were at the time of saving.</li>
-    </ul>
-    <ul>
-        <li><strong>Quick Save:</strong> Right-click on the canvas to copy or save it to file.</li>
-    </ul>
-
-    <h3>6. Additional Information</h3>
-    <p>Other useful tips and tricks for using this app:</p>
-    <ul>
-        <li><strong>Undo Changes:</strong> You can undo your last action by pressing 'Ctrl+Z'. This is helpful for
-            reversing unintended changes.</li>
-        <li><strong>Zooming:</strong> Use the mouse wheel to zoom in and out of the canvas area, allowing for finer
-            control over text placement and editing.</li>
-        <li><strong>Shortcuts:</strong> Type r too reverse one or multiple glyph on the canvas. h,t,b,r,l for
-            alignments/li>
-        <li><strong>Tools:</strong> Use Cartouche, Line, Text, or Arrow buttons to insert elements on the canvas</li>
-    </ul>
-
-    <h3>8. Learn More About Hieroglyphics</h3>
-    <p>For a comprehensive overview of the hieroglyphics language and its use throughout history, follow the Wiki
-        button. This resource provides valuable insights into the language's development, character usage, and
-        significance in ancient Egyptian culture.</p>
-    <h3>HAVE FUN!</h3>
+    <div class="outro">
+        <span class="big">𓂀 𓏏 𓊵 𓄿</span>
+        Have fun building.
+    </div>
 </body>
 
 </html>

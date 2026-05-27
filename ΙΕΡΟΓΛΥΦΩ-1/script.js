@@ -1,49 +1,98 @@
 /*!
  * ===== DO NOT REMOVE COPYRIGHTS =====
  * ===== DO NOT ALTER SCRIPT =====
- * 
+ *
  * A script for working with Hieroglyphs
- * 
+ *
  * @author   Massimo Mazzon
  * @version  1.5.0
  * @license  NONE
  * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
  */
+
+// =============================================================================
+// TABLE OF CONTENTS
+// =============================================================================
+//   1. State (globals + constants)
+//   2. Canvas init + grid
+//   3. Character table — decode, render, filter
+//   4. Gardiner category labels
+//   5. Add character to canvas
+//   6. Mouse handlers (drag, marquee, pan, zoom)
+//   7. Undo
+//   8. Delete / cleanup helpers
+//   9. Mirror + alignment
+//  10. Workspace save / load
+//  11. Save as PDF
+//  12. Search / filter dropdown
+//  13. MdC input interface
+//  14. Drawing tools (cartouche, circle, line, arrow, bracket, rect, pencil, bubble)
+//  15. On-screen keyboard dialog
+//  16. initKeyboardAndSearch  (DOM-ready)
+//  17. initMainMenu           (DOM-ready)
+//  18. MdC paste handler
+//  19. DOM event wiring
+//  20. initCharDragstart      (DOM-ready)
+//  21. Background image
+//  22. initBackgroundImage    (DOM-ready)
+//  23. DOM ready dispatcher
+//  24. Background color popup
+//  25. Layout & window lifecycle (resize, beforeunload, keybindings)
+// =============================================================================
+
+// =============================================================================
+// State (module-global mutable state and constants)
+// =============================================================================
+
+// Canvas / 2D context
 var ctx = c.getContext('2d');
-// Global variable to store the background image object
 let backgroundImage = null;
-var mousePos = { x: 0, y: 0 }; // Object to hold mouse position
-var texts = []; // Array to hold text objects
-const gridSize = 10; // Grid size in pixels
+
+// Constants
+const gridSize = 10;                 // Grid size in pixels
+const scaleSensitivity = 0.1;        // Mouse-wheel zoom sensitivity
+const threshold = 5;                 // Minimum angle change for history save
+const rotationThreshold = 15;        // Rotation snap threshold (degrees)
+
+// Mouse / drag / pan
+var mousePos = { x: 0, y: 0 };
 let isDragging = false;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
-let selectedTextIndex = -1; // Added to keep track of selected text index
-let currentId = 0;
+let isPanning = false;
+let lastPosX, lastPosY;
+
+// Marquee selection
 let marqueeStart = { x: 0, y: 0 };
 let marqueeEnd = { x: 0, y: 0 };
 let isDrawingMarquee = false;
-let updateHistory = [];
-let scale = 1;  // Initial scale factor
-const scaleSensitivity = 0.1;  // Sensitivity of scaling
+
+// Text objects + active editing
+var texts = [];                      // Array of text objects
+let selectedTextIndex = -1;
+let currentId = 0;
+let activeTextObject = null;         // Text object currently being edited
+let textPosition = { x: 100, y: 100 };
+
+// Transform state (captured at gesture start for undo)
+let scale = 1;
 var initialPosition = null;
-let isPanning = false;
-let lastPosX, lastPosY;
-let currentGrid = null;  // Store reference to current grid
-const undoHistory = [];
-const redoHistory = [];
 let initialRotationState = null;
 let initialMoveState = null;
-const threshold = 5; // Set to the minimum angle change for saving history
-const rotationThreshold = 15;  // Adjust threshold as needed
-let activeTextObject = null; // Track which text object is being edited
-let textPosition = { x: 100, y: 100 };
-let canvasModified = false;
 let initialScaleState = null;
+
+// History
+let updateHistory = [];
+const undoHistory = [];
+
+// Grid + canvas flags
+let currentGrid = null;
+let canvasModified = false;
 let resizeTimeout;
-// ====================================
 
-
+// =============================================================================
+// Canvas init
+// =============================================================================
 function getCanvasDimensions() {
     const searchContainer = document.getElementById('searchContainer');
     const searchWidth = searchContainer ? searchContainer.offsetWidth : 400; // 400 is default width
@@ -107,22 +156,56 @@ function drawGrid() {
 }
 
 drawGrid();
-// ===================== Decode characters from list of glyphs ==================
-
+// =============================================================================
+// Character table — decode obfuscated chars.js, render rows, filter
+// =============================================================================
 function loadCharacters(encoded) {
-    const unshifted = encoded.split('').map(char =>
-        String.fromCharCode(char.charCodeAt(0) - 1)
-    ).join('');
+    try {
+        const unshifted = encoded.split('').map(char =>
+            String.fromCharCode(char.charCodeAt(0) - 1)
+        ).join('');
 
-    // Decode base64 back to JSON string
-    const jsonStr = decodeURIComponent(escape(atob(unshifted)));
-    return JSON.parse(jsonStr);
+        // Decode base64 back to JSON string
+        const jsonStr = decodeURIComponent(escape(atob(unshifted)));
+        return JSON.parse(jsonStr);
+    } catch (err) {
+        console.error('Failed to decode character table:', err);
+        alert('Character table failed to load. The app may not work correctly.');
+        return [];
+    }
 }
 
 // Decode and use the data
 const characters = loadCharacters(table);
+// Indexes for O(1) lookup in hot paths (drag-drop, batch glyph paste).
+const charsByCode = new Map(characters.map(entry => [entry[0], entry]));
+const charsByGlyph = new Map(characters.map(entry => [entry[1], entry]));
 
-// =====================================================================================
+// Trailing-edge throttle: ensures fn runs at most once per `wait` ms.
+function throttle(fn, wait) {
+    let lastCall = 0;
+    let scheduled = null;
+    return function (...args) {
+        const now = Date.now();
+        const remaining = wait - (now - lastCall);
+        if (remaining <= 0) {
+            if (scheduled) { clearTimeout(scheduled); scheduled = null; }
+            lastCall = now;
+            fn.apply(this, args);
+        } else if (!scheduled) {
+            scheduled = setTimeout(() => {
+                lastCall = Date.now();
+                scheduled = null;
+                fn.apply(this, args);
+            }, remaining);
+        }
+    };
+}
+const drawGridThrottled = throttle(drawGrid, 100);
+
+// =============================================================================
+// Gardiner category labels (used by the search dropdown)
+// =============================================================================
 const sentences = [
     { letter: "A", text: "Man and his occupations" },
     { letter: "B", text: "Woman and her occupations" },
@@ -163,14 +246,23 @@ const sentences = [
 
 function displayCharactersInRows(charList) {
     let content = '<div class="row">';
+    let dividerInserted = false;
     charList.forEach(([code, char], index) => {
         // Extract category from code (e.g., 'NU' from 'NU1' or 'A' from 'A1')
         const category = horizontalGlyphs.includes(code) ? 'Hrz' : code.match(/[A-Z]+/)[0];
 
+        // Extended-A glyphs live above U+13460. Insert a visual divider the first
+        // time we cross into them, and tag those cells so CSS can distinguish them.
+        const isExt = char && char.codePointAt(0) >= 0x13460;
+        if (isExt && !dividerInserted) {
+            content += '</div><div class="section-divider">Extended-A</div><div class="row">';
+            dividerInserted = true;
+        }
+
         content += `
-            <div class="char-container" 
-                 draggable="true" 
-                 id="drag-${category}-${index}" 
+            <div class="char-container${isExt ? ' ext-a' : ''}"
+                 draggable="true"
+                 id="drag-${category}-${index}"
                  data-category="${category}">
                 <div class="char">${char}</div>
                 <div class="name">${code}</div>
@@ -237,7 +329,11 @@ function addCharacterToCanvas(text, characterKey, x, y) {
         fill: 'black',
         originX: 'center',
         originY: 'center',
-        selectable: true
+        selectable: true,
+        // Noto covers base block; Hieroglyphica Extended fills Extended-A.
+        // Without this, fabric uses a system fallback that often lacks Extended-A.
+        fontFamily: '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif',
+        textBaseline: 'alphabetic'  // Override fabric 5.2.4's deprecated 'alphabetical' typo
     });
 
     // Generate a unique ID for the text object
@@ -272,6 +368,7 @@ function addCharacterToCanvas(text, characterKey, x, y) {
 
     // Call renderAll to ensure the canvas is updated
     canvas.renderAll();
+    return textObj;
 }
 displayCharactersInRows(characters);
 // Helper function to clear existing grid
@@ -280,7 +377,9 @@ function clearExistingGrid() {
         canvas.remove(currentGrid);
     }
 }
-// =================== MOUSE ACTIONS =====================
+// =============================================================================
+// Mouse handlers (drag, marquee, pan, zoom)
+// =============================================================================
 // Add these variables to your global variables section
 let bgOffsetX = 0;
 let bgOffsetY = 0;
@@ -346,7 +445,7 @@ canvas.on('mouse:move', function (options) {
         lastPosX = options.e.clientX;
         lastPosY = options.e.clientY;
         canvas.requestRenderAll();
-        drawGrid();
+        drawGridThrottled();
         return;
     }
 });
@@ -393,22 +492,21 @@ canvas.on('drop', function (options) {
     options.e.preventDefault();
     canvasModified = true;
     const droppedData = options.e.dataTransfer.getData('text/plain');
+    if (!droppedData) return;
 
-    // Find the character entry by the dropped data
-    const characterEntry = characters.find(([, char]) => char === droppedData);
-
-    if (characterEntry) {
-        // Check if this is a three-element entry (alphabet case)
-        const characterKey = characterEntry.length === 3 ? characterEntry[2] : characterEntry[0];
-
-        // Calculate position relative to the canvas
+    // Single-glyph drop from the character palette — place at the cursor.
+    const single = charsByGlyph.get(droppedData);
+    if (single && [...droppedData].length === 1) {
+        const characterKey = single.length === 3 ? single[2] : single[0];
         const pointer = canvas.getPointer(options.e);
-        const mouseX = pointer.x;
-        const mouseY = pointer.y;
-
-        // Add character to canvas, using the correct key for pastedNames
-        addCharacterToCanvas(droppedData, characterKey, mouseX, mouseY);
+        addCharacterToCanvas(droppedData, characterKey, pointer.x, pointer.y);
+        return;
     }
+
+    // Multi-glyph drop (e.g. text selected from dictionary results, or pasted
+    // Gardiner codes). Route through the MdC handler so the row is
+    // bottom-aligned and laid out below existing content.
+    handleMdCInput(droppedData);
 });
 canvas.on('mouse:dblclick', function (options) {
     if (options.target && (options.target.type === 'i-text' || options.target.type === 'text')) {
@@ -576,20 +674,10 @@ canvas.on('object:modified', function (options) {
         initialMoveState = null;
     }
 });
-canvas.on('object:rotating', function (options) {
-    const obj = options.target;
-    if (obj && initialRotationState === null) {
-        // Store the complete initial state when rotation starts
-        initialRotationState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'skewX', 'skewY', 'width', 'height', 'flipX', 'flipY']);
-        console.log('Rotation started. Initial state:', initialRotationState);
-    }
-});
-// ================================== end =============================
 
-// ============================ change bg color ===========================
-
-// =========================== Undo function ===============================
-
+// =============================================================================
+// Undo
+// =============================================================================
 function undoLastAction() {
     if (undoHistory.length === 0) return;
 
@@ -742,7 +830,9 @@ function storeAndRemoveCharacter(obj) {
     // Call the existing remove function
     removeCharacterFromCanvas(obj);
 }
-// ======================================== Mirror text ========================
+// =============================================================================
+// Mirror + alignment
+// =============================================================================
 function mirrorTextObject() {
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
@@ -840,10 +930,12 @@ function isArrangedVertically(objects) {
     // consider it a vertical arrangement
     return avgVertDist > avgHorizDist * 1.5;
 }
-// =========================================== end mirror =========================
 function alignObjects(direction = 'horizontal') {
     const activeObjects = canvas.getActiveObjects();
     if (activeObjects.length === 0) return;
+
+    // Cache scaled heights once — getScaledHeight() can be expensive on groups.
+    const scaledHeights = activeObjects.map(obj => obj.getScaledHeight());
 
     // Store the initial states before alignment
     const prevState = activeObjects.map(obj => ({
@@ -851,27 +943,26 @@ function alignObjects(direction = 'horizontal') {
         prevState: obj.toJSON(['left', 'top', 'angle'])
     }));
 
-    // Your existing alignment code
     const getRefPoint = {
         horizontal: () => {
-            const center = activeObjects.reduce((sum, obj) =>
-                sum + (obj.top + obj.getScaledHeight() / 2), 0);
+            const center = activeObjects.reduce((sum, obj, i) =>
+                sum + (obj.top + scaledHeights[i] / 2), 0);
             return center / activeObjects.length;
         },
         top: () => Math.min(...activeObjects.map(obj => obj.top)),
-        bottom: () => Math.max(...activeObjects.map(obj =>
-            obj.top + obj.getScaledHeight())),
+        bottom: () => Math.max(...activeObjects.map((obj, i) =>
+            obj.top + scaledHeights[i])),
         left: () => Math.min(...activeObjects.map(obj => obj.left))
     };
 
     const alignTo = getRefPoint[direction]();
 
     // Apply alignment
-    activeObjects.forEach(obj => {
+    activeObjects.forEach((obj, i) => {
         const props = {
-            horizontal: { top: alignTo - obj.getScaledHeight() / 2 },
+            horizontal: { top: alignTo - scaledHeights[i] / 2 },
             top: { top: alignTo },
-            bottom: { top: alignTo - obj.getScaledHeight() },
+            bottom: { top: alignTo - scaledHeights[i] },
             left: { left: alignTo }
         };
         obj.set(props[direction]);
@@ -1083,9 +1174,26 @@ function loadWorkspace() {
     fileInput.click();
 }
 
-// ====================  Save as PDF =================
+// =============================================================================
+// Save as PDF
+// =============================================================================
+let html2pdfPromise = null;
+function ensureHtml2pdfLoaded() {
+    if (typeof html2pdf !== 'undefined') return Promise.resolve();
+    if (html2pdfPromise) return html2pdfPromise;
+    html2pdfPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        s.onload = resolve;
+        s.onerror = () => { html2pdfPromise = null; reject(new Error('Failed to load html2pdf.js')); };
+        document.head.appendChild(s);
+    });
+    return html2pdfPromise;
+}
+
 async function saveToPDF() {
     try {
+        await ensureHtml2pdfLoaded();
         // Create a temporary canvas for the combined image
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width;
@@ -1178,7 +1286,9 @@ async function saveToPDF() {
 // Add click handler
 document.getElementById('saveAsPDF')?.addEventListener('click', saveToPDF);
 
-// =============================================== filter hieros =============================================
+// =============================================================================
+// Search / filter
+// =============================================================================
 // dropdown logic
 const dropdownContent = document.getElementById("dropdownContent");
 sentences.forEach(sentence => {
@@ -1194,60 +1304,79 @@ sentences.forEach(sentence => {
     });
     dropdownContent.appendChild(link);
 });
-// ==================================== MdC input interface ====================
+// =============================================================================
+// MdC input interface
+// =============================================================================
 // Add a simple input interface
 function addMdCInterface() {
     const container = document.createElement('div');
+    container.id = 'mdcContainer';
     container.style.cssText = `
         position: fixed;
-        bottom: 130px;
-        left: 20px;
+        bottom: 20px;
         background: gray;
-        padding: 8px;
+        padding: 6px;
         border: 1px solid #ccc;
         border-radius: 4px;
         z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     `;
 
     const input = document.createElement('input');
     input.type = 'text';
     input.id = "mdcInput";
     input.name = "mdcInput";
-    input.placeholder = 'Paste series (e.g., A1-D21-N35)';
-    input.style.marginRight = '8px';
+    input.placeholder = 'e.g. A1 D21 or 𓀀𓏏';
     input.style.width = '200px';
-    input.style.transform = 'translateY(-2px)';
 
-
-    // Add keydown event listener for input
     input.addEventListener('keydown', function (e) {
         if (e.key === 'Backspace') {
             e.stopPropagation(); // Prevent the global backspace handler
         }
-        // Handle Enter/Return key
         if (e.key === 'Enter') {
-            e.preventDefault(); // Prevent form submission if within a form
+            e.preventDefault();
             handleMdCInput(this.value);
-            // Optional: Clear input after processing
             this.value = '';
         }
     });
 
     const button = document.createElement('button');
-    button.textContent = 'Add Glyphs';
-    button.style.transform = 'translateY(-2px)';
+    button.textContent = 'Add';
     button.onclick = () => {
         handleMdCInput(input.value);
-        input.value = ''; // Clear input after adding glyphs
+        input.value = '';
     };
 
     container.appendChild(input);
     container.appendChild(button);
     document.body.appendChild(container);
+
+    // Anchor the widget just to the right of the toolbar at the same vertical
+    // level. Recomputes when the toolbar resizes (e.g. menu opens) or the
+    // viewport resizes, so it stays glued to #tools' right edge.
+    const toolbar = document.getElementById('tools');
+    const gap = 8;
+    const reposition = () => {
+        if (!toolbar) {
+            container.style.left = '20px';
+            return;
+        }
+        const r = toolbar.getBoundingClientRect();
+        container.style.left = (r.right + gap) + 'px';
+    };
+    reposition();
+    if (toolbar && typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(reposition).observe(toolbar);
+    }
+    window.addEventListener('resize', reposition);
 }
 // Initialize the interface
 addMdCInterface();
-// ================================= tools ===============================
+// =============================================================================
+// Drawing tools (cartouche, circle, line, arrow, bracket, rect, pencil, bubble)
+// =============================================================================
 function generateUniqueId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
@@ -1287,12 +1416,6 @@ function setupTextSubmission(x, y) {
         object: textBox.toJSON(),
         id: textBox.id
     });
-}
-function closeKeyboard() {
-    document.getElementById('keyboardDialog').style.display = 'none';
-    document.getElementById('keyboardOverlay').style.display = 'none';
-    document.getElementById('keyboardInput').value = '';
-    activeTextObject = null;
 }
 function addCartouche() {
     var rect = new fabric.Rect({
@@ -1611,25 +1734,25 @@ function addSpeechBubble() {
     canvas.renderAll();
     return bubble;
 }
-// ========================== KEYBOARD ===========================
+// =============================================================================
+// On-screen keyboard dialog
+// =============================================================================
+
+function handleKeyboardKeydown(e) {
+    if (e.key === 'Backspace') {
+        e.stopPropagation(); // Prevent the global backspace handler
+    }
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addKeyboardText();
+    }
+}
 
 function openKeyboard() {
     document.getElementById('keyboardDialog').style.display = 'block';
     document.getElementById('keyboardOverlay').style.display = 'block';
     const keyboardInput = document.getElementById('keyboardInput');
     keyboardInput.focus();
-
-    // Add keydown event listener for backspace handling
-    keyboardInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Backspace') {
-            e.stopPropagation(); // Prevent the global backspace handler
-        }
-        // Handle Enter/Return key
-        if (e.key === 'Enter') {
-            e.preventDefault(); // Prevent form submission if within a form
-            addKeyboardText();
-        }
-    });
 }
 
 function addKeyboardText() {
@@ -1673,18 +1796,16 @@ function addKeyboardText() {
     closeKeyboard();
 }
 
-// Add this cleanup function to remove the event listener when closing the keyboard
 function closeKeyboard() {
-    const keyboardInput = document.getElementById('keyboardInput');
-    // Remove the event listener when closing
-    keyboardInput.removeEventListener('keydown', null);
-    // Clear the input value
-    keyboardInput.value = '';
     document.getElementById('keyboardDialog').style.display = 'none';
     document.getElementById('keyboardOverlay').style.display = 'none';
+    document.getElementById('keyboardInput').value = '';
+    activeTextObject = null;
 }
-document.addEventListener('DOMContentLoaded', function () {
+function initKeyboardAndSearch() {
     const keyboardInput = document.getElementById('keyboardInput');
+    // Attach the keydown handler once; openKeyboard/closeKeyboard just toggle visibility.
+    keyboardInput.addEventListener('keydown', handleKeyboardKeydown);
     // Handle search input filtering
     searchInput.addEventListener('input', e =>
         filterAndDisplayCharacters(characters, e.target.value)
@@ -1706,114 +1827,146 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Close when clicking overlay
     document.getElementById('keyboardOverlay').addEventListener('click', closeKeyboard);
-});
+}
 
-// ============================== Save menu and submenues ============================
-document.addEventListener('DOMContentLoaded', () => {
-    const saveBtn = document.getElementById('saveWorkspaceBtn');
-    const saveMenu = document.getElementById('saveMenu');
+// =============================================================================
+// Main file menu (Save / Open / Wiki)
+// =============================================================================
+function initMainMenu() {
+    const menuBtn = document.getElementById('mainMenuBtn');
+    const menu = document.getElementById('mainMenu');
     const saveAsJsonBtn = document.getElementById('saveAsJsonBtn');
     const saveAsPdfBtn = document.getElementById('saveAsPdfBtn');
+    const openBtn = document.getElementById('loadWorkspaceBtn');
+    const wikiBtn = document.getElementById('wikiBtn');
 
-    // Ensure submenu is hidden on load
-    saveMenu.classList.add('hidden');
+    menu.classList.add('hidden');
 
-    // Toggle submenu visibility on "Save" button click
-    saveBtn.addEventListener('click', (event) => {
-        event.stopPropagation(); // Prevent click bubbling
-        saveMenu.classList.toggle('hidden');
-    });
-
-    // Save as JSON
-    saveAsJsonBtn.addEventListener('click', (event) => {
+    menuBtn.addEventListener('click', (event) => {
         event.stopPropagation();
-        saveWorkspace();
-        saveMenu.classList.add('hidden'); // Hide menu after action
+        menu.classList.toggle('hidden');
     });
 
-    // Save as PDF
-    saveAsPdfBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        saveToPDF();
-        saveMenu.classList.add('hidden'); // Hide menu after action
+    const close = () => menu.classList.add('hidden');
+
+    saveAsJsonBtn.addEventListener('click', (e) => { e.stopPropagation(); saveWorkspace(); close(); });
+    saveAsPdfBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPDF(); close(); });
+    openBtn.addEventListener('click', (e) => { e.stopPropagation(); loadWorkspace(); close(); });
+    wikiBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open('https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner', '_blank');
+        close();
     });
 
-    // Close the submenu when clicking outside
-    document.addEventListener('click', () => {
-        saveMenu.classList.add('hidden');
-    });
-});
+    document.addEventListener('click', close);
+}
 
-// =========================== Place MdC glyphs in rows  ===========================
+// =============================================================================
+// MdC paste handler — drop multi-glyph strings onto the canvas
+// =============================================================================
+// Parse paste input into an ordered list of character entries.
+// Accepts: Gardiner codes ("A1-D21-N35", "A1 D21 N35", "A1,D21"),
+// raw hieroglyph unicode ("𓂀𓏏𓊵"), or a mix.
+function parseMdCInput(input) {
+    const matches = [];
+    // Split on common separators; whatever remains is either a code
+    // token or a run of raw glyph characters.
+    const tokens = input.split(/[-\s,;:*]+/).filter(Boolean);
+    for (const token of tokens) {
+        const codeMatch = charsByCode.get(token.toUpperCase());
+        if (codeMatch) {
+            matches.push(codeMatch);
+            continue;
+        }
+        // Iterate by codepoint (Egyptian hieroglyphs are surrogate pairs in UTF-16).
+        for (const ch of token) {
+            const glyphMatch = charsByGlyph.get(ch);
+            if (glyphMatch) matches.push(glyphMatch);
+        }
+    }
+    return matches;
+}
+
 function handleMdCInput(mdcString) {
-    const glyphs = mdcString.split('-');
-    const glyphWidth = 60;
+    const matches = parseMdCInput(mdcString);
+    if (matches.length === 0) {
+        alert('No glyphs recognized. Paste Gardiner codes (e.g. A1-D21-N35) or hieroglyph characters.');
+        return;
+    }
+
+    // Glyphs render at fontSize 60 with center origin. Real glyph widths
+    // and heights vary, so step by measured width and bottom-align so the
+    // baseline (bottom edge) is shared across the row.
+    const hGap = 12;
+    const vGap = 18;
+    const nominalGlyph = 60;
+    const lineHeight = nominalGlyph + vGap;
     const startX = 100;
-    const startY = 100;
-    const lineHeight = 30;
+    const baselineYStart = 100 + nominalGlyph;  // shared bottom edge of first row
     const margin = 50;
     const maxLines = 14;
 
-    // Calculate how many glyphs can fit in one line
-    const usableWidth = canvas.width - (2 * margin);
-    const glyphsPerLine = Math.floor(usableWidth / glyphWidth);
+    const rightEdge = canvas.width - margin;
 
-    // Find existing objects to determine starting position
     const existingObjects = canvas.getObjects();
-    let highestY = startY;
+    let baselineY = baselineYStart;
     if (existingObjects.length > 0) {
-        highestY = existingObjects.reduce((maxY, obj) => {
-            return Math.max(maxY, obj.top + obj.height);
-        }, startY);
-        highestY += lineHeight;
+        // Lowest bottom edge across existing objects (top is the center for originY:'center').
+        const lowestBottom = existingObjects.reduce((maxY, obj) => {
+            return Math.max(maxY, obj.top + obj.getScaledHeight() / 2);
+        }, 0);
+        // New row sits a full lineHeight below — that's vGap of clear space + a nominal glyph height.
+        baselineY = Math.max(baselineYStart, lowestBottom + lineHeight);
     }
 
     let xOffset = startX;
-    let yPos = highestY;
 
-    // Calculate available vertical space
     const usableHeight = canvas.height - margin;
-    const availableLines = Math.floor((usableHeight - highestY) / lineHeight);
+    const availableLines = Math.floor((usableHeight - baselineY) / lineHeight) + 1;
     let currentLine = 1;
-    let glyphsInCurrentLine = 0;
 
-    // Check if we have room for more lines
     if (availableLines <= 0) {
         alert('Canvas is full. Cannot add more glyphs.');
         return;
     }
 
-    // Using for...of instead of forEach
-    for (const glyph of glyphs) {
-        // Stop if we've exceeded max lines or available space
+    for (const match of matches) {
         if (currentLine > Math.min(maxLines, availableLines)) {
             alert(`Reached line limit of ${Math.min(maxLines, availableLines)}`);
-            return; // This will actually exit the function
+            return;
         }
 
-        const trimmedGlyph = glyph.trim();
-        const match = characters.find(([code]) => code === trimmedGlyph.toUpperCase());
+        // Place provisionally to measure, then re-position so the left edge
+        // sits at xOffset and the bottom edge sits on baselineY.
+        const obj = addCharacterToCanvas(match[1], match[0], xOffset, baselineY);
+        const w = obj.getScaledWidth();
+        const h = obj.getScaledHeight();
 
-        if (match) {
-            if (glyphsInCurrentLine >= glyphsPerLine) {
-                xOffset = startX;
-                yPos += lineHeight;
-                currentLine++;
-                glyphsInCurrentLine = 0;
-
-                if (currentLine > Math.min(maxLines, availableLines)) {
-                    alert(`Reached line limit of ${Math.min(maxLines, availableLines)}`);
-                    return; // This will actually exit the function
-                }
+        // If this glyph would spill past the right edge, wrap to next line.
+        if (xOffset + w > rightEdge && xOffset > startX) {
+            xOffset = startX;
+            baselineY += lineHeight;
+            currentLine++;
+            if (currentLine > Math.min(maxLines, availableLines)) {
+                canvas.remove(obj);
+                alert(`Reached line limit of ${Math.min(maxLines, availableLines)}`);
+                return;
             }
-
-            addCharacterToCanvas(match[1], match[0], xOffset, yPos);
-            xOffset += glyphWidth;
-            glyphsInCurrentLine++;
         }
+
+        obj.set({
+            left: xOffset + w / 2,
+            top: baselineY - h / 2
+        });
+        obj.setCoords();
+        xOffset += w + hGap;
     }
+
+    canvas.requestRenderAll();
 }
-// =================================== EVENT LISTENERS ========================
+// =============================================================================
+// DOM event wiring (search, help overlay, dropdown)
+// =============================================================================
 
 document.getElementById("dropdownButton").addEventListener("click", () => {
     const content = document.getElementById("dropdownContent");
@@ -1835,12 +1988,10 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     // Filter and display characters based on the search query
     filterAndDisplayCharacters(characters, e.target.value);
 });
-// Add event listeners to the save and load buttons
-// document.getElementById('saveWorkspaceBtn').addEventListener('click', saveWorkspace);
-document.getElementById('loadWorkspaceBtn').addEventListener('click', loadWorkspace);
+// Save / Open / Wiki are wired up inside the main file menu init above.
 
 //============================ Adds char to Gardiner field ===================
-document.addEventListener('DOMContentLoaded', () => {
+function initCharDragstart() {
     const container = document.getElementById('charListContainer');
     container.addEventListener('dragstart', (event) => {
         // Check if className exists and is a string
@@ -1849,8 +2000,10 @@ document.addEventListener('DOMContentLoaded', () => {
             event.dataTransfer.setData('text/plain', event.target.querySelector('.char').textContent);
         }
     }, false);
-});
-// ===================== Background image load =================================
+}
+// =============================================================================
+// Background image
+// =============================================================================
 canvas.on('selection:created', function (e) {
     const selectedObject = e.selected && e.selected[0];
     if (selectedObject && selectedObject.type === 'image' && !selectedObject.selectable) {
@@ -1859,7 +2012,7 @@ canvas.on('selection:created', function (e) {
         canvas.requestRenderAll();
     }
 });
-document.addEventListener('DOMContentLoaded', function () {
+function initBackgroundImage() {
     const opacitySlider = document.getElementById('bgOpacity');
     const opacityValue = document.getElementById('opacityValue');
 
@@ -1942,38 +2095,11 @@ bgImageInput.addEventListener('change', function (e) {
         return;
     }
 
-    // Create a privacy-conscious file reader setup
-    const reader = new FileReader();
-    
-    reader.onload = function (event) {
-        // Create a temporary URL that will be revoked after loading
-        const tempUrl = URL.createObjectURL(file);
-        
-        // Handle the image loading with the temporary URL
-        handleImageLoad(tempUrl);
-        
-        // Clean up: revoke the temporary URL after a short delay
-        // to ensure the image has loaded
-        setTimeout(() => {
-            URL.revokeObjectURL(tempUrl);
-        }, 1000);
-        
-        // Clear the input value for security
-        bgImageInput.value = '';
-        
-        // Clear the FileReader's memory
-        reader.abort();
-    };
-    
-    reader.onerror = function () {
-        console.error('Error reading file');
-        // Clean up on error
-        bgImageInput.value = '';
-        reader.abort();
-    };
-
-    // Read the file as a blob instead of data URL for better memory management
-    reader.readAsArrayBuffer(file);
+    // Use the file directly as an object URL — no FileReader needed.
+    const tempUrl = URL.createObjectURL(file);
+    handleImageLoad(tempUrl);
+    setTimeout(() => URL.revokeObjectURL(tempUrl), 1000);
+    bgImageInput.value = '';
 });
 
 // Add these attributes to your input element for additional security
@@ -1996,9 +2122,24 @@ bgImageInput.setAttribute('capture', 'environment');
             canvas.requestRenderAll();
         }
     };
+}
+
+// =============================================================================
+// DOM ready dispatcher — single entry point for all init.
+// =============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    initKeyboardAndSearch();
+    initMainMenu();
+    initCharDragstart();
+    initBackgroundImage();
+    initColorPopup();
 });
-// ============================ change bg color ===========================
-function toggleColorPopup() {
+
+// =============================================================================
+// Background color popup
+// =============================================================================
+function toggleColorPopup(e) {
+    e?.stopPropagation();
     const popup = document.getElementById('colorPopup');
     popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
 }
@@ -2007,11 +2148,20 @@ function setCanvasColor(color) {
     canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
     document.getElementById('colorPopup').style.display = 'none';
 }
-// =========================================================================
-// ================================== Autosave config option ======================================
-// ===============================================================================================
-// ===============================Title/watermark -- DO NOT DELETE -- ============
-// ============================================ end COPYRIGHTS ===================================================
+
+function initColorPopup() {
+    // Close popup when clicking anywhere outside it (matches the main-menu pattern).
+    // The 🎨 button's onclick calls stopPropagation, so toggling doesn't trigger this.
+    document.addEventListener('click', (e) => {
+        const popup = document.getElementById('colorPopup');
+        if (popup.style.display !== 'none' && !popup.contains(e.target)) {
+            popup.style.display = 'none';
+        }
+    });
+}
+// =============================================================================
+// Layout & window lifecycle (resize, beforeunload, keybindings)
+// =============================================================================
 function updateDivWidth() {
     const canvasWidth = getCanvasDimensions().width;
     document.getElementById('pastedNamesContainer').style.width = `${canvasWidth}px`;

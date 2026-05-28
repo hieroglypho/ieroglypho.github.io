@@ -399,6 +399,7 @@
         <a href="index.html">HOME</a>
         <a href="tutorials.html">TUTORIAL</a>
         <a href="research.html">RESEARCH</a>
+        <a href="dictionary.html">DICTIONARY</a>
     </nav>
 
     <div class="content">
@@ -407,7 +408,7 @@
             <div class="paper-header">
                 <p class="paper-title">Hieroglyphica · ΙΕΡΟΓΛΥΦΩ</p>
                 <p class="paper-subtitle">A Browser-Native Composition Environment for Egyptian Epigraphy</p>
-                <p class="paper-meta">Mazzon · hieroglyphica.org · Draft v0.2 — 28 May 2026</p>
+                <p class="paper-meta">M. Mazzon · hieroglyphica.org · Draft v0.2 — 28 May 2026</p>
             </div>
 
             <div class="dictionary-download" style="margin-bottom: 25px;">
@@ -449,7 +450,7 @@
             <h4>3.1 Platform</h4>
             <p>Hieroglyphica is a single-page web application served from hieroglyphica.org, requiring no installation. It is implemented in vanilla JavaScript with no build step; the canvas composition layer uses Fabric.js 5.2.4. Persistence is handled via JSON workspace files (load/save) and IndexedDB for dictionary caching. The application runs entirely client-side; no editorial content leaves the user's machine.</p>
             <h4>3.2 Glyph Repertoire and Fonts</h4>
-            <p>Hieroglyphica renders glyphs using Noto Sans Egyptian Hieroglyphs (Apache-2.0 / SIL-OFL) for the core Unicode block (U+13000–U+1342F) and a custom Hieroglyphica Extended font for Egyptian Hieroglyphs Extended-A (U+13460–U+143FF), exposing approximately 4,897 additional signs. Because rendering uses standard Unicode codepoints with embedded fonts, the same glyph data passes unchanged through copy, paste, export, and reimport — a property that the proprietary glyph-set approach used by JSesh does not provide.</p>
+            <p>Hieroglyphica renders glyphs using Noto Sans Egyptian Hieroglyphs (Apache-2.0 / SIL-OFL) for the core Unicode block (U+13000–U+1342F) and a custom Hieroglyphica Extended font — developed by M. Mazzon specifically for this project — for Egyptian Hieroglyphs Extended-A (U+13460–U+143FF), exposing approximately 4,897 additional signs. Because rendering uses standard Unicode codepoints with embedded fonts, the same glyph data passes unchanged through copy, paste, export, and reimport — a property that the proprietary glyph-set approach used by JSesh does not provide.</p>
             <h4>3.3 Input Modes</h4>
             <p>The editor exposes three input paradigms within a unified composition dialog:</p>
             <ul>
@@ -542,83 +543,7 @@
             </div>
         </div>
 
-        <!-- Dictionary Download Section -->
-        <div class="section">
-            <h2>Dictionary Access</h2>
-            <p>Access our comprehensive hieroglyphic dictionary for offline use. This file is regularly updated with new entries and improvements.</p>
-            <div class="dictionary-download">
-                <div>
-                    <strong>Latest Version:</strong> May 2026
-                    <br>
-                    <small>Format: .txt | Size: 3.8MB</small>
-                </div>
-                <a href="dictionary.txt" class="download-button"  id="downloadLink">Download Dictionary</a>
-            </div>
-        </div>
-
-        <!-- Submission Form Section -->
-        <div class="section">
-            <h2>Submit New Hieroglyph</h2>
-            <p>Help expand our dictionary by submitting new hieroglyphs for consideration. Please provide as much detail as possible to assist with verification.</p>
-            <form target="_blank" action="https://formsubmit.co/08cd06e3ca775e2d66f6b732292a0b54" method="POST">
-                <div class="form-group">
-                    <input type="text" name="gardiner_code" class="form-control" placeholder="Gardiner Code (e.g., A1)" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input type="text" name="transliteration" class="form-control" placeholder="Transliteration" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input type="text" name="translation" class="form-control" placeholder="Translation (English meaning)" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input type="url" name="source" class="form-control" placeholder="Source URL (Images, references, etc.)" required autocomplete="url">
-                </div>
-                <div class="form-group">
-                    <input type="text" name="name" class="form-control" placeholder="Your Full Name" required autocomplete="name">
-                </div>
-                <div class="form-group">
-                    <input type="email" name="email" class="form-control" placeholder="Email for Follow-up" required autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <textarea placeholder="Additional notes, context, or special considerations" class="form-control" name="notes" rows="5" autocomplete="off"></textarea>
-                </div>
-                <input type="text" name="_honey" style="display:none" autocomplete="off">
-                <button type="submit" class="btn form-submit">Submit Hieroglyph</button>
-            </form>
-        </div>
-
-        <!-- Update Log Section -->
-        <div class="section">
-            <h2>Update Log</h2>
-            <div class="update-entry">
-                <div class="update-date">May 27, 2026</div>
-                <div class="update-title">v2 Release</div>
-                <p>MdC paste series accepts mixed Gardiner codes and raw hieroglyphs. Dictionary auto-saves to the browser and supports drag-to-canvas. Extended Hieroglyphica font adds 4,900+ glyphs. Help overlay rewritten; performance and undo reliability improved.</p>
-            </div>
-            <div class="update-entry">
-                <div class="update-date">December 23, 2024</div>
-                <div class="update-title">Dictionary Expansion</div>
-                <p>Added 50 new entries from Middle Kingdom texts. Updated transliterations for accuracy.</p>
-            </div>
-            <div class="update-entry">
-                <div class="update-date">December 21, 2024</div>
-                <div class="update-title">GOING LIVE!</div>
-                <p>Improved mobile responsiveness and dark mode support across all features.</p>
-            </div>
-        </div>
     </div>
-    <script>
-    document.getElementById('downloadLink').addEventListener('click', function (event) {
-        event.preventDefault();
-        const link = document.createElement('a');
-        link.href = 'dictionary.txt';
-        link.download = 'dictionary.txt';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
-    </script>
-
 
         <footer>
             <div style="margin-bottom: 15px;">

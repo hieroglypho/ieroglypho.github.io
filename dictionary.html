@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ΙΕΡΟΓΛΥΦΩ - Tutorials</title>
+    <title>ΙΕΡΟΓΛΥΦΩ - Dictionary</title>
     <!-- Essential Open Graph tags for LinkedIn -->
     <meta property="og:title" content="ΙΕΡΟΓΛΥΦΩ - Egyptian Hieroglyphs Tool" />
-    <meta property="og:description" content="Explore the ultimate tool for writing, studying, and creating Egyptian hieroglyphs. Features include drag-and-drop functionality, cartouche creation, and a comprehensive hieroglyph search tool for Egyptology enthusiasts." />
+    <meta property="og:description" content="Download the comprehensive Hieroglyphica dictionary for offline use, or submit new hieroglyphs to help expand it." />
     <meta property="og:url" content="https://www.hieroglyphica.org" />
     <meta property="og:image" content="https://www.hieroglyphica.org/path-to-your-image.jpg" />
     <meta property="og:type" content="website" />
-    
+
     <!-- Meta tags for search engines -->
-    <meta name="title" content="ΙΕΡΟΓΛΥΦΩ - Hieroglyphic Writing Tool">
-    <meta name="description" content="Professional tool for writing and studying Egyptian hieroglyphs. Features include drag & drop interface, cartouche creation, and comprehensive hieroglyph search.">
-    <meta name="keywords" content="hieroglyphs, Egyptian hieroglyphs, ancient Egyptian, cartouche, hieroglyphics tool, Egyptian writing, Egyptology">
-    
+    <meta name="title" content="ΙΕΡΟΓΛΥΦΩ - Hieroglyphic Dictionary">
+    <meta name="description" content="Download the Hieroglyphica hieroglyphic dictionary for offline use and submit new hieroglyphs for consideration.">
+    <meta name="keywords" content="hieroglyphs, Egyptian hieroglyphs, hieroglyphic dictionary, ancient Egyptian, Egyptology">
+
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://www.hieroglyphica.org">
+    <link rel="canonical" href="https://www.hieroglyphica.org/dictionary.html">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <!-- Robot directives -->
-    <meta name="robots" content="index, follow">   
+    <meta name="robots" content="index, follow">
     <!-- Language alternatives -->
     <link rel="alternate" hreflang="en" href="https://www.hieroglyphica.org">
-    
+
     <style>
+        /* Base Variables - matching your existing theme */
         :root {
             --primary-bg: #f1f1f1;
             --header-bg: #2c3e50;
@@ -52,6 +53,7 @@
             }
         }
 
+        /* Core styles matching your existing theme */
         body {
             font-family: var(--font-main);
             letter-spacing: 0.5px;
@@ -68,7 +70,6 @@
             padding: 10px;
             text-align: center;
             font-size: 24px;
-            letter-spacing: 0.5px;
         }
 
         .nav-tabs {
@@ -94,42 +95,95 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
 
+        /* Content container */
         .content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 20px;
-        }
-
-        .video-container {
+        /* Section styling */
+        .section {
             background-color: var(--feature-bg);
             border-radius: 8px;
-            padding: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .video-container h3 {
-            font-family: var(--font-main);
-            font-weight: 600;
+        .section h2 {
             margin-top: 0;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            font-weight: 600;
         }
 
-        .video-frame {
+        /* Dictionary download section */
+        .dictionary-download {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background-color: rgba(22, 160, 133, 0.1);
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .download-button {
+            background-color: var(--button-bg);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+
+        .download-button:hover {
+            background-color: var(--button-hover);
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
             width: 100%;
-            aspect-ratio: 16/9;
-            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--feature-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
         }
 
-        .video-description {
-            font-size: 15px;
-            line-height: 1.6;
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-submit {
+            background-color: var(--button-bg);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .form-submit:hover {
+            background-color: var(--button-hover);
         }
 
         footer {
@@ -210,10 +264,6 @@
         }
 
         @media (max-width: 600px) {
-            .welcome-text {
-                text-align: left;
-                padding: 0 25px;
-            }
             .social-btn {
                 padding: 6px 10px;
                 font-size: 12px;
@@ -223,6 +273,7 @@
     </style>
 </head>
 <body>
+
     <header>ΙΕΡΟΓΛΥΦΩ</header>
 
     <nav class="nav-tabs">
@@ -234,27 +285,66 @@
     </nav>
 
     <div class="content">
-        <div class="video-grid">
-            <div class="video-container">
-                <h3>Getting Started</h3>
-                    <iframe class="video-frame" 
-                        src="https://www.youtube.com/embed/5bKCBR9sVxs"
-                        title="Getting Started Tutorial"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                <p class="video-description">Learn the basics of hieroglyphic writing and how to use our digital tools effectively.</p>
-            </div>
-            <div class="video-container">
-                <h3>Advanced Techniques</h3>
-                <p class="video-description">Explore advanced features and learn professional transcription techniques.</p>
+        <!-- Dictionary Download Section -->
+        <div class="section">
+            <h2>Dictionary Access</h2>
+            <p>Access our comprehensive hieroglyphic dictionary for offline use. This file is regularly updated with new entries and improvements.</p>
+            <div class="dictionary-download">
+                <div>
+                    <strong>Latest Version:</strong> May 2026
+                    <br>
+                    <small>Format: .txt | Size: 3.8MB</small>
+                </div>
+                <a href="dictionary.txt" class="download-button"  id="downloadLink">Download Dictionary</a>
             </div>
         </div>
+
+        <!-- Submission Form Section -->
+        <div class="section">
+            <h2>Submit New Hieroglyph</h2>
+            <p>Help expand our dictionary by submitting new hieroglyphs for consideration. Please provide as much detail as possible to assist with verification.</p>
+            <form target="_blank" action="https://formsubmit.co/08cd06e3ca775e2d66f6b732292a0b54" method="POST">
+                <div class="form-group">
+                    <input type="text" name="gardiner_code" class="form-control" placeholder="Gardiner Code (e.g., A1)" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input type="text" name="transliteration" class="form-control" placeholder="Transliteration" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input type="text" name="translation" class="form-control" placeholder="Translation (English meaning)" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input type="url" name="source" class="form-control" placeholder="Source URL (Images, references, etc.)" required autocomplete="url">
+                </div>
+                <div class="form-group">
+                    <input type="text" name="name" class="form-control" placeholder="Your Full Name" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <input type="email" name="email" class="form-control" placeholder="Email for Follow-up" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <textarea placeholder="Additional notes, context, or special considerations" class="form-control" name="notes" rows="5" autocomplete="off"></textarea>
+                </div>
+                <input type="text" name="_honey" style="display:none" autocomplete="off">
+                <button type="submit" class="btn form-submit">Submit Hieroglyph</button>
+            </form>
+        </div>
     </div>
+    <script>
+    document.getElementById('downloadLink').addEventListener('click', function (event) {
+        event.preventDefault();
+        const link = document.createElement('a');
+        link.href = 'dictionary.txt';
+        link.download = 'dictionary.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+    </script>
 
         <footer>
             <div style="margin-bottom: 15px;">
-                © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. • 
+                © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. •
                 <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
             </div>            <div style="margin-bottom: 15px;">show ❤️ by sharing us on:</div>
             <div class="social-buttons">

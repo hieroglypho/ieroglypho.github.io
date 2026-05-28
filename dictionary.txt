@@ -1,3 +1,5 @@
+# Hieroglyphica Dictionary — https://www.hieroglyphica.org
+# Credits to M. Mazzon for extensively adding terminology and phrases to it, from the original version.
 𓀀	wi I, me, my <i> pronoun </i>	A1
 𓀀	.kwi I <i> stative-past tense </i>	 A1
 𓀀	s man, someone, anyone, no-one <i> noun </i>	 A1

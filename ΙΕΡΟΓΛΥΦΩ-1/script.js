@@ -103,6 +103,22 @@ function getCanvasDimensions() {
     };
 }
 
+// Fabric 5.2.4 hardcodes the deprecated CanvasTextBaseline value 'alphabetical'
+// (a typo for 'alphabetic') when rendering text, which the browser rejects and
+// warns about on every glyph draw. The object-level textBaseline is ignored, so
+// we remap the bad token at the context level before the assignment lands.
+(function patchTextBaselineTypo() {
+    const proto = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
+    const desc = proto && Object.getOwnPropertyDescriptor(proto, 'textBaseline');
+    if (!desc || !desc.set || !desc.get) return;
+    Object.defineProperty(proto, 'textBaseline', {
+        configurable: true,
+        enumerable: desc.enumerable,
+        get: desc.get,
+        set(v) { desc.set.call(this, v === 'alphabetical' ? 'alphabetic' : v); }
+    });
+})();
+
 // Initialize canvas with viewport dimensions
 const initialDimensions = getCanvasDimensions();
 var canvas = new fabric.Canvas('c', {
@@ -324,8 +340,7 @@ function addCharacterToCanvas(text, characterKey, x, y) {
         selectable: true,
         // Noto covers base block; Hieroglyphica Extended fills Extended-A.
         // Without this, fabric uses a system fallback that often lacks Extended-A.
-        fontFamily: '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif',
-        textBaseline: 'alphabetic'  // Override fabric 5.2.4's deprecated 'alphabetical' typo
+        fontFamily: '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif'
     });
 
     // Generate a unique ID for the text object
@@ -1330,18 +1345,23 @@ async function saveToSVG() {
 // =============================================================================
 // Save as PDF
 // =============================================================================
-let html2pdfPromise = null;
-function ensureHtml2pdfLoaded() {
-    if (typeof html2pdf !== 'undefined') return Promise.resolve();
-    if (html2pdfPromise) return html2pdfPromise;
-    html2pdfPromise = new Promise((resolve, reject) => {
+let jsPDFPromise = null;
+function getJsPDFCtor() {
+    // jsPDF's UMD build exposes the constructor at window.jspdf.jsPDF;
+    // older builds put it directly at window.jsPDF.
+    return (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
+}
+function ensureJsPDFLoaded() {
+    if (getJsPDFCtor()) return Promise.resolve();
+    if (jsPDFPromise) return jsPDFPromise;
+    jsPDFPromise = new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
         s.onload = resolve;
-        s.onerror = () => { html2pdfPromise = null; reject(new Error('Failed to load html2pdf.js')); };
+        s.onerror = () => { jsPDFPromise = null; reject(new Error('Failed to load jsPDF')); };
         document.head.appendChild(s);
     });
-    return html2pdfPromise;
+    return jsPDFPromise;
 }
 
 // Lazy fetch + base64 of the bundled Noto TTF (~1 MB) for jsPDF font embedding.
@@ -1460,13 +1480,13 @@ function showCanvasToast(msg) {
     showCanvasToast._t = setTimeout(() => toast.classList.remove('visible'), 1800);
 }
 
-// jsPDF comes bundled inside the html2pdf script — we use it directly rather
-// than going through html2pdf's image-of-image pipeline.
+// We use jsPDF directly to embed the canvas as an image plus an invisible,
+// selectable Unicode text overlay.
 async function saveToPDF() {
     try {
-        await ensureHtml2pdfLoaded();
-        const jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
-        if (!jsPDFCtor) throw new Error('jsPDF unavailable from html2pdf bundle');
+        await ensureJsPDFLoaded();
+        const jsPDFCtor = getJsPDFCtor();
+        if (!jsPDFCtor) throw new Error('jsPDF unavailable after load');
 
         const composite = await compositeCanvasWithBg();
         const pngDataUrl = composite.toDataURL('image/png');
@@ -2010,7 +2030,7 @@ function closeKeyboard() {
 // Distinct from addCharacterToCanvas, which creates one fabric.Text per glyph
 // for free positioning. A glyph text run keeps multiple glyphs as one editable
 // text block — selectable/copyable in the browser, and exported as a single
-// text node in SVG (PDF still rasterises via html2pdf).
+// text node in SVG (PDF embeds the canvas raster via jsPDF).
 
 function syncThreeLineExtras() {
     const mode = document.querySelector('input[name="glyphMode"]:checked')?.value || 'textRun';

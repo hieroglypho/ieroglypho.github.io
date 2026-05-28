@@ -57,6 +57,37 @@
         .link:hover {
             text-decoration: underline;
         }
+    
+        .rainbow-donate {
+            display: grid;
+            place-items: center;
+            padding: 0;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            width: 50px;
+            height: 50px;
+            line-height: 1;
+        }
+
+        .rainbow-donate span {
+            display: block;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #ff00ff, #ff0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 2s linear infinite;
+            background-size: 200% auto;
+            text-align: center;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0 center; }
+            100% { background-position: -200% center; }
+        }
     </style>
 </head>
 <body>
@@ -66,7 +97,12 @@
         <p>ΙΕΡΟΓΛΥΦΩ is designed to provide the best experience on desktop computers. For optimal use of our hieroglyphic writing tools, please visit us on a desktop or laptop computer.</p>
         <p>Thank you for your interest in exploring ancient Egyptian writing with us!</p>
         <p><a href="mailto:ieroglypho@hierogliphica.org" class="link">Contact Support</a></p>
-    </div>
+<div style="display: flex; justify-content: center; margin-bottom: 15px;">
+            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="rainbow-donate" title="Donate!">
+                <span>$:)</span>
+            </button>
+        </div>
+            </div>
 
     <script>
         // Add this to prevent mobile users from bypassing by going back

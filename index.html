@@ -307,6 +307,45 @@
             vertical-align: middle;
             line-height: 1.4;
         }
+
+        .rainbow-donate {
+            display: grid;
+            place-items: center;
+            padding: 0;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            width: 50px;
+            height: 50px;
+            line-height: 1;
+        }
+
+        .rainbow-donate span {
+            display: block;
+            background: linear-gradient(
+                to right,
+                #ff0000,
+                #ffff00,
+                #00ff00,
+                #00ffff,
+                #ff00ff,
+                #ff0000
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 2s linear infinite;
+            background-size: 200% auto;
+            text-align: center;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0 center; }
+            100% { background-position: -200% center; }
+        }
     </style>
 </head>
 <body>
@@ -340,7 +379,7 @@
             <a href="https://www.hieroglyphica.org/%CE%99%CE%95%CE%A1%CE%9F%CE%93%CE%9B%CE%A5%CE%A6%CE%A9-1/XYjQ5WMMLCY0vy9sT.html" target="_blank" style="text-decoration: none; display: flex; align-items: center;">
                 <h3 style="color: #ff0000; font-size: 28px; font-weight: bold; text-transform: uppercase; margin: 0;">FREE</h3>
             </a>
-            <a href="https://www.paypal.com/donate/?hosted_button_id=FLR49G2DRY2SL" style="text-decoration: none; background-color: #009688; color: white; padding: 10px 20px; border-radius: 5px; display: flex; align-items: center; font-weight: bold; font-size: 16px;" target="_blank">Donate
+            <a href="https://www.paypal.com/ncp/payment/PMWMHAY55RZSE" style="text-decoration: none; background-color: #009688; color: white; padding: 10px 20px; border-radius: 5px; display: flex; align-items: center; font-weight: bold; font-size: 16px;" target="_blank">Donate
     </a>
         </div>
         <div style="display: flex; justify-content: center; width: 100%;">
@@ -420,6 +459,11 @@
         </div>
     </div>
     <footer>
+        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="rainbow-donate" title="Donate!">
+                <span>$:)</span>
+            </button>
+        </div>
         <div style="margin-bottom: 15px;">
             © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. •
                 <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>

@@ -171,6 +171,25 @@ function drawGrid() {
 }
 
 drawGrid();
+
+// Hide the full-canvas brand watermark on the first interaction so it doesn't
+// clutter the workspace. It still appears in PNG/PDF exports (stamped in
+// compositeCanvasWithBg), just as a small corner mark.
+(function setupWatermarkAutoHide() {
+    const overlay = document.getElementById('fixedTextOverlay');
+    if (!overlay) return;
+    let hidden = false;
+    const hide = () => {
+        if (hidden) return;
+        hidden = true;
+        overlay.style.opacity = '0';
+        // Drop it from layout once faded so it can never interfere with the canvas.
+        setTimeout(() => { overlay.style.display = 'none'; }, 450);
+    };
+    canvas.on('mouse:down', hide);
+    canvas.on('object:added', hide);
+})();
+
 // =============================================================================
 // Character table — decode obfuscated chars.js, render rows, filter
 // =============================================================================
@@ -1433,8 +1452,23 @@ async function compositeCanvasWithBg() {
             });
         }
         ctx.drawImage(canvas.getElement(), 0, 0);
+        stampExportWatermark(ctx, canvas.width, canvas.height);
         return tempCanvas;
     });
+}
+
+// Stamps the brand watermark into the top-right corner of an export canvas.
+// Used for both PNG and PDF output (the PDF embeds this raster).
+function stampExportWatermark(ctx, w, h) {
+    const fontSize = Math.max(13, Math.round(Math.min(w, h) * 0.03));
+    const pad = Math.round(fontSize * 0.7);
+    ctx.save();
+    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.fillText('ΙΕΡΟΓΛΥΦΩ', w - pad, pad);
+    ctx.restore();
 }
 
 async function saveToPNG() {

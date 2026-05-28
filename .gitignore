@@ -1,0 +1,25 @@
+# OS / filesystem junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Backups & temp
+*.bak
+*.tmp
+*.orig
+
+# Paper working drafts (the published .docx is tracked; LibreOffice .odt is a local draft)
+Hieroglyphica-paper.odt
+.~lock.*#

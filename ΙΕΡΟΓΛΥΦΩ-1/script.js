@@ -23,14 +23,13 @@
 //   8. Delete / cleanup helpers
 //   9. Mirror + alignment
 //  10. Workspace save / load
-//  11. Save as PDF
+//  11. Save as SVG / PDF
 //  12. Search / filter dropdown
-//  13. MdC input interface
-//  14. Drawing tools (cartouche, circle, line, arrow, bracket, rect, pencil, bubble)
-//  15. On-screen keyboard dialog
-//  16. initKeyboardAndSearch  (DOM-ready)
-//  17. initMainMenu           (DOM-ready)
-//  18. MdC paste handler
+//  13. Drawing tools (cartouche, circle, line, arrow, bracket, rect, pencil, bubble)
+//  14. On-screen keyboard dialog + glyph input dialog
+//  15. initKeyboardAndSearch  (DOM-ready)
+//  16. initMainMenu           (DOM-ready)
+//  17. MdC paste handler
 //  19. DOM event wiring
 //  20. initCharDragstart      (DOM-ready)
 //  21. Background image
@@ -245,17 +244,14 @@ const sentences = [
 // Add your new horizontal category at the beginning or end
 
 function displayCharactersInRows(charList) {
-    let content = '<div class="row">';
+    let content = '';
     let dividerInserted = false;
     charList.forEach(([code, char], index) => {
-        // Extract category from code (e.g., 'NU' from 'NU1' or 'A' from 'A1')
         const category = horizontalGlyphs.includes(code) ? 'Hrz' : code.match(/[A-Z]+/)[0];
 
-        // Extended-A glyphs live above U+13460. Insert a visual divider the first
-        // time we cross into them, and tag those cells so CSS can distinguish them.
         const isExt = char && char.codePointAt(0) >= 0x13460;
         if (isExt && !dividerInserted) {
-            content += '</div><div class="section-divider">Extended-A</div><div class="row">';
+            content += '<div class="section-divider">Extended-A</div>';
             dividerInserted = true;
         }
 
@@ -267,12 +263,8 @@ function displayCharactersInRows(charList) {
                 <div class="char">${char}</div>
                 <div class="name">${code}</div>
             </div>`;
-        if ((index + 1) % 5 === 0) {
-            content += '</div><div class="row">';
-        }
     });
-    content += '</div>';
-    document.getElementById('charListContainer').innerHTML = content;
+    document.getElementById('charList').innerHTML = content;
 }
 // filters hieros as search happens
 function filterAndDisplayCharacters(charList, query) {
@@ -821,6 +813,19 @@ function removeCharacterFromCanvas(object) {
     }
 }
 function storeAndRemoveCharacter(obj) {
+    // Three-line block: deleting any row deletes its siblings too. Guard against
+    // re-entry so the sweep doesn't loop forever when called per-sibling.
+    if (obj && obj.blockId && !obj._blockSweeping) {
+        const siblings = getBlockSiblings(obj);
+        if (siblings.length) {
+            obj._blockSweeping = true;
+            siblings.forEach(s => {
+                s._blockSweeping = true;
+                storeAndRemoveCharacter(s);
+            });
+        }
+    }
+
     // Store the object state before deletion
     const objectState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
     objectState.characterKey = obj.characterKey; // Preserve the character key
@@ -1043,11 +1048,15 @@ function saveWorkspace() {
             scale: (bgImage.style.transform.match(/scale\(([\d.]+)\)/) || [null, 1])[1]
         } : null;
 
+        // Preserve app-level custom properties on each object so reload
+        // reconstitutes link state, glyph-run marker, etc.
+        const CUSTOM_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow'];
+
         // Create workspace object with canvas state, names, and background
         const workspace = {
             canvas: {
-                ...canvas.toJSON(),
-                objects: objects.map(obj => obj.toJSON())
+                ...canvas.toJSON(CUSTOM_PROPS),
+                objects: objects.map(obj => obj.toJSON(CUSTOM_PROPS))
             },
             pastedNames: Array.from(document.getElementById('pastedNames')?.children || [])
                 .map(span => ({
@@ -1220,6 +1229,105 @@ function loadWorkspace() {
 }
 
 // =============================================================================
+// Save as SVG
+// =============================================================================
+// Fabric emits text objects as real <text> nodes, so a SVG export is
+// selectable and scales losslessly. We inject an @font-face for the
+// bundled Hieroglyphica Extended woff2 so Extended-A glyphs survive when
+// the SVG is opened on a machine without the font installed; the Noto
+// base block is left as a family-name reference (most viewers substitute).
+
+let hieroFontDataUrlPromise = null;
+function ensureHieroFontDataUrl() {
+    if (hieroFontDataUrlPromise) return hieroFontDataUrlPromise;
+    hieroFontDataUrlPromise = (async () => {
+        try {
+            const resp = await fetch('fonts/HieroglyphicaExtended-Regular.woff2');
+            if (!resp.ok) return null;
+            const buf = await resp.arrayBuffer();
+            // Chunked base64 — apply() on a multi-MB Uint8Array can blow the stack.
+            const bytes = new Uint8Array(buf);
+            let bin = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) {
+                bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+            }
+            return 'data:font/woff2;base64,' + btoa(bin);
+        } catch (_) {
+            return null;
+        }
+    })();
+    return hieroFontDataUrlPromise;
+}
+
+async function srcToDataUrl(src) {
+    if (!src) return null;
+    if (src.startsWith('data:')) return src;
+    try {
+        const resp = await fetch(src, { mode: 'cors' });
+        if (!resp.ok) return null;
+        const blob = await resp.blob();
+        return await new Promise((resolve) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result);
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(blob);
+        });
+    } catch (_) {
+        return null;
+    }
+}
+
+function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function saveToSVG() {
+    let svg = await withGridHidden(() => canvas.toSVG());
+
+    // Build an @font-face block to embed the local woff2.
+    const hieroDataUrl = await ensureHieroFontDataUrl();
+    const fontFaces = [];
+    if (hieroDataUrl) {
+        fontFaces.push(`@font-face{font-family:'Hieroglyphica Extended';src:url(${hieroDataUrl}) format('woff2');unicode-range:U+13460-143FF;}`);
+    }
+    const styleBlock = fontFaces.length
+        ? `<style type="text/css"><![CDATA[${fontFaces.join('')}]]></style>`
+        : '';
+
+    // Optional background image — embed as base64 <image> so the SVG is
+    // self-contained even when the user uploaded a local file.
+    const bgImage = document.getElementById('bgImage');
+    let bgEl = '';
+    if (bgImage && bgImage.style.display !== 'none' && bgImage.src) {
+        const dataUrl = await srcToDataUrl(bgImage.src);
+        if (dataUrl) {
+            const opacity = parseFloat(bgImage.style.opacity) || 0.5;
+            bgEl = `<image href="${dataUrl}" x="0" y="0" width="${canvas.width}" height="${canvas.height}" opacity="${opacity}" preserveAspectRatio="xMidYMid meet"/>`;
+        }
+    }
+
+    // Inject style + background right after fabric's <defs></defs>.
+    const injection = `${styleBlock}${bgEl}`;
+    if (injection) {
+        if (svg.includes('</defs>')) {
+            svg = svg.replace('</defs>', `</defs>${injection}`);
+        } else {
+            svg = svg.replace(/(<svg[^>]*>)/, `$1${injection}`);
+        }
+    }
+
+    const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.svg`;
+    triggerDownload(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), filename);
+}
+
+// =============================================================================
 // Save as PDF
 // =============================================================================
 let html2pdfPromise = null;
@@ -1236,95 +1344,193 @@ function ensureHtml2pdfLoaded() {
     return html2pdfPromise;
 }
 
-async function saveToPDF() {
+// Lazy fetch + base64 of the bundled Noto TTF (~1 MB) for jsPDF font embedding.
+// Cached after first call so subsequent PDF saves don't re-fetch.
+let hieroTtfPromise = null;
+function ensureHieroTtfBase64() {
+    if (hieroTtfPromise) return hieroTtfPromise;
+    hieroTtfPromise = (async () => {
+        try {
+            const resp = await fetch('fonts/NotoSansEgyptianHieroglyphs-Regular.ttf');
+            if (!resp.ok) return null;
+            const buf = await resp.arrayBuffer();
+            const bytes = new Uint8Array(buf);
+            let bin = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) {
+                bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+            }
+            return btoa(bin);
+        } catch (_) {
+            return null;
+        }
+    })();
+    return hieroTtfPromise;
+}
+
+// Hybrid PDF: raster page (preserves all canvas shapes) + an invisible text
+// layer (Unicode hieroglyphs and transliteration become selectable/copyable).
+// The editing grid is set as Fabric's backgroundImage (see drawGrid). Temporarily
+// detach it so exports don't bake in the grid lines, then restore in `finally`.
+async function withGridHidden(fn) {
+    const gridBg = canvas.backgroundImage;
+    if (gridBg) {
+        canvas.backgroundImage = null;
+        canvas.renderAll();
+    }
     try {
-        await ensureHtml2pdfLoaded();
-        // Create a temporary canvas for the combined image
+        return await fn();
+    } finally {
+        if (gridBg) {
+            canvas.backgroundImage = gridBg;
+            canvas.renderAll();
+        }
+    }
+}
+
+// Render the background image (if visible) and the Fabric canvas pixels onto
+// a fresh canvas, so callers get a single flat raster matching what the user
+// sees — minus the editing grid. Used by Save-as-PNG, Save-as-PDF, Copy-image.
+async function compositeCanvasWithBg() {
+    return withGridHidden(async () => {
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width;
         tempCanvas.height = canvas.height;
         const ctx = tempCanvas.getContext('2d');
 
-        // Draw background if exists
         const bgImage = document.getElementById('bgImage');
-        if (bgImage && bgImage.style.display !== 'none') {
+        if (bgImage && bgImage.style.display !== 'none' && bgImage.src) {
             await new Promise((resolve) => {
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
                 img.onload = () => {
-                    // Apply background opacity
                     ctx.globalAlpha = parseFloat(bgImage.style.opacity) || 0.5;
-
-                    // Get transform values from original background
-                    const transform = bgImage.style.transform;
-                    const scaleMatch = transform.match(/scale\(([\d.]+)\)/);
-                    const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     ctx.globalAlpha = 1;
                     resolve();
                 };
+                img.onerror = resolve;  // best-effort; skip bg if it fails
                 img.src = bgImage.src;
             });
         }
-
-        // Draw canvas content over background
         ctx.drawImage(canvas.getElement(), 0, 0);
+        return tempCanvas;
+    });
+}
 
-        // Get the combined image as data URL
-        const combinedImage = tempCanvas.toDataURL({
-            format: 'png',
-            quality: 1,
-            multiplier: 2
+async function saveToPNG() {
+    try {
+        const composite = await compositeCanvasWithBg();
+        const blob = await new Promise((res) => composite.toBlob(res, 'image/png'));
+        if (!blob) throw new Error('toBlob returned null');
+        const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.png`;
+        triggerDownload(blob, filename);
+    } catch (err) {
+        console.error('Error saving PNG:', err);
+        alert('Error saving PNG: ' + (err.message || err));
+    }
+}
+
+async function copyCanvasImage() {
+    try {
+        const composite = await compositeCanvasWithBg();
+        const blob = await new Promise((res) => composite.toBlob(res, 'image/png'));
+        if (!blob) throw new Error('toBlob returned null');
+        if (!navigator.clipboard || !window.ClipboardItem) {
+            throw new Error('Clipboard image write not supported in this browser');
+        }
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        showCanvasToast('Image copied to clipboard');
+    } catch (err) {
+        console.error('Error copying image:', err);
+        alert('Could not copy image: ' + (err.message || err) + '\nFalling back to download.');
+        saveToPNG();
+    }
+}
+
+function showCanvasToast(msg) {
+    let toast = document.getElementById('canvasToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'canvasToast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    clearTimeout(showCanvasToast._t);
+    showCanvasToast._t = setTimeout(() => toast.classList.remove('visible'), 1800);
+}
+
+// jsPDF comes bundled inside the html2pdf script — we use it directly rather
+// than going through html2pdf's image-of-image pipeline.
+async function saveToPDF() {
+    try {
+        await ensureHtml2pdfLoaded();
+        const jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
+        if (!jsPDFCtor) throw new Error('jsPDF unavailable from html2pdf bundle');
+
+        const composite = await compositeCanvasWithBg();
+        const pngDataUrl = composite.toDataURL('image/png');
+
+        // 2. Build the PDF.
+        const pdf = new jsPDFCtor({
+            unit: 'px',
+            format: [canvas.width, canvas.height],
+            orientation: canvas.width >= canvas.height ? 'l' : 'p'
         });
+        pdf.addImage(pngDataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
 
-        // Create image element with combined screenshot
-        const img = new Image();
-        img.src = combinedImage;
+        // 3. Invisible text overlay so glyphs and transliteration are
+        //    selectable/copyable as Unicode. Skipped silently if the font
+        //    fetch failed — the rasterised PDF is still produced.
+        const ttfB64 = await ensureHieroTtfBase64();
+        let textLayerOK = false;
+        if (ttfB64) {
+            try {
+                pdf.addFileToVFS('NotoSansEgyptianHieroglyphs-Regular.ttf', ttfB64);
+                pdf.addFont('NotoSansEgyptianHieroglyphs-Regular.ttf', 'NotoSansEgyptianHieroglyphs', 'normal');
+                pdf.setFont('NotoSansEgyptianHieroglyphs', 'normal');
 
-        // Configure html2pdf options
-        const opt = {
-            margin: 0,
-            filename: `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 1 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                logging: true,
-                width: canvas.width,
-                height: canvas.height
-            },
-            jsPDF: {
-                unit: 'px',
-                format: [canvas.width, canvas.height]
+                for (const obj of canvas.getObjects()) {
+                    if (!obj || !obj.text) continue;
+                    if (obj.type !== 'text' && obj.type !== 'i-text' && obj.type !== 'textbox') continue;
+                    const r = obj.getBoundingRect(true, true);
+                    const fs = (obj.fontSize || 16) * (obj.scaleY || 1);
+                    pdf.setFontSize(fs);
+                    const lineHeight = fs * (obj.lineHeight || 1.16);
+                    const lines = String(obj.text).split('\n');
+                    for (let i = 0; i < lines.length; i++) {
+                        if (!lines[i]) continue;
+                        // Approximate baseline at ~85% down the bbox; exact
+                        // position isn't critical for invisible text, only
+                        // selection-region accuracy.
+                        const baseline = r.top + fs * 0.85 + i * lineHeight;
+                        try {
+                            pdf.text(lines[i], r.left, baseline, { renderingMode: 'invisible' });
+                        } catch (e) {
+                            console.warn('PDF text overlay skipped:', lines[i], e);
+                        }
+                    }
+                }
+                textLayerOK = true;
+            } catch (e) {
+                console.warn('PDF text layer disabled:', e);
             }
-        };
+        }
 
-        // Generate PDF
-        await html2pdf()
-            .set(opt)
-            .from(img)
-            .save();
+        // 4. Save.
+        const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`;
+        pdf.save(filename);
 
-        // Show success message
+        // 5. Indicator.
         const indicator = document.createElement('div');
-        indicator.textContent = 'PDF Saved!';
-        indicator.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            z-index: 1000;
-        `;
+        indicator.textContent = textLayerOK ? 'PDF saved (selectable text)' : 'PDF saved';
+        indicator.style.cssText = `position:fixed;bottom:20px;right:20px;background:rgba(0,0,0,0.8);color:white;padding:8px 16px;border-radius:4px;z-index:1000;`;
         document.body.appendChild(indicator);
         setTimeout(() => indicator.remove(), 2000);
 
     } catch (error) {
         console.error('Error saving PDF:', error);
-        alert('Error saving PDF. Please try again.');
+        alert('Error saving PDF: ' + (error.message || error));
     }
 }
 
@@ -1349,97 +1555,6 @@ sentences.forEach(sentence => {
     });
     dropdownContent.appendChild(link);
 });
-// =============================================================================
-// MdC input interface
-// =============================================================================
-// Add a simple input interface
-function addMdCInterface() {
-    const container = document.createElement('div');
-    container.id = 'mdcContainer';
-    container.style.cssText = `
-        position: fixed;
-        background: gray;
-        padding: 6px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    `;
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.id = "mdcInput";
-    input.name = "mdcInput";
-    input.placeholder = 'e.g. A1 D21 or 𓀀𓏏';
-    input.style.width = '200px';
-    input.style.padding = '2px 4px';
-    input.style.margin = '0';
-    input.style.height = '22px';
-    input.style.boxSizing = 'border-box';
-
-    input.addEventListener('keydown', function (e) {
-        if (e.key === 'Backspace') {
-            e.stopPropagation(); // Prevent the global backspace handler
-        }
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleMdCInput(this.value);
-            this.value = '';
-        }
-    });
-
-    const button = document.createElement('button');
-    button.textContent = 'Add';
-    button.style.padding = '2px 8px';
-    button.style.margin = '0';
-    button.style.height = '22px';
-    button.style.lineHeight = '1';
-    button.style.boxSizing = 'border-box';
-    button.onclick = () => {
-        handleMdCInput(input.value);
-        input.value = '';
-    };
-
-    container.appendChild(input);
-    container.appendChild(button);
-
-    // Embed inside #tools: stack the existing button row below and the MdC row
-    // above. Wrap the existing children into a row container so the toolbar
-    // can become a 2-row column flex without restructuring the HTML.
-    const toolbar = document.getElementById('tools');
-    if (toolbar) {
-        const buttonRow = document.createElement('div');
-        buttonRow.id = 'toolsButtonRow';
-        buttonRow.style.cssText = `
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 4px;
-            align-items: center;
-        `;
-        while (toolbar.firstChild) buttonRow.appendChild(toolbar.firstChild);
-        toolbar.appendChild(container);
-        toolbar.appendChild(buttonRow);
-
-        toolbar.style.flexDirection = 'column';
-        toolbar.style.alignItems = 'flex-start';
-        toolbar.style.gap = '0';
-        toolbar.style.paddingTop = '2px';
-        toolbar.style.paddingBottom = '2px';
-
-        // Inside-toolbar styling: drop the floating background/border so the
-        // MdC row inherits the dark toolbar look.
-        container.style.position = 'static';
-        container.style.background = 'transparent';
-        container.style.border = 'none';
-        container.style.padding = '0';
-    } else {
-        document.body.appendChild(container);
-    }
-}
-// Initialize the interface
-addMdCInterface();
 // =============================================================================
 // Drawing tools (cartouche, circle, line, arrow, bracket, rect, pencil, bubble)
 // =============================================================================
@@ -1888,6 +2003,289 @@ function closeKeyboard() {
     document.getElementById('keyboardInput').value = '';
     activeTextObject = null;
 }
+
+// =============================================================================
+// Glyph text run (Unicode hieroglyphs as a single selectable IText)
+// =============================================================================
+// Distinct from addCharacterToCanvas, which creates one fabric.Text per glyph
+// for free positioning. A glyph text run keeps multiple glyphs as one editable
+// text block — selectable/copyable in the browser, and exported as a single
+// text node in SVG (PDF still rasterises via html2pdf).
+
+function syncThreeLineExtras() {
+    const mode = document.querySelector('input[name="glyphMode"]:checked')?.value || 'textRun';
+    const extras = document.getElementById('threeLineExtras');
+    if (extras) extras.style.display = mode === 'threeLine' ? 'block' : 'none';
+}
+
+// Special-chars palette inside the three-line section. Tracks which of
+// {translit, translation} was focused last, so palette clicks insert into the
+// right field. Bound once on first open via setupOnce flag.
+let _translitPaletteTarget = null;
+function setupTranslitPalette() {
+    const palette = document.getElementById('translitPalette');
+    const translit = document.getElementById('threeLineTranslit');
+    const translation = document.getElementById('threeLineTranslation');
+    if (!palette || !translit || !translation) return;
+    if (palette.dataset.wired === '1') return;
+    palette.dataset.wired = '1';
+
+    _translitPaletteTarget = translit;
+    translit.addEventListener('focus', () => { _translitPaletteTarget = translit; });
+    translation.addEventListener('focus', () => { _translitPaletteTarget = translation; });
+
+    // mousedown (not click) so the textarea doesn't lose focus before insertion.
+    palette.addEventListener('mousedown', (e) => {
+        const key = e.target.closest('.key');
+        if (!key) return;
+        e.preventDefault();
+        const ch = key.textContent;
+        const field = _translitPaletteTarget || translit;
+        const start = field.selectionStart ?? field.value.length;
+        const end = field.selectionEnd ?? field.value.length;
+        field.value = field.value.slice(0, start) + ch + field.value.slice(end);
+        const caret = start + ch.length;
+        field.focus();
+        field.setSelectionRange(caret, caret);
+    });
+}
+
+function openGlyphTextDialog() {
+    document.getElementById('glyphTextDialog').style.display = 'block';
+    document.getElementById('glyphTextOverlay').style.display = 'block';
+    // Restore last-used mode so the toggle is sticky across opens.
+    let mode = 'textRun';
+    try { mode = localStorage.getItem('glyphMode') || 'textRun'; } catch (_) { }
+    const radio = document.querySelector(`input[name="glyphMode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+    // Bind once per open via onchange (replaces, so no listener buildup).
+    document.querySelectorAll('input[name="glyphMode"]').forEach(r => {
+        r.onchange = syncThreeLineExtras;
+    });
+    syncThreeLineExtras();
+    setupTranslitPalette();
+    document.getElementById('glyphTextInput').focus();
+}
+
+function closeGlyphTextDialog() {
+    document.getElementById('glyphTextDialog').style.display = 'none';
+    document.getElementById('glyphTextOverlay').style.display = 'none';
+    document.getElementById('glyphTextInput').value = '';
+    const translit = document.getElementById('threeLineTranslit');
+    const translation = document.getElementById('threeLineTranslation');
+    if (translit) translit.value = '';
+    if (translation) translation.value = '';
+}
+
+async function addGlyphsFromDialog() {
+    const raw = document.getElementById('glyphTextInput').value;
+    const fontSize = parseInt(document.getElementById('glyphTextFontSize').value, 10) || 60;
+    const mode = document.querySelector('input[name="glyphMode"]:checked')?.value || 'textRun';
+    try { localStorage.setItem('glyphMode', mode); } catch (_) { }
+
+    if (mode === 'individual') {
+        // Hand off to the existing flat layout engine (one fabric.Text per sign).
+        handleMdCInput(raw);
+        closeGlyphTextDialog();
+        return;
+    }
+
+    if (mode === 'threeLine') {
+        const translit = document.getElementById('threeLineTranslit').value;
+        const translation = document.getElementById('threeLineTranslation').value;
+        await addThreeLineBlock(raw, translit, translation, fontSize);
+        closeGlyphTextDialog();
+        return;
+    }
+
+    // textRun: one selectable fabric.IText holding the whole string.
+    const matches = parseMdCInput(raw);
+    if (matches.length === 0) {
+        alert('No glyphs recognized. Enter Gardiner codes (e.g. A1-D21-N35) or paste Unicode hieroglyphs.');
+        return;
+    }
+    const glyphString = matches.map(m => m[1]).join('');
+    try {
+        await document.fonts.load(`${fontSize}px "Noto Sans Egyptian Hieroglyphs"`);
+    } catch (_) { /* best-effort */ }
+    addGlyphTextRun(glyphString, 200, 200, fontSize);
+    closeGlyphTextDialog();
+}
+
+// =============================================================================
+// Three-line linked block: glyphs / transliteration / translation
+// =============================================================================
+// Custom properties added to fabric.IText instances:
+//   blockId  — shared by all three rows of the same block
+//   blockRow — 'glyphs' | 'translit' | 'translation'
+// Linkage:
+//   - object:moving propagates the delta to all siblings with the same blockId
+//   - storeAndRemoveCharacter sweeps siblings before removing the target
+// Persistence:
+//   - saveWorkspace toJSON include list contains blockId + blockRow so reload
+//     reconstitutes the linkage automatically (Fabric copies through unknowns).
+
+async function addThreeLineBlock(glyphsRaw, translit, translation, glyphSize) {
+    glyphsRaw = (glyphsRaw || '').trim();
+    translit = translit || '';
+    translation = translation || '';
+    glyphSize = glyphSize || 48;
+
+    if (!glyphsRaw && !translit && !translation) return;
+
+    // Resolve hieroglyph input: accept Gardiner codes or raw Unicode.
+    let glyphText = '';
+    if (glyphsRaw) {
+        const matches = parseMdCInput(glyphsRaw);
+        glyphText = matches.length ? matches.map(m => m[1]).join('') : glyphsRaw;
+    }
+
+    if (glyphText) {
+        try { await document.fonts.load(`${glyphSize}px "Noto Sans Egyptian Hieroglyphs"`); }
+        catch (_) { /* best-effort */ }
+    }
+
+    const translitSize = Math.max(12, Math.round(glyphSize * 0.45));
+    const translationSize = Math.max(11, Math.round(glyphSize * 0.38));
+    const gap = Math.round(glyphSize * 0.18);
+
+    const blockId = `block_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+    const baseX = 200;
+    let y = 200;
+
+    const common = {
+        left: baseX,
+        fill: 'black',
+        originX: 'left',
+        originY: 'top',
+        borderColor: '#CCCCCC',
+        cornerColor: '#CCCCCC',
+        cornerSize: 6,
+        transparentCorners: false,
+        blockId: blockId,
+    };
+
+    const rows = [];
+    if (glyphText) {
+        const row = new fabric.IText(glyphText, {
+            ...common,
+            top: y,
+            fontSize: glyphSize,
+            fontFamily: '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif',
+            blockRow: 'glyphs',
+        });
+        row.id = generateUniqueId();
+        rows.push(row);
+        y += row.height + gap;
+    }
+    if (translit) {
+        const row = new fabric.IText(translit, {
+            ...common,
+            top: y,
+            fontSize: translitSize,
+            fontFamily: 'Times, "Times New Roman", serif',
+            fontStyle: 'italic',
+            blockRow: 'translit',
+        });
+        row.id = generateUniqueId();
+        rows.push(row);
+        y += row.height + gap;
+    }
+    if (translation) {
+        const row = new fabric.IText(translation, {
+            ...common,
+            top: y,
+            fontSize: translationSize,
+            fontFamily: 'Arial, sans-serif',
+            blockRow: 'translation',
+        });
+        row.id = generateUniqueId();
+        rows.push(row);
+    }
+
+    rows.forEach(r => canvas.add(r));
+    if (rows.length) canvas.setActiveObject(rows[0]);
+    canvasModified = true;
+    canvas.requestRenderAll();
+}
+
+function getBlockSiblings(obj) {
+    if (!obj || !obj.blockId) return [];
+    return canvas.getObjects().filter(o => o.blockId === obj.blockId && o !== obj);
+}
+
+// Wires drag propagation: moving any row moves all siblings by the same delta.
+// Uses _lastLeft/_lastTop on the dragged object as a per-frame anchor; we reset
+// these on mouse:down so the first frame of the next drag starts from a clean
+// reference point.
+function initBlockLinkage() {
+    let suppress = false;
+
+    canvas.on('mouse:down', (opt) => {
+        const obj = opt.target;
+        if (obj && obj.blockId) {
+            obj._lastLeft = obj.left;
+            obj._lastTop = obj.top;
+        }
+    });
+
+    canvas.on('object:moving', (e) => {
+        const obj = e.target;
+        if (!obj || !obj.blockId || suppress) return;
+        if (obj._lastLeft == null) {
+            obj._lastLeft = obj.left;
+            obj._lastTop = obj.top;
+            return;
+        }
+        const dx = obj.left - obj._lastLeft;
+        const dy = obj.top - obj._lastTop;
+        obj._lastLeft = obj.left;
+        obj._lastTop = obj.top;
+        if (dx === 0 && dy === 0) return;
+
+        suppress = true;
+        getBlockSiblings(obj).forEach(s => {
+            s.set({ left: s.left + dx, top: s.top + dy });
+            s.setCoords();
+        });
+        suppress = false;
+    });
+}
+
+function addGlyphTextRun(text, x, y, fontSize) {
+    canvasModified = true;
+
+    const textRun = new fabric.IText(text, {
+        left: x,
+        top: y,
+        fontSize: fontSize,
+        fill: 'black',
+        originX: 'left',
+        originY: 'top',
+        selectable: true,
+        fontFamily: '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif',
+        textBaseline: 'alphabetic',
+        borderColor: '#CCCCCC',
+        cornerColor: '#CCCCCC',
+        cornerSize: 6,
+        transparentCorners: false
+    });
+
+    textRun.id = generateUniqueId();
+    textRun.isGlyphTextRun = true;
+
+    canvas.add(textRun);
+    canvas.setActiveObject(textRun);
+
+    undoHistory.push({
+        type: 'add',
+        object: textRun.toJSON(['id', 'isGlyphTextRun']),
+        id: textRun.id
+    });
+
+    canvas.requestRenderAll();
+    return textRun;
+}
 function initKeyboardAndSearch() {
     const keyboardInput = document.getElementById('keyboardInput');
     // Attach the keydown handler once; openKeyboard/closeKeyboard just toggle visibility.
@@ -1913,6 +2311,21 @@ function initKeyboardAndSearch() {
 
     // Close when clicking overlay
     document.getElementById('keyboardOverlay').addEventListener('click', closeKeyboard);
+
+    // Glyph text run dialog: dismiss on overlay click and on Enter (with Shift
+    // for newline, matching common chat UX).
+    const glyphOverlay = document.getElementById('glyphTextOverlay');
+    if (glyphOverlay) glyphOverlay.addEventListener('click', closeGlyphTextDialog);
+    const glyphInput = document.getElementById('glyphTextInput');
+    if (glyphInput) {
+        glyphInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') e.stopPropagation();
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                addGlyphsFromDialog();
+            }
+        });
+    }
 }
 
 // =============================================================================
@@ -1922,6 +2335,7 @@ function initMainMenu() {
     const menuBtn = document.getElementById('mainMenuBtn');
     const menu = document.getElementById('mainMenu');
     const saveAsJsonBtn = document.getElementById('saveAsJsonBtn');
+    const saveAsSvgBtn = document.getElementById('saveAsSvgBtn');
     const saveAsPdfBtn = document.getElementById('saveAsPdfBtn');
     const openBtn = document.getElementById('loadWorkspaceBtn');
     const wikiBtn = document.getElementById('wikiBtn');
@@ -1935,7 +2349,10 @@ function initMainMenu() {
 
     const close = () => menu.classList.add('hidden');
 
+    const saveAsPngBtn = document.getElementById('saveAsPngBtn');
     saveAsJsonBtn.addEventListener('click', (e) => { e.stopPropagation(); saveWorkspace(); close(); });
+    if (saveAsPngBtn) saveAsPngBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPNG(); close(); });
+    saveAsSvgBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToSVG(); close(); });
     saveAsPdfBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPDF(); close(); });
     openBtn.addEventListener('click', (e) => { e.stopPropagation(); loadWorkspace(); close(); });
     wikiBtn.addEventListener('click', (e) => {
@@ -2086,6 +2503,18 @@ function initCharDragstart() {
             event.dataTransfer.setData('text/plain', event.target.querySelector('.char').textContent);
         }
     }, false);
+
+    // Click-to-select: highlight the clicked palette cell, clearing any prior
+    // selection. Selection is purely visual — drag and existing add-to-canvas
+    // flows are unaffected.
+    container.addEventListener('click', (event) => {
+        const cell = event.target.closest('.char-container');
+        if (!cell || !container.contains(cell)) return;
+        const prev = container.querySelector('.char-container.selected');
+        if (prev === cell) return;
+        if (prev) prev.classList.remove('selected');
+        cell.classList.add('selected');
+    });
 }
 // =============================================================================
 // Background image
@@ -2219,7 +2648,187 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharDragstart();
     initBackgroundImage();
     initColorPopup();
+    initPaletteResizer();
+    initResultsResizer();
+    initCanvasContextMenu();
+    initBlockLinkage();
 });
+
+// Replace the browser's default right-click menu on the canvas with one whose
+// Save/Copy entries actually capture the composed image (Fabric pixels +
+// background image). The browser default only sees Fabric's transparent
+// upper-canvas, so its "Save image"/"Copy image" entries are misleading.
+function initCanvasContextMenu() {
+    const menu = document.getElementById('canvasCtxMenu');
+    const workspace = document.getElementById('workspaceContainer');
+    if (!menu || !workspace) return;
+
+    const open = (clientX, clientY) => {
+        // Show off-screen first so we can measure, then clamp into viewport.
+        menu.style.left = '-9999px';
+        menu.style.top = '-9999px';
+        menu.classList.remove('hidden');
+        const rect = menu.getBoundingClientRect();
+        const x = Math.min(clientX, window.innerWidth - rect.width - 4);
+        const y = Math.min(clientY, window.innerHeight - rect.height - 4);
+        menu.style.left = Math.max(4, x) + 'px';
+        menu.style.top = Math.max(4, y) + 'px';
+    };
+    const close = () => menu.classList.add('hidden');
+
+    workspace.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        open(e.clientX, e.clientY);
+    });
+
+    menu.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        e.stopPropagation();
+        close();
+        switch (btn.dataset.action) {
+            case 'copy': copyCanvasImage(); break;
+            case 'png':  saveToPNG();       break;
+            case 'svg':  saveToSVG();       break;
+            case 'pdf':  saveToPDF();       break;
+        }
+    });
+
+    // Dismiss on outside click, scroll, resize, or Escape.
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+}
+
+// Drag the left edge of #searchContainer to widen the Gardiner palette.
+// Width is stored on :root as --palette-w and persisted in localStorage.
+// The Fabric canvas is resized to fill the remaining space.
+function initPaletteResizer() {
+    const handle = document.getElementById('paletteResizer');
+    const panel = document.getElementById('searchContainer');
+    const container = document.querySelector('.container');
+    if (!handle || !panel || !container) return;
+
+    const MIN_W = 280;
+    const clampW = (w) => {
+        const max = Math.max(MIN_W, Math.floor(window.innerWidth * 0.8));
+        return Math.min(max, Math.max(MIN_W, w));
+    };
+
+    function applyW(w) {
+        document.documentElement.style.setProperty('--palette-w', w + 'px');
+        if (typeof canvas !== 'undefined' && canvas && canvas.setDimensions) {
+            const d = getCanvasDimensions();
+            canvas.setDimensions({ width: d.width, height: d.height }, { cssOnly: false });
+            try { clearExistingGrid(); drawGrid(); } catch (_) { }
+            const zoom = canvas.getZoom();
+            const vpt = canvas.viewportTransform;
+            canvas.setViewportTransform([zoom, 0, 0, zoom, vpt[4], vpt[5]]);
+            canvas.requestRenderAll();
+        }
+        try { updateDivWidth(); } catch (_) { }
+    }
+
+    // Restore + clamp the saved width, then re-run the canvas-resize path so
+    // the Fabric pixel buffer (initialized earlier against the default palette
+    // width) is brought in line with the restored width. Without this, on
+    // reload the canvas stays too wide and pushes the palette off-screen until
+    // any subsequent window-resize event fires.
+    const saved = parseInt(localStorage.getItem('paletteW'), 10);
+    if (saved > 0) applyW(clampW(saved));
+
+    // If the window shrinks below current palette + min canvas room, clamp.
+    window.addEventListener('resize', () => {
+        const cur = parseInt(getComputedStyle(panel).width, 10);
+        if (cur > 0) {
+            const clamped = clampW(cur);
+            if (clamped !== cur) applyW(clamped);
+        }
+    });
+
+    let dragging = false;
+    let rafPending = false;
+    let pendingW = 0;
+
+    handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        dragging = true;
+        try { handle.setPointerCapture(e.pointerId); } catch (_) { }
+        document.body.style.cursor = 'ew-resize';
+    });
+
+    handle.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const rect = container.getBoundingClientRect();
+        pendingW = clampW(rect.right - e.clientX);
+        if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(() => {
+                rafPending = false;
+                applyW(pendingW);
+            });
+        }
+    });
+
+    function endDrag(e) {
+        if (!dragging) return;
+        dragging = false;
+        try { handle.releasePointerCapture(e.pointerId); } catch (_) { }
+        document.body.style.cursor = '';
+        try {
+            const cur = parseInt(getComputedStyle(panel).width, 10);
+            if (cur > 0) localStorage.setItem('paletteW', String(cur));
+        } catch (_) { }
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+}
+
+// Wire up the horizontal bar between the char list and the dictionary panel.
+// Drag down to grow the char list, up to grow the dictionary results.
+function initResultsResizer() {
+    const handle = document.getElementById('resultsResizer');
+    const list = document.getElementById('charListContainer');
+    if (!handle || !list) return;
+
+    const saved = parseInt(localStorage.getItem('charListH'), 10);
+    if (saved > 0) {
+        list.style.height = saved + 'px';
+        list.style.minHeight = '0';
+        list.style.flexShrink = '1';
+    }
+
+    let dragging = false;
+    handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        dragging = true;
+        try { handle.setPointerCapture(e.pointerId); } catch (_) { }
+        document.body.style.cursor = 'ns-resize';
+    });
+    handle.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const rect = list.getBoundingClientRect();
+        const newH = Math.max(120, e.clientY - rect.top);
+        list.style.height = newH + 'px';
+        list.style.minHeight = '0';
+        list.style.flexShrink = '1';
+    });
+    function endDrag(e) {
+        if (!dragging) return;
+        dragging = false;
+        try { handle.releasePointerCapture(e.pointerId); } catch (_) { }
+        document.body.style.cursor = '';
+        try {
+            const h = parseInt(list.style.height, 10);
+            if (h > 0) localStorage.setItem('charListH', String(h));
+        } catch (_) { }
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+}
 
 // =============================================================================
 // Background color popup
@@ -2308,7 +2917,11 @@ window.addEventListener('beforeunload', function (e) {
 window.addEventListener('keydown', function (e) {
     const activeObject = canvas.getActiveObject();
     const activeGroup = canvas.getActiveObjects();
-    const isInSearchInput = e.target.id === 'searchInput';
+    // Skip delete-from-canvas when focus is in any text field — input,
+    // textarea, or contenteditable. Prevents Backspace inside dialog inputs
+    // from nuking the selected canvas object.
+    const tag = (e.target.tagName || '').toLowerCase();
+    const isInTextField = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
 
     // Utility to display feedback
     const showIndicator = (message) => {
@@ -2444,7 +3057,7 @@ window.addEventListener('keydown', function (e) {
     }
 
     // Delete objects (Delete/Backspace)
-    if (!isInSearchInput && (e.key === 'Delete' || e.key === 'Backspace')) {
+    if (!isInTextField && (e.key === 'Delete' || e.key === 'Backspace')) {
         e.preventDefault();
         if (activeGroup.length) {
             activeGroup.forEach(storeAndRemoveCharacter);

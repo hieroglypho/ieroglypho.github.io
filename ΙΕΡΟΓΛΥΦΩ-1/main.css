@@ -88,12 +88,11 @@ body {
 }
 
 
-/* Main search container - fixed width */
+/* Main search container - user-resizable via #paletteResizer drag handle */
 #searchContainer {
-    width: 400px;
-    /* Fixed width instead of viewport-based */
-    min-width: 400px;
-    /* Ensure minimum width */
+    width: var(--palette-w, 400px);
+    min-width: 280px;
+    max-width: 80vw;
     border: 1px dotted #ffffff;
     padding: 10px;
     background-color: #1e1e1e;
@@ -104,19 +103,34 @@ body {
     height: calc(100vh - 2vh);
     box-sizing: border-box;
     margin: 0;
+    flex-shrink: 0;
 }
 
-/* Character list container */
+/* Left-edge drag handle to widen/narrow the palette. Sits on the border so
+   the hit area straddles the seam between canvas and palette. */
+#paletteResizer {
+    position: absolute;
+    top: 0;
+    left: -3px;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 10;
+    background: transparent;
+}
+#paletteResizer:hover,
+#paletteResizer:active {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+}
+
+/* Character list — columns reflow as the palette is resized. */
 #charList {
     display: grid;
-    grid-template-columns: repeat(5, 70px);
-    /* Fixed width columns */
+    grid-template-columns: repeat(auto-fill, 70px);
+    justify-content: center;
     gap: 5px;
     padding: 10px;
-    width: fit-content;
-    /* Only take needed width */
     margin: 0 auto;
-    /* Center horizontally */
 }
 
 /* Character item styling */
@@ -143,9 +157,60 @@ body {
     background-color: #1d1813;
 }
 
+/* Compact special-chars palette inside the three-line block dialog. Inserts
+   into whichever of {translit, translation} has focus when a key is clicked. */
+.translit-palette {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.translit-palette .keyboard-row {
+    display: flex;
+    gap: 3px;
+}
+.translit-palette .key {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    background: #2a2a2a;
+    color: #e6d4b8;
+    border: 1px solid #444;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+.translit-palette .key:hover { background: #3a3a3a; }
+.translit-palette .key:active { background: #4a4a4a; }
+
+/* Row labels inside the three-line block dialog. */
+.three-line-label {
+    display: block;
+    margin: 8px 0 3px;
+    font-size: 11px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Click-to-select highlight — persists until another cell is clicked or the
+   palette re-renders (search/category change). */
+.char-container.selected {
+    border-color: #f0c674;
+    background-color: #3a2f1a;
+    box-shadow: 0 0 0 2px rgba(240, 198, 116, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
 /* Section divider that appears between base block and Extended-A in the chart. */
 .section-divider {
-    width: 100%;
+    grid-column: 1 / -1;
     padding: 8px 12px;
     margin: 8px 0;
     background: linear-gradient(90deg, transparent, #8a5c2b 20%, #8a5c2b 80%, transparent);
@@ -525,7 +590,8 @@ canvas {
     margin: 4px 0;
 }
 
-.coptic-label span {
+.coptic-label span,
+.section-label span {
     font-size: 0.8em;
     font-style: italic;
     color: #666;
@@ -926,7 +992,57 @@ time {
 /* Media query for minimum width support */
 @media screen and (max-width: 1200px) {
     #searchContainer {
-        width: 300px;
-        /* Minimum width when viewport is narrow */
+        width: var(--palette-w, 300px);
     }
+}
+
+/* Right-click context menu shown over the canvas. Replaces the browser's
+   default menu, whose "Save image" / "Copy image" entries only see the
+   Fabric upper-canvas (mostly transparent) and miss the background image. */
+.canvas-ctx-menu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 170px;
+    background: #1e1e1e;
+    border: 1px solid #555;
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+}
+.canvas-ctx-menu.hidden { display: none; }
+.canvas-ctx-menu button {
+    background: transparent;
+    color: #ddd;
+    border: none;
+    padding: 7px 14px;
+    text-align: left;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+}
+.canvas-ctx-menu button:hover { background: #2f2f2f; color: #fff; }
+
+/* Brief confirmation toast for clipboard copy etc. */
+#canvasToast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20, 20, 20, 0.92);
+    color: #e6d4b8;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid #8a5c2b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease, transform 180ms ease;
+    z-index: 10001;
+}
+#canvasToast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }

@@ -4,13 +4,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ΙΕΡΟΓΛΥΦΩ</title>
-    <!-- mobiles redirects -->
+
+    <!-- mobiles redirects (kept early so mobile users bounce before loading heavy assets) -->
     <script>
         if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             window.location.href = "https://www.hieroglyphica.org/mobile.html";
         }
     </script>
+
+    <title>Hieroglyphica — Egyptian Hieroglyph Composer | Gardiner Signs, MdC, Transliteration</title>
+
+    <!-- Primary meta -->
+    <meta name="description" content="Free in-browser composer for Egyptian hieroglyphs. Search 1,000+ Gardiner signs, compose with Manuel de Codage (MdC), add transliteration and translation in linked three-line blocks, and export to PNG, SVG, or PDF with selectable Unicode text. Built for Egyptologists, students, and enthusiasts.">
+    <meta name="keywords" content="Egyptian hieroglyphs, hieroglyph editor, hieroglyph composer, Gardiner signs, Manuel de Codage, MdC, transliteration, Egyptology, ancient Egypt, Hieroglyphica, Unicode hieroglyphs, Noto Sans Egyptian, Leiden conventions, Coptic, interlinear gloss">
+    <meta name="author" content="Hieroglyphica">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1e1e1e">
+    <meta name="application-name" content="Hieroglyphica">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="canonical" href="https://www.hieroglyphica.org/ΙΕΡΟΓΛΥΦΩ-1/XYjQ5WMMLCY0vy9sT.html">
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, Slack, iMessage previews) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Hieroglyphica">
+    <meta property="og:url" content="https://www.hieroglyphica.org/ΙΕΡΟΓΛΥΦΩ-1/XYjQ5WMMLCY0vy9sT.html">
+    <meta property="og:title" content="Hieroglyphica — Egyptian Hieroglyph Composer">
+    <meta property="og:description" content="Compose Egyptian hieroglyphs in your browser. Gardiner sign palette, Manuel de Codage, transliteration, linked three-line interlinear blocks, and export to PNG / SVG / selectable-text PDF.">
+    <meta property="og:image" content="https://www.hieroglyphica.org/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Hieroglyphica — Egyptian hieroglyph composer screenshot">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hieroglyphica — Egyptian Hieroglyph Composer">
+    <meta name="twitter:description" content="Browser-based composer for Egyptian hieroglyphs. Gardiner signs, MdC, transliteration, three-line blocks, export to PNG / SVG / PDF.">
+    <meta name="twitter:image" content="https://www.hieroglyphica.org/og-image.png">
+    <meta name="twitter:image:alt" content="Hieroglyphica — Egyptian hieroglyph composer screenshot">
+
+    <!-- Favicon: inline SVG with the Ω from ΙΕΡΟΓΛΥΦΩ on a dark tile (no external file needed). -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='60%25' font-size='42' text-anchor='middle' font-family='Georgia,serif' fill='%23e6a6a6' font-weight='bold'%3E%CE%A9%3C/text%3E%3C/svg%3E">
+
+    <!-- iOS / PWA hints -->
+    <meta name="apple-mobile-web-app-title" content="Hieroglyphica">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Structured data: surfaces the app in rich search results. -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Hieroglyphica",
+        "alternateName": "ΙΕΡΟΓΛΥΦΩ",
+        "url": "https://www.hieroglyphica.org/ΙΕΡΟΓΛΥΦΩ-1/XYjQ5WMMLCY0vy9sT.html",
+        "applicationCategory": "EducationalApplication",
+        "applicationSubCategory": "Egyptology",
+        "operatingSystem": "Web Browser (desktop)",
+        "browserRequirements": "Requires JavaScript. Modern desktop browser (Chrome, Firefox, Safari, Edge).",
+        "description": "Free in-browser composer for Egyptian hieroglyphs with Gardiner sign palette, Manuel de Codage input, transliteration, Leiden brackets, linked three-line interlinear blocks, and PNG / SVG / PDF export.",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "1000+ Gardiner signs with search",
+            "Manuel de Codage (MdC) input",
+            "Egyptological transliteration keyboard",
+            "Leiden bracket conventions",
+            "Three-line linked blocks (glyphs / transliteration / translation)",
+            "Export to PNG, SVG, and selectable-text PDF",
+            "JSON workspace save and load"
+        ]
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
@@ -43,6 +115,7 @@
         </div>
 
         <div id="searchContainer" style="position: relative;">
+            <div id="paletteResizer" title="Drag to resize palette"></div>
             <input type="text" id="searchInput" placeholder="Search characters or names...">
             <div class="dropdown">
                 <button id="dropdownButton">or A, B, C..</button>
@@ -81,6 +154,8 @@
             <button id="mainMenuBtn" class="action-btn" title="File menu">≡</button>
             <div id="mainMenu" class="save-menu hidden">
                 <button id="saveAsJsonBtn">Save as JSON</button>
+                <button id="saveAsPngBtn">Save as PNG</button>
+                <button id="saveAsSvgBtn">Save as SVG</button>
                 <button id="saveAsPdfBtn">Save as PDF</button>
                 <button id="loadWorkspaceBtn">Open JSON…</button>
                 <button id="wikiBtn">Gardiner signs (Wiki)</button>
@@ -93,11 +168,12 @@
             <button onclick="addCustomRect()" title="Add a Rectangle">▭</button>
             <button onclick="addCircle()" title="Add a Circle">◯</button>
             <button onclick="addPencilLine()" title="Add a Freehand Line">✎</button>
-            <button onclick="addSquareBracket()" title="Add Square Brackets">[</button>
+            <button onclick="addSquareBracket()" title="Add bracket shape (draggable annotation)">[ ]</button>
             <button onclick="addSpeechBubble()" title="Add a Speech Bubble">💬</button>
 
             <input type="file" id="bgImageInput" accept="image/*" class="hidden-input">
             <button title="Enter text" onclick="openKeyboard()">⌨</button>
+            <button title="Add hieroglyphs (text run, individual signs, or three-line block)" onclick="openGlyphTextDialog()">𓂀…</button>
             <button onclick="document.getElementById('bgImageInput').click()"
                 title="Upload background image">BG</button>
         </div>
@@ -132,6 +208,14 @@
     </div>
     <!-- /#tools -->
 
+    <!-- Right-click context menu for the canvas. Hidden until shown via JS. -->
+    <div id="canvasCtxMenu" class="canvas-ctx-menu hidden">
+        <button data-action="copy">📋 Copy image</button>
+        <button data-action="png">💾 Save as PNG</button>
+        <button data-action="svg">💾 Save as SVG</button>
+        <button data-action="pdf">💾 Save as PDF</button>
+    </div>
+
     <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
     <div class="help-overlay" id="helpOverlay">
         <iframe src="help-content.html" class="help-content-frame" id="helpContent"></iframe>
@@ -150,6 +234,7 @@
                 <div class="keyboard-row special-chars">
                     <div class="key">ꜣ</div>
                     <div class="key">ꜥ</div>
+                    <div class="key">ꞽ</div>
                     <div class="key">ḥ</div>
                     <div class="key">ḫ</div>
                     <div class="key">ẖ</div>
@@ -158,9 +243,37 @@
                     <div class="key">ṯ</div>
                     <div class="key">ḏ</div>
                 </div>
+                <div class="keyboard-row special-chars">
+                    <div class="key">Ꜣ</div>
+                    <div class="key">Ꜥ</div>
+                    <div class="key">Ꞽ</div>
+                    <div class="key">Ḥ</div>
+                    <div class="key">Ḫ</div>
+                    <div class="key">H&#x0331;</div>
+                    <div class="key">Š</div>
+                    <div class="key">Ḳ</div>
+                    <div class="key">Ṯ</div>
+                    <div class="key">Ḏ</div>
+                </div>
                 <!-- Divider -->
                 <div class="divider"></div>
-                <div class="keyboard-row coptic-label">
+                <div class="keyboard-row section-label">
+                    <span>Leiden</span>
+                </div>
+                <div class="keyboard-row special-chars">
+                    <div class="key" title="Lacuna (missing, restored)">[</div>
+                    <div class="key" title="Lacuna close">]</div>
+                    <div class="key" title="Damaged (traces remain)">⌜</div>
+                    <div class="key" title="Damaged close">⌝</div>
+                    <div class="key" title="Scribal omission (editor restored)">⟨</div>
+                    <div class="key" title="Omission close">⟩</div>
+                    <div class="key" title="Superfluous (scribal error)">{</div>
+                    <div class="key" title="Superfluous close">}</div>
+                    <div class="key" title="Ellipsis (untranscribed)">…</div>
+                </div>
+                <!-- Divider -->
+                <div class="divider"></div>
+                <div class="keyboard-row section-label">
                     <span>Coptic</span>
                 </div>
                 <div class="keyboard-row coptic-chars">
@@ -193,6 +306,84 @@
             <div class="dialog-buttons">
                 <button class="dialog-btn cancel" onclick="closeKeyboard()">Cancel</button>
                 <button class="dialog-btn add" onclick="addKeyboardText()">Add Text</button>
+            </div>
+        </div>
+
+        <!-- GLYPH INPUT dialog: single Unicode IText OR individual draggable signs -->
+        <div class="keyboard-overlay" id="glyphTextOverlay"></div>
+        <div class="keyboard-dialog" id="glyphTextDialog">
+            <div style="margin-bottom: 8px; font-size: 12px; color: #aaa; line-height: 1.4;">
+                Type or paste Unicode hieroglyphs, or Gardiner codes
+                (e.g. <code style="color:#ddd;">A1-D21-N35</code>).
+            </div>
+            <div class="input-container">
+                <textarea class="keyboard-input" id="glyphTextInput"
+                    placeholder="𓀀𓏏𓇋   or   A1 D21 N35"
+                    style="height: 60px; font-size: 32px;"></textarea>
+                <input type="number" id="glyphTextFontSize" class="font-size-input" value="60" min="12" max="200">
+            </div>
+            <div class="glyph-mode-row" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px; font-size:12px; color:#ddd;">
+                <label style="cursor:pointer; user-select:none;">
+                    <input type="radio" name="glyphMode" value="textRun" checked>
+                    Single text run <span style="color:#888;">(selectable / citable)</span>
+                </label>
+                <label style="cursor:pointer; user-select:none;">
+                    <input type="radio" name="glyphMode" value="individual">
+                    Individual signs <span style="color:#888;">(draggable)</span>
+                </label>
+                <label style="cursor:pointer; user-select:none;">
+                    <input type="radio" name="glyphMode" value="threeLine">
+                    Three-line block <span style="color:#888;">(glyphs / transliteration / translation)</span>
+                </label>
+            </div>
+
+            <!-- Extra rows revealed only in three-line mode. -->
+            <div id="threeLineExtras" style="display:none;">
+                <label class="three-line-label">Special characters
+                    <span style="color:#888; text-transform:none; letter-spacing:0;">
+                        — click to insert at cursor in transliteration or translation
+                    </span>
+                </label>
+                <div id="translitPalette" class="translit-palette">
+                    <div class="keyboard-row special-chars">
+                        <div class="key">ꜣ</div><div class="key">ꜥ</div><div class="key">ꞽ</div>
+                        <div class="key">ḥ</div><div class="key">ḫ</div><div class="key">ẖ</div>
+                        <div class="key">š</div><div class="key">ḳ</div><div class="key">ṯ</div>
+                        <div class="key">ḏ</div>
+                    </div>
+                    <div class="keyboard-row special-chars">
+                        <div class="key">Ꜣ</div><div class="key">Ꜥ</div><div class="key">Ꞽ</div>
+                        <div class="key">Ḥ</div><div class="key">Ḫ</div><div class="key">H&#x0331;</div>
+                        <div class="key">Š</div><div class="key">Ḳ</div><div class="key">Ṯ</div>
+                        <div class="key">Ḏ</div>
+                    </div>
+                    <div class="keyboard-row special-chars">
+                        <div class="key" title="Lacuna open">[</div>
+                        <div class="key" title="Lacuna close">]</div>
+                        <div class="key" title="Damaged open">⌜</div>
+                        <div class="key" title="Damaged close">⌝</div>
+                        <div class="key" title="Editor restored open">⟨</div>
+                        <div class="key" title="Editor restored close">⟩</div>
+                        <div class="key" title="Superfluous open">{</div>
+                        <div class="key" title="Superfluous close">}</div>
+                        <div class="key" title="Ellipsis">…</div>
+                    </div>
+                </div>
+
+                <label class="three-line-label">Transliteration</label>
+                <textarea class="keyboard-input" id="threeLineTranslit"
+                    placeholder="ꜣbḏ.w"
+                    style="height:36px; font-size:18px; font-style:italic;"></textarea>
+
+                <label class="three-line-label">Translation</label>
+                <textarea class="keyboard-input" id="threeLineTranslation"
+                    placeholder="Abydos"
+                    style="height:36px; font-size:16px;"></textarea>
+            </div>
+
+            <div class="dialog-buttons">
+                <button class="dialog-btn cancel" onclick="closeGlyphTextDialog()">Cancel</button>
+                <button class="dialog-btn add" onclick="addGlyphsFromDialog()">Add</button>
             </div>
         </div>
 

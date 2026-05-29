@@ -162,17 +162,22 @@ async function addGlyphsFromDialog() {
     const mode = document.querySelector('input[name="glyphMode"]:checked')?.value || 'textRun';
     try { localStorage.setItem('glyphMode', mode); } catch (_) { }
 
-    if (mode === 'individual') {
-        // Hand off to the existing flat layout engine (one fabric.Text per sign).
-        handleMdCInput(raw);
-        closeGlyphTextDialog();
-        return;
-    }
-
     if (mode === 'threeLine') {
         const translit = document.getElementById('threeLineTranslit').value;
         const translation = document.getElementById('threeLineTranslation').value;
         await addThreeLineBlock(raw, translit, translation, fontSize);
+        closeGlyphTextDialog();
+        return;
+    }
+
+    // MdC spatial operators (':' stack, '*' juxtapose, parentheses) arrange
+    // glyphs in 2D, which a single linear text run cannot represent. Route to
+    // the individual-sign layout engine whenever the user picks that mode OR
+    // the input contains a spatial operator — so e.g. "(M17:X1)*N35" lays out
+    // correctly even if "Single text run" happens to be selected.
+    const hasSpatialMdC = /[:*()]/.test(raw);
+    if (mode === 'individual' || hasSpatialMdC) {
+        handleMdCInput(raw);
         closeGlyphTextDialog();
         return;
     }
@@ -469,7 +474,239 @@ function parseMdCInput(input) {
     return matches;
 }
 
+// -----------------------------------------------------------------------------
+// Tier 1 — core spatial layout for the MdC operators  -  :  *  ( )
+// -----------------------------------------------------------------------------
+// handleMdCInput parses the string into a small expression tree honouring the
+// Manuel de Codage operator precedence (tightest binding first):
+//
+//     ( ... )   grouping (highest)
+//     *         juxtaposition  — glyphs placed side by side (horizontal)
+//     :         superposition  — glyphs stacked top-over-bottom (vertical)
+//     -         cadrat separator — laid out left-to-right along the row (lowest)
+//
+// So  A*B:C   parses as  (A*B):C   — "A beside B" sitting over "C", and
+//     A:B*C   parses as  A:(B*C)   — "A" over "B beside C".
+//
+// Glyphs keep their natural metrics (no stretching); within a group they pack
+// along the operator axis and centre on the cross axis. Each top-level cadrat
+// is uniformly scaled down if it would exceed MDC_MAX_CADRAT so deep stacks
+// stay within a sane size. Any parse failure (unbalanced parens, a stray
+// operator, nothing recognised) falls back to the original flat-row layout so
+// a paste never hard-fails.
+
+const MDC_BASE = 60;            // fontSize glyphs are added at (matches addCharacterToCanvas)
+const MDC_GAP = 4;              // gap between siblings inside a cadrat, at scale 1
+const MDC_MAX_CADRAT = 130;     // cap on a single cadrat's width/height before downscaling
+const MDC_FONT = '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif';
+
 function handleMdCInput(mdcString) {
+    let tree = null;
+    try {
+        tree = parseMdCTree(tokenizeMdC(mdcString));
+    } catch (_) {
+        tree = null;  // fall through to the flat layout below
+    }
+
+    if (!tree || tree.children.length === 0) {
+        // No spatial structure (or a parse error) — keep the original behaviour.
+        return handleMdCInputFlat(mdcString);
+    }
+
+    layoutMdCRow(tree.children);
+}
+
+// Split the raw string into glyph leaves and operator tokens.
+// A "word" is resolved as a whole Gardiner code first; failing that it is
+// treated as a run of raw Unicode glyphs (each becomes its own leaf, joined by
+// an implicit '-' so plain pasted Unicode still lays out as a row).
+function tokenizeMdC(input) {
+    const tokens = [];
+    let word = '';
+
+    const flushWord = () => {
+        if (!word) return;
+        const code = charsByCode.get(word.toUpperCase());
+        if (code) {
+            tokens.push({ type: 'glyph', entry: code });
+        } else {
+            const leaves = [];
+            for (const ch of word) {
+                const g = charsByGlyph.get(ch);
+                if (g) leaves.push(g);
+            }
+            leaves.forEach((g, i) => {
+                if (i > 0) tokens.push({ type: 'op', op: '-' });
+                tokens.push({ type: 'glyph', entry: g });
+            });
+        }
+        word = '';
+    };
+
+    for (const ch of input) {
+        if (ch === '(' || ch === ')' || ch === '-' || ch === ':' || ch === '*') {
+            flushWord();
+            tokens.push({ type: 'op', op: ch });
+        } else if (/[\s,;]/.test(ch)) {
+            flushWord();
+            tokens.push({ type: 'op', op: '-' });   // whitespace/comma = cadrat break
+        } else {
+            word += ch;
+        }
+    }
+    flushWord();
+    return tokens;
+}
+
+// Recursive-descent parse into:
+//   { type:'glyph', entry }                 leaf
+//   { type:'h', children:[...] }            '*' horizontal group
+//   { type:'v', children:[...] }            ':' vertical group
+//   { type:'row', children:[cadrat,...] }   top-level '-' sequence
+function parseMdCTree(tokens) {
+    let pos = 0;
+    const peek = () => tokens[pos];
+    const eat = () => tokens[pos++];
+    const isOp = (t, op) => t && t.type === 'op' && t.op === op;
+
+    function parseAtom() {
+        const t = peek();
+        if (isOp(t, '(')) {
+            eat();
+            const inner = parseStack();
+            if (!isOp(peek(), ')')) throw new Error('unbalanced parens');
+            eat();
+            return inner;
+        }
+        if (t && t.type === 'glyph') { eat(); return { type: 'glyph', entry: t.entry }; }
+        throw new Error('unexpected token');
+    }
+
+    function parseJuxt() {
+        const kids = [parseAtom()];
+        while (isOp(peek(), '*')) { eat(); kids.push(parseAtom()); }
+        return kids.length === 1 ? kids[0] : { type: 'h', children: kids };
+    }
+
+    function parseStack() {
+        const kids = [parseJuxt()];
+        while (isOp(peek(), ':')) { eat(); kids.push(parseJuxt()); }
+        return kids.length === 1 ? kids[0] : { type: 'v', children: kids };
+    }
+
+    function parseSeq() {
+        const cadrats = [];
+        while (isOp(peek(), '-')) eat();          // skip leading separators
+        while (peek()) {
+            cadrats.push(parseStack());
+            while (isOp(peek(), '-')) eat();       // collapse separators between cadrats
+        }
+        return { type: 'row', children: cadrats };
+    }
+
+    const tree = parseSeq();
+    if (pos < tokens.length) throw new Error('trailing tokens');
+    return tree;
+}
+
+// Compute each node's natural (unscaled) box, storing w/h on the node.
+function measureMdCNode(node) {
+    if (node.type === 'glyph') {
+        const t = new fabric.Text(node.entry[1], { fontSize: MDC_BASE, fontFamily: MDC_FONT });
+        node.w = t.width || MDC_BASE;
+        node.h = t.height || MDC_BASE;
+        return node;
+    }
+    node.children.forEach(measureMdCNode);
+    const gaps = MDC_GAP * (node.children.length - 1);
+    if (node.type === 'h') {
+        node.w = node.children.reduce((s, c) => s + c.w, 0) + gaps;
+        node.h = Math.max(...node.children.map(c => c.h));
+    } else { // 'v'
+        node.w = Math.max(...node.children.map(c => c.w));
+        node.h = node.children.reduce((s, c) => s + c.h, 0) + gaps;
+    }
+    return node;
+}
+
+// Render a measured node. (x, y) is the top-left of the node's box; the whole
+// subtree is drawn at the given uniform `scale`. Children pack along the
+// operator axis and centre on the cross axis.
+function placeMdCNode(node, x, y, scale) {
+    const boxW = node.w * scale;
+    const boxH = node.h * scale;
+
+    if (node.type === 'glyph') {
+        const obj = addCharacterToCanvas(node.entry[1], node.entry[0], 0, 0);
+        obj.set({ scaleX: scale, scaleY: scale, left: x + boxW / 2, top: y + boxH / 2 });
+        obj.setCoords();
+        return;
+    }
+
+    if (node.type === 'h') {
+        let cx = x;
+        for (const c of node.children) {
+            const ch = c.h * scale;
+            placeMdCNode(c, cx, y + (boxH - ch) / 2, scale);   // centre vertically
+            cx += c.w * scale + MDC_GAP * scale;
+        }
+    } else { // 'v'
+        let cy = y;
+        for (const c of node.children) {
+            const cw = c.w * scale;
+            placeMdCNode(c, x + (boxW - cw) / 2, cy, scale);   // centre horizontally
+            cy += c.h * scale + MDC_GAP * scale;
+        }
+    }
+}
+
+// Lay a sequence of cadrats out along the row: bottom-aligned, wrapping at the
+// right edge, placed below any existing canvas content (mirrors the old flat
+// layout, but each item is a fully laid-out cadrat block).
+function layoutMdCRow(cadrats) {
+    const hGap = 12, vGap = 18, margin = 50, startX = 100;
+    const rightEdge = canvas.width - margin;
+    const usableBottom = canvas.height - margin;
+
+    const blocks = cadrats.map(node => {
+        measureMdCNode(node);
+        const scale = Math.min(1, MDC_MAX_CADRAT / node.w, MDC_MAX_CADRAT / node.h);
+        return { node, w: node.w * scale, h: node.h * scale, scale };
+    });
+
+    let baselineY = 100 + MDC_BASE;
+    const existing = canvas.getObjects();
+    if (existing.length > 0) {
+        const lowestBottom = existing.reduce(
+            (m, o) => Math.max(m, o.top + o.getScaledHeight() / 2), 0);
+        baselineY = Math.max(baselineY, lowestBottom + MDC_BASE + vGap);
+    }
+
+    let cursorX = startX;
+    let rowMaxH = 0;
+
+    for (const b of blocks) {
+        if (cursorX + b.w > rightEdge && cursorX > startX) {
+            cursorX = startX;
+            baselineY += rowMaxH + vGap;   // advance by the tallest cadrat in the row
+            rowMaxH = 0;
+        }
+        if (baselineY > usableBottom) {
+            alert('Canvas is full. Some glyphs were not placed.');
+            break;
+        }
+        placeMdCNode(b.node, cursorX, baselineY - b.h, b.scale);  // bottom edge on baseline
+        cursorX += b.w + hGap;
+        rowMaxH = Math.max(rowMaxH, b.h);
+    }
+
+    canvas.requestRenderAll();
+}
+
+// Original flat layout — one fabric.Text per sign in a single bottom-aligned,
+// wrapping row. Retained as the fallback when there is no spatial structure to
+// honour (or a parse error). Treats every operator as a plain separator.
+function handleMdCInputFlat(mdcString) {
     const matches = parseMdCInput(mdcString);
     if (matches.length === 0) {
         alert('No glyphs recognized. Paste Gardiner codes (e.g. A1-D21-N35) or hieroglyph characters.');

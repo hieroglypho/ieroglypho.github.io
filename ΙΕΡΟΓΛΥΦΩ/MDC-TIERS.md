@@ -34,8 +34,8 @@ Issues found in that summary, worth remembering:
 | Tier | Scope | Operators / codes | Difficulty | Status |
 |------|-------|-------------------|------------|--------|
 | **1** | Core spatial layout | `*` (side-by-side), `:` (stacked), `-` (cadrat separator), `( )` (grouping) | Easy-to-moderate | ✅ done |
-| **2** | Text structure | word end (space / `_`), sentence end (double space / `__`), line break `!`, page/section break `!!` | Easy-to-moderate | ⬜ next |
-| **3** | Enclosures | cartouche `< >`, serekh `<S >S`, hwt `<H >H`, frame `<F >F`; begin/middle/end parts (2nd letter b/m/f) | Moderate-to-hard | ⬜ |
+| **2** | Text structure | word end (space / `_`), sentence end (double space / `__`), line break `!`, page/section break `!!` | Easy-to-moderate | ✅ done |
+| **3** | Enclosures | cartouche `< >`, serekh `<S >S`, hwt `<H >H`, frame `<F >F`; begin/middle/end parts (2nd letter b/m/f) | Moderate-to-hard | ⬜ next |
 | **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ⬜ |
 | **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ⬜ |
 | **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | ⬜ |
@@ -57,15 +57,19 @@ Operators with precedence (tightest → loosest): `( )` > `*` > `:` > `-`.
 - Dialog auto-routes input containing `:` `*` `(` `)` to the layout engine even
   when "Single text run" is selected (a linear run can't represent 2D).
 
-### Tier 2 — text structure  ⬜ (next)
-Layer onto `layoutMdCRow`:
-- **space / `_`** → word boundary: a wider gap between cadrats than the normal
-  intra-row gap. (Tier 1 currently treats a space as a plain `-` separator; this
-  tier upgrades it to a *word gap*.)
-- **double space / `__`** → sentence boundary: a wider gap still.
-- **`!`** → line break: force a new row regardless of right-edge wrap.
-- **`!!`** → page/section break: a larger vertical jump (the canvas is infinite,
-  so render as an extra-large vertical gap rather than a true new page).
+### Tier 2 — text structure  ✅
+Layered onto `layoutMdCRow`; the row is now a list of items
+(`{kind:'cadrat',node,gap}` / `{kind:'break',level}`) instead of bare cadrats.
+- **space / `_`** → word boundary: gap `MDC_WORD_GAP` (28) between cadrats,
+  wider than the `-` separator `MDC_CADRAT_GAP` (10).
+- **double space / `__`** → sentence boundary: gap `MDC_SENTENCE_GAP` (50).
+- **`!`** → line break: forces a new row regardless of right-edge wrap.
+- **`!!`** → page/section break: new row plus an extra `MDC_PAGE_VGAP` (70) of
+  vertical space (the canvas is infinite, so this is a large gap, not a real
+  page). The tokenizer now indexes by code point so it can look ahead for
+  `!!` / `__` / space runs without splitting glyph surrogate pairs.
+- The dialog auto-route trigger now also fires on `!` (a linear text run can't
+  line-break), in addition to `:` `*` `(` `)`.
 
 ### Tier 3 — enclosures  ⬜
 Wrap a laid-out group in a drawn frame (Fabric path/rect/ellipse):
@@ -94,3 +98,7 @@ construction rather than packing bounding boxes. Tackle last.
 - **2026-05-29** — Tier 1 shipped (commit `947b8f2`): core spatial operators
   `* : - ( )` with precedence, cadrat capping, flat-row fallback, and dialog
   auto-routing of spatial input.
+- **2026-05-29** — Tier 2 shipped: text structure — word/sentence gaps (space /
+  `_`, double for sentence), line break `!`, page break `!!`. Row is now an item
+  list with per-cadrat gap strength + break items; tokenizer indexes by code
+  point for `!!` / `__` / space-run look-ahead; dialog auto-route adds `!`.

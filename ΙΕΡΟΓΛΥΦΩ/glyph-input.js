@@ -175,7 +175,7 @@ async function addGlyphsFromDialog() {
     // the individual-sign layout engine whenever the user picks that mode OR
     // the input contains a spatial operator — so e.g. "(M17:X1)*N35" lays out
     // correctly even if "Single text run" happens to be selected.
-    const hasSpatialMdC = /[:*()]/.test(raw);
+    const hasSpatialMdC = /[:*()!]/.test(raw);
     if (mode === 'individual' || hasSpatialMdC) {
         handleMdCInput(raw);
         closeGlyphTextDialog();
@@ -475,7 +475,7 @@ function parseMdCInput(input) {
 }
 
 // -----------------------------------------------------------------------------
-// Tier 1 — core spatial layout for the MdC operators  -  :  *  ( )
+// Tiers 1–2 — spatial layout + text structure for the MdC operators
 // -----------------------------------------------------------------------------
 // handleMdCInput parses the string into a small expression tree honouring the
 // Manuel de Codage operator precedence (tightest binding first):
@@ -488,6 +488,12 @@ function parseMdCInput(input) {
 // So  A*B:C   parses as  (A*B):C   — "A beside B" sitting over "C", and
 //     A:B*C   parses as  A:(B*C)   — "A" over "B beside C".
 //
+// Tier 2 adds text structure between cadrats:
+//     space / _    word boundary    — a wider gap than '-'
+//     2× space / __ sentence boundary — wider still
+//     !            line break       — force a new row
+//     !!           page/section break — new row plus a large vertical gap
+//
 // Glyphs keep their natural metrics (no stretching); within a group they pack
 // along the operator axis and centre on the cross axis. Each top-level cadrat
 // is uniformly scaled down if it would exceed MDC_MAX_CADRAT so deep stacks
@@ -499,6 +505,11 @@ const MDC_BASE = 60;            // fontSize glyphs are added at (matches addChar
 const MDC_GAP = 4;              // gap between siblings inside a cadrat, at scale 1
 const MDC_MAX_CADRAT = 130;     // cap on a single cadrat's width/height before downscaling
 const MDC_FONT = '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif';
+const MDC_CADRAT_GAP = 10;      // '-' separator: cadrats within a word
+const MDC_WORD_GAP = 28;        // single space / '_' : word boundary
+const MDC_SENTENCE_GAP = 50;    // double space / '__' : sentence boundary
+const MDC_LINE_VGAP = 18;       // vertical gap between rows (normal wrap / '!')
+const MDC_PAGE_VGAP = 70;       // extra vertical gap added for a '!!' page break
 
 function handleMdCInput(mdcString) {
     let tree = null;
@@ -508,8 +519,8 @@ function handleMdCInput(mdcString) {
         tree = null;  // fall through to the flat layout below
     }
 
-    if (!tree || tree.children.length === 0) {
-        // No spatial structure (or a parse error) — keep the original behaviour.
+    if (!tree || !tree.children.some(c => c.kind === 'cadrat')) {
+        // No glyphs to place (or a parse error) — keep the original behaviour.
         return handleMdCInputFlat(mdcString);
     }
 
@@ -543,15 +554,37 @@ function tokenizeMdC(input) {
         word = '';
     };
 
-    for (const ch of input) {
+    // Index over code points (not UTF-16 units) so glyph surrogate pairs stay
+    // intact while we still get look-ahead for '!!' / '__' / space runs.
+    const chars = [...input];
+    let i = 0;
+    while (i < chars.length) {
+        const ch = chars[i];
         if (ch === '(' || ch === ')' || ch === '-' || ch === ':' || ch === '*') {
             flushWord();
             tokens.push({ type: 'op', op: ch });
-        } else if (/[\s,;]/.test(ch)) {
+            i++;
+        } else if (ch === '!') {
             flushWord();
-            tokens.push({ type: 'op', op: '-' });   // whitespace/comma = cadrat break
+            if (chars[i + 1] === '!') { tokens.push({ type: 'op', op: '!!' }); i += 2; }
+            else { tokens.push({ type: 'op', op: '!' }); i++; }
+        } else if (ch === '_') {
+            flushWord();
+            let n = 0;
+            while (i < chars.length && chars[i] === '_') { n++; i++; }
+            tokens.push({ type: 'op', op: n >= 2 ? 'sgap' : 'wgap' });
+        } else if (/\s/.test(ch)) {
+            flushWord();
+            let n = 0;
+            while (i < chars.length && /\s/.test(chars[i])) { n++; i++; }
+            tokens.push({ type: 'op', op: n >= 2 ? 'sgap' : 'wgap' });
+        } else if (ch === ',' || ch === ';') {
+            flushWord();
+            tokens.push({ type: 'op', op: '-' });   // legacy paste convenience = cadrat break
+            i++;
         } else {
             word += ch;
+            i++;
         }
     }
     flushWord();
@@ -562,7 +595,9 @@ function tokenizeMdC(input) {
 //   { type:'glyph', entry }                 leaf
 //   { type:'h', children:[...] }            '*' horizontal group
 //   { type:'v', children:[...] }            ':' vertical group
-//   { type:'row', children:[cadrat,...] }   top-level '-' sequence
+//   { type:'row', children:[item,...] }     top-level sequence, where each item
+//                                            is { kind:'cadrat', node, gap } or
+//                                            { kind:'break', level:'line'|'page' }
 function parseMdCTree(tokens) {
     let pos = 0;
     const peek = () => tokens[pos];
@@ -595,13 +630,36 @@ function parseMdCTree(tokens) {
     }
 
     function parseSeq() {
-        const cadrats = [];
-        while (isOp(peek(), '-')) eat();          // skip leading separators
-        while (peek()) {
-            cadrats.push(parseStack());
-            while (isOp(peek(), '-')) eat();       // collapse separators between cadrats
+        const SEP_GAP = { '-': 'cadrat', wgap: 'word', sgap: 'sentence' };
+        const GAP_RANK = { cadrat: 1, word: 2, sentence: 3 };
+        const items = [];
+
+        // Consume a run of separators/breaks between cadrats. Pushes break items
+        // in order as it sees them; returns the strongest gap in the run (a gap
+        // sitting next to a break is moot, since a break starts a fresh row).
+        function consumeSeps() {
+            let gap = null;
+            while (peek() && peek().type === 'op' &&
+                (peek().op in SEP_GAP || peek().op === '!' || peek().op === '!!')) {
+                const op = eat().op;
+                if (op === '!' || op === '!!') {
+                    items.push({ kind: 'break', level: op === '!!' ? 'page' : 'line' });
+                    gap = null;
+                } else {
+                    const g = SEP_GAP[op];
+                    if (!gap || GAP_RANK[g] > GAP_RANK[gap]) gap = g;
+                }
+            }
+            return gap;
         }
-        return { type: 'row', children: cadrats };
+
+        let gap = consumeSeps();                 // leading run (gap is ignored at row start)
+        while (peek()) {
+            const node = parseStack();
+            items.push({ kind: 'cadrat', node, gap });
+            gap = consumeSeps();
+        }
+        return { type: 'row', children: items };
     }
 
     const tree = parseSeq();
@@ -660,43 +718,65 @@ function placeMdCNode(node, x, y, scale) {
     }
 }
 
-// Lay a sequence of cadrats out along the row: bottom-aligned, wrapping at the
-// right edge, placed below any existing canvas content (mirrors the old flat
-// layout, but each item is a fully laid-out cadrat block).
-function layoutMdCRow(cadrats) {
-    const hGap = 12, vGap = 18, margin = 50, startX = 100;
+// Lay the row items out: cadrats bottom-aligned and wrapping at the right edge,
+// separated by a gap whose width reflects the cadrat / word / sentence boundary,
+// with '!' / '!!' break items forcing a new row (plus extra space for a page
+// break). Placed below any existing canvas content.
+function layoutMdCRow(items) {
+    const margin = 50, startX = 100;
     const rightEdge = canvas.width - margin;
     const usableBottom = canvas.height - margin;
 
-    const blocks = cadrats.map(node => {
-        measureMdCNode(node);
-        const scale = Math.min(1, MDC_MAX_CADRAT / node.w, MDC_MAX_CADRAT / node.h);
-        return { node, w: node.w * scale, h: node.h * scale, scale };
-    });
+    const gapFor = strength => strength === 'sentence' ? MDC_SENTENCE_GAP
+        : strength === 'word' ? MDC_WORD_GAP
+            : MDC_CADRAT_GAP;   // 'cadrat' / null default
+
+    // Measure each cadrat once, attaching its placed (capped) block size.
+    for (const item of items) {
+        if (item.kind !== 'cadrat') continue;
+        measureMdCNode(item.node);
+        const scale = Math.min(1, MDC_MAX_CADRAT / item.node.w, MDC_MAX_CADRAT / item.node.h);
+        item.block = { w: item.node.w * scale, h: item.node.h * scale, scale };
+    }
 
     let baselineY = 100 + MDC_BASE;
     const existing = canvas.getObjects();
     if (existing.length > 0) {
         const lowestBottom = existing.reduce(
             (m, o) => Math.max(m, o.top + o.getScaledHeight() / 2), 0);
-        baselineY = Math.max(baselineY, lowestBottom + MDC_BASE + vGap);
+        baselineY = Math.max(baselineY, lowestBottom + MDC_BASE + MDC_LINE_VGAP);
     }
 
     let cursorX = startX;
     let rowMaxH = 0;
+    const advanceRow = extra => {
+        cursorX = startX;
+        baselineY += rowMaxH + MDC_LINE_VGAP + extra;  // advance by the row's tallest cadrat
+        rowMaxH = 0;
+    };
 
-    for (const b of blocks) {
-        if (cursorX + b.w > rightEdge && cursorX > startX) {
-            cursorX = startX;
-            baselineY += rowMaxH + vGap;   // advance by the tallest cadrat in the row
-            rowMaxH = 0;
+    for (const item of items) {
+        if (item.kind === 'break') {
+            advanceRow(item.level === 'page' ? MDC_PAGE_VGAP : 0);
+            continue;
+        }
+
+        const b = item.block;
+        let gap = cursorX === startX ? 0 : gapFor(item.gap);
+
+        // Wrap if this cadrat (plus its leading gap) would spill past the edge.
+        if (cursorX > startX && cursorX + gap + b.w > rightEdge) {
+            advanceRow(0);
+            gap = 0;
         }
         if (baselineY > usableBottom) {
             alert('Canvas is full. Some glyphs were not placed.');
             break;
         }
-        placeMdCNode(b.node, cursorX, baselineY - b.h, b.scale);  // bottom edge on baseline
-        cursorX += b.w + hGap;
+
+        cursorX += gap;
+        placeMdCNode(item.node, cursorX, baselineY - b.h, b.scale);  // bottom edge on baseline
+        cursorX += b.w;
         rowMaxH = Math.max(rowMaxH, b.h);
     }
 

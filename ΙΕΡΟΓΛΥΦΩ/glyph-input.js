@@ -902,12 +902,25 @@ function layoutMdCRow(items) {
         item.block = { w: item.node.w * scale, h: item.node.h * scale, scale };
     }
 
-    let baselineY = 100 + MDC_BASE;
+    // Tallest block — reserve vertical room so the first row clears any existing
+    // content (and the canvas top) even for tall stacks/enclosures.
+    const blockHeights = items.filter(it => it.kind === 'cadrat').map(it => it.block.h);
+    const maxBlockH = blockHeights.length ? Math.max(...blockHeights) : MDC_BASE;
+
+    let baselineY = 100 + maxBlockH;
     const existing = canvas.getObjects();
     if (existing.length > 0) {
-        const lowestBottom = existing.reduce(
-            (m, o) => Math.max(m, o.top + o.getScaledHeight() / 2), 0);
-        baselineY = Math.max(baselineY, lowestBottom + MDC_BASE + MDC_LINE_VGAP);
+        // True bottom edge regardless of origin: glyphs use centre origin, but
+        // enclosure frames use top origin — the old centre-only math placed a
+        // new paste too high and overlapped existing frames.
+        const bottomOf = o => {
+            const h = o.getScaledHeight();
+            return o.originY === 'top' ? o.top + h
+                : o.originY === 'bottom' ? o.top
+                    : o.top + h / 2;
+        };
+        const lowestBottom = existing.reduce((m, o) => Math.max(m, bottomOf(o)), 0);
+        baselineY = Math.max(baselineY, lowestBottom + MDC_LINE_VGAP + maxBlockH);
     }
 
     let cursorX = startX;

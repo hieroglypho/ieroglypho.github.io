@@ -120,6 +120,10 @@ construction rather than packing bounding boxes. Tackle last.
   doorway notch), `<S >S` (serekh, simplified paneled facade). Cartouche `< >`
   excluded by design (manual tool); part-letters deferred. Enclosure parses as
   one cadrat; frame drawn behind glyphs as a separate selectable object.
+- **2026-05-29** — Fix: a second paste overlapped an existing enclosure. The
+  "place below existing content" math assumed centre origin (`top+h/2`), but
+  frames use top origin, so their bottom was underestimated. Now computes each
+  object's true bottom by origin and reserves the tallest block's height.
 - **2026-05-29** — Ink-box measurement (refinement to Tiers 1–2): glyphs are now
   measured by their real ink box via Canvas `measureText()` (actualBoundingBox*)
   instead of fabric's uniform line-box height, and placed by that box. Fixes

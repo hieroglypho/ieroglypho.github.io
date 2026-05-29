@@ -1,10 +1,20 @@
+@font-face {
+    font-family: 'Hieroglyphica Extended';
+    src: url('fonts/HieroglyphicaExtended-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+13460-143FF;
+}
+
 .noto-sans-egyptian-hieroglyphs-regular {
-    font-family: "Noto Sans Egyptian Hieroglyphs", sans-serif;
+    font-family: "Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif;
     font-weight: 400;
     font-style: normal;
 }
+
 body {
-    font-family: 'Noto Sans Egyptian Hieroglyphs';
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended';
     color: #5d1414;
     background-color: #ddd6d6;
     margin: 0;
@@ -21,7 +31,7 @@ body {
 /* Base container styles */
 .container {
     display: flex;
-    justify-content: flex-start;    
+    justify-content: flex-start;
     width: 100vw;
     height: 100vh;
     background-color: #636363;
@@ -29,20 +39,26 @@ body {
     box-sizing: border-box;
     gap: 0;
 }
+
 .color-swatch {
     width: 30px;
     height: 30px;
     border: 1px solid black;
     cursor: pointer;
-    box-sizing: border-box; /* Ensure consistent box sizing */
+    box-sizing: border-box;
+    /* Ensure consistent box sizing */
     filter: none !important;
 }
+
 #colorPopup {
     position: absolute;
-    bottom: 45px;  /* Adjust this value to move it higher */
+    bottom: 45px;
+    /* Adjust this value to move it higher */
     right: 330px;
-    z-index: 9999;  /* Ensure it's above other content */
-    display: none;  /* Keep it hidden by default */
+    z-index: 999;
+    /* Ensure it's above other content */
+    display: none;
+    /* Keep it hidden by default */
     background-color: #998b60;
     padding: 10px;
     border-radius: 5px;
@@ -55,11 +71,43 @@ body {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+/* ============= WATERMARKS - DO NOT REMOVE ========================== */
+#fixedTextOverlay {
+    /* Full-canvas engraved watermark: sits BEHIND the (transparent) canvas at
+       z-index 0, so it reads as part of the background and any glyphs drawn on
+       the canvas render on top of it. */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: clamp(40px, 8vw, 200px);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    /* Relief / engraved look: fill matches the gray workspace so only the
+       paired highlight + shadow define the letterforms. */
+    color: #636363;
+    text-shadow:
+        1px 1px 1px rgba(255, 255, 255, 0.10),
+        -1px -1px 1px rgba(0, 0, 0, 0.40);
+    transition: opacity 0.4s ease;
+}
 
-/* Main search container - fixed width */
+
+/* Main search container - user-resizable via #paletteResizer drag handle */
 #searchContainer {
-    width: 400px; /* Fixed width instead of viewport-based */
-    min-width: 400px; /* Ensure minimum width */
+    width: var(--palette-w, 400px);
+    min-width: 280px;
+    max-width: 80vw;
     border: 1px dotted #ffffff;
     padding: 10px;
     background-color: #1e1e1e;
@@ -70,21 +118,39 @@ body {
     height: calc(100vh - 2vh);
     box-sizing: border-box;
     margin: 0;
+    flex-shrink: 0;
 }
 
-/* Character list container */
+/* Left-edge drag handle to widen/narrow the palette. Sits on the border so
+   the hit area straddles the seam between canvas and palette. */
+#paletteResizer {
+    position: absolute;
+    top: 0;
+    left: -3px;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 10;
+    background: transparent;
+}
+#paletteResizer:hover,
+#paletteResizer:active {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+}
+
+/* Character list — columns reflow as the palette is resized. */
 #charList {
     display: grid;
-    grid-template-columns: repeat(5, 70px); /* Fixed width columns */
+    grid-template-columns: repeat(auto-fill, 70px);
+    justify-content: center;
     gap: 5px;
     padding: 10px;
-    width: fit-content; /* Only take needed width */
-    margin: 0 auto; /* Center horizontally */
+    margin: 0 auto;
 }
 
 /* Character item styling */
 .char-container {
-    font-family: 'Noto Sans Egyptian Hieroglyphs', sans-serif !important;
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', sans-serif !important;
     border-radius: 9px;
     border: 2px solid #2730ba;
     background-color: #131c1d;
@@ -95,7 +161,79 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: 70px; /* Match grid column width */
+    width: 70px;
+    /* Match grid column width */
+}
+
+/* Extended-A cells — different border tone and a subtle warm tint so they're
+   distinguishable at a glance from the base-block entries above. */
+.char-container.ext-a {
+    border-color: #8a5c2b;
+    background-color: #1d1813;
+}
+
+/* Compact special-chars palette inside the three-line block dialog. Inserts
+   into whichever of {translit, translation} has focus when a key is clicked. */
+.translit-palette {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.translit-palette .keyboard-row {
+    display: flex;
+    gap: 3px;
+}
+.translit-palette .key {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    background: #2a2a2a;
+    color: #e6d4b8;
+    border: 1px solid #444;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+.translit-palette .key:hover { background: #3a3a3a; }
+.translit-palette .key:active { background: #4a4a4a; }
+
+/* Row labels inside the three-line block dialog. */
+.three-line-label {
+    display: block;
+    margin: 8px 0 3px;
+    font-size: 11px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Click-to-select highlight — persists until another cell is clicked or the
+   palette re-renders (search/category change). */
+.char-container.selected {
+    border-color: #f0c674;
+    background-color: #3a2f1a;
+    box-shadow: 0 0 0 2px rgba(240, 198, 116, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Section divider that appears between base block and Extended-A in the chart. */
+.section-divider {
+    grid-column: 1 / -1;
+    padding: 8px 12px;
+    margin: 8px 0;
+    background: linear-gradient(90deg, transparent, #8a5c2b 20%, #8a5c2b 80%, transparent);
+    color: #e6d4b8;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-align: center;
+    text-transform: uppercase;
 }
 
 /* Rest of your styles remain the same */
@@ -107,6 +245,21 @@ body {
     background-color: #454444;
     width: 100%;
     margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+/* Drag handle that lets the user resize the dictionary results panel */
+#resultsResizer {
+    height: 6px;
+    background: linear-gradient(#666, #444);
+    cursor: ns-resize;
+    border-radius: 3px;
+    margin: 2px 0 6px;
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 0 #888;
+}
+#resultsResizer:hover {
+    background: linear-gradient(#888, #666);
 }
 
 .row {
@@ -117,14 +270,14 @@ body {
 }
 
 .char {
-    font-family: 'Noto Sans Egyptian Hieroglyphs', sans-serif !important;
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', sans-serif !important;
     font-size: 30px;
     color: #e6a6a6;
-      text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Prevent synthetic font variants */
-  font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent synthetic font variants */
+    font-synthesis: none;
 }
 
 .name {
@@ -134,33 +287,39 @@ body {
 
 /* Canvas styling */
 canvas {
-    width: 100% !important; /* Force full width */
+    width: 100% !important;
+    /* Force full width */
     height: calc(100vh - 2vh);
     border: 1px solid #6565f9;
     background-color: #f5f5f512 !important;
     margin: 0;
 }
+
 #searchInput {
     width: calc(100% - 13px);
     margin-bottom: 5px;
     padding: 5px;
 }
+
 /* =========load dict========= */
 .file-upload-row {
-    margin-bottom: 1rem;
+    margin-bottom: .25rem;
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 .upload-button {
-    padding: 0px 0px;
     background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    line-height: 1;
+    font-size: 12px;
+    height: 20px;
+    white-space: nowrap;
+    line-height: 0;
+    display: inline-block;
 }
 
 .upload-button:hover {
@@ -168,14 +327,15 @@ canvas {
 }
 
 .file-status {
-    font-size: 0.5em;
-    color: #666;
+    font-size: 0.9em;
+    color: #833838;
 }
 
 .search-button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
+
 /* ================== */
 #workspaceContainer {
     position: relative;
@@ -183,9 +343,12 @@ canvas {
 }
 
 #pastedNamesContainer {
-    width: calc(100% - 20px); /* Subtract padding from total width */
-    min-width: 100px; /* Add minimum width */
-    max-width: 100%; /* Ensure it doesn't overflow */
+    width: calc(100% - 20px);
+    /* Subtract padding from total width */
+    min-width: 100px;
+    /* Add minimum width */
+    max-width: 100%;
+    /* Ensure it doesn't overflow */
     position: absolute;
     top: 10px;
     left: 0;
@@ -197,7 +360,8 @@ canvas {
     display: flex;
     align-items: center;
     gap: 8px;
-    box-sizing: border-box; /* Include padding in width calculation */
+    box-sizing: border-box;
+    /* Include padding in width calculation */
 }
 
 #pastedNames {
@@ -205,13 +369,17 @@ canvas {
     color: #e2dfdf;
     min-width: 50px;
     overflow-wrap: break-word;
-    flex: 1; /* Allow it to take remaining space */
-    max-width: 100%; /* Adjust based on the space needed for "Gardiner:" label */
+    flex: 1;
+    user-select: text; /* Allow text selection */
+    /* Allow it to take remaining space */
+    max-width: 100%;
+    /* Adjust based on the space needed for "Gardiner:" label */
 }
 
 #searchContainer {
     position: relative;
-    margin-top: 0px; /* Add enough margin to prevent overlap with pastedNamesContainer */
+    margin-top: 0px;
+    /* Add enough margin to prevent overlap with pastedNamesContainer */
 }
 
 
@@ -223,7 +391,7 @@ canvas {
 }
 
 .dropdown-content {
-    
+
     display: none;
     position: absolute;
     right: 0;
@@ -231,7 +399,7 @@ canvas {
     min-width: 160px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0px 48px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: 0px 48px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 2;
 }
 
@@ -259,50 +427,54 @@ canvas {
     background: #fff;
 }
 
+/* Help overlay styling */
 .help-overlay {
-    display: none; /* Hidden by default */
+    display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.8);
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 2000;
 }
 
-/* Iframe styling */
 .help-content-frame {
-    width: 70%;
-    height: 70%;
-    border: none;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: min(820px, 92vw);
+    height: min(720px, 88vh);
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    background-color: #1a1a1a;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 #tools {
     position: fixed;
     bottom: 20px;
-    left: 20px; /* Align with MDC container */
-    max-width: 740px;
-    width: calc(100% - 40px);
+    left: 20px;
+    width: fit-content;
+    max-width: calc(100vw - 40px);
     background-color: rgba(99, 99, 99, 0.95);
-    padding: 12px;
+    padding: 4px 6px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     display: flex;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 4px;
     align-items: center;
+}
+
+#tools .tool-group {
+    flex-wrap: nowrap;
 }
 
 .tool-group {
     position: relative;
     display: flex;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
 }
+
 .tool-separator {
     width: 1px;
     height: 24px;
@@ -339,7 +511,7 @@ canvas {
     box-shadow: none;
 }
 
-    /* KEYBOARD POPUP */
+/* KEYBOARD POPUP */
 /* Base styles */
 .keyboard-overlay {
     display: none;
@@ -348,7 +520,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 999;
 }
 
@@ -376,7 +548,7 @@ canvas {
 }
 
 .keyboard-input {
-    font-family: 'Noto Sans Egyptian Hieroglyphs';
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended';
     width: 300px;
     padding: 8px;
     background-color: #2a2a2a;
@@ -411,7 +583,7 @@ canvas {
 }
 
 .key {
-    font-family: 'Noto Sans Egyptian Hieroglyphs';
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended';
     width: 30px;
     height: 30px;
     background-color: #2a2a2a;
@@ -425,19 +597,23 @@ canvas {
     user-select: none;
     font-size: 18px;
 }
+
 .divider {
     width: 100%;
     height: 2px;
     background-color: #ccc;
     margin: 4px 0;
 }
-.coptic-label span {
+
+.coptic-label span,
+.section-label span {
     font-size: 0.8em;
     font-style: italic;
     color: #666;
     text-align: center;
     width: 100%;
 }
+
 .key:hover {
     background-color: #3a3a3a;
 }
@@ -467,25 +643,18 @@ canvas {
     background-color: #4CAF50;
     color: white;
 }
-/* Overlay for the keyboard dialog */
-.keyboard-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 999;
-}
+
+/* (Duplicate .keyboard-overlay removed — see canonical def near line 395.) */
 /* ==================== end keyboard =================== */
 /* Ensure proper sizing for workspace elements */
 .workspace-wrapper {
     flex: 1;
     display: flex;
     height: 100%;
-    width: 100%; /* Ensure full width */
+    width: 100%;
+    /* Ensure full width */
 }
+
 .workspace-container {
     position: relative;
     flex: 1;
@@ -524,37 +693,11 @@ canvas {
     height: 100%;
 }
 
-.tools-panel {
-    padding: 10px;
-    background: #f8f9fa;
-    border-top: 1px solid #ddd;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-}
-
-.tool-group {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.tool-btn {
-    padding: 6px 12px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.tool-btn:hover {
-    background: #f0f0f0;
-}
 .rainbow-donate {
-    display: grid;  /* Using grid for perfect centering */
-    place-items: center;  /* Centers in both directions */
+    display: grid;
+    /* Using grid for perfect centering */
+    place-items: center;
+    /* Centers in both directions */
     padding: 0;
     background: #2a2a2a;
     border: 1px solid #3a3a3a;
@@ -564,40 +707,47 @@ canvas {
     font-size: 16px;
     width: 50px;
     height: 50px;
-    line-height: 1;  /* Prevents line-height from affecting centering */
+    line-height: 1;
+    /* Prevents line-height from affecting centering */
 }
 
 .rainbow-donate span {
-    display: block;  /* Changed to block */
-    background: linear-gradient(
-        to right,
-        #ff0000,
-        #ffff00,
-        #00ff00,
-        #00ffff,
-        #ff00ff,
-        #ff0000
-    );
+    display: block;
+    /* Changed to block */
+    background: linear-gradient(to right,
+            #ff0000,
+            #ffff00,
+            #00ff00,
+            #00ffff,
+            #ff00ff,
+            #ff0000);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: rainbow 2s linear infinite;
     background-size: 200% auto;
-    text-align: center;  /* Center the text inside span */
+    text-align: center;
+    /* Center the text inside span */
 }
 
 @keyframes rainbow {
-    0% { background-position: 0 center; }
-    100% { background-position: -200% center; }
+    0% {
+        background-position: 0 center;
+    }
+
+    100% {
+        background-position: -200% center;
+    }
 }
+
 .hidden-input {
     display: none;
 }
+
 /* Compact slider controls */
 .slider-controls {
     display: inline-flex;
     gap: 8px;
-    height: 80px;
     align-items: center;
 }
 
@@ -635,11 +785,13 @@ canvas {
 .compact-slider:hover::-moz-range-thumb {
     background: #444;
 }
+
 .slider-controls {
     display: flex;
     gap: 15px;
     align-items: center;
 }
+
 .slider-label {
     font-weight: bold;
     min-width: 10px;
@@ -672,9 +824,9 @@ canvas {
 /* Save As buttons and submenu */
 .workspace-actions {
     display: flex;
-    position: relative; /* Ensure the submenu is positioned relative to this container */
+    position: relative;
+    /* Ensure the submenu is positioned relative to this container */
     gap: 5px;
-    margin-left: auto;
 }
 
 .action-btn {
@@ -690,45 +842,7 @@ canvas {
 .action-btn:hover {
     background: #0056b3;
 }
-.popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
 
-.popup.hidden {
-    display: none;
-}
-
-.popup-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.upgrade-label {
-    display: inline-block;
-    padding: 10px 20px;
-    background: #28a745;
-    color: white;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 16px;
-    transition: background-color 0.2s;
-}
-
-.upgrade-label:hover {
-    background: #218838;
-    cursor: pointer;
-}
 .save-menu {
     display: flex;
     flex-direction: column;
@@ -737,7 +851,8 @@ canvas {
     border: 1px solid #ccc;
     /* box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); */
     z-index: 100;
-    padding: 2px 2px; /* Reduced vertical padding */
+    padding: 2px 2px;
+    /* Reduced vertical padding */
     border-radius: 4px;
     bottom: 100%;
     left: 0;
@@ -745,7 +860,8 @@ canvas {
 }
 
 .save-menu button {
-    padding: 8px 10px; /* Adjusted padding */
+    padding: 8px 10px;
+    /* Adjusted padding */
     text-align: left;
     width: 100%;
     border: none;
@@ -764,13 +880,13 @@ canvas {
 }
 
 
-/* stules for Fygus search */
+/* styles for Dictionary search */
 .search-row {
     display: flex;
     gap: 5px;
     width: 100%;
     margin: 0;
-    margin-bottom:5px
+    margin-bottom: 5px
 }
 
 .search-input {
@@ -780,11 +896,12 @@ canvas {
     border-radius: 4px;
     background-color: #1a1a1a;
     color: white;
-    min-width: 0; /* Prevents flex item from overflowing */
+    min-width: 0;
+    /* Prevents flex item from overflowing */
 }
 
 .search-button {
-    padding: 8px 16px;
+    /* padding: 8px px; */
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -807,16 +924,20 @@ canvas {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Required for Firefox */
-    max-height: 100%; /* Prevent overflow */
+    min-height: 0;
+    /* Required for Firefox */
+    max-height: 100%;
+    /* Prevent overflow */
 }
 
 #secondarySearch {
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 0; /* Required for Firefox */
+    min-height: 0;
+    /* Required for Firefox */
 }
+
 /* Adjust the overall container */
 #searchContainer {
     display: flex;
@@ -824,13 +945,26 @@ canvas {
     gap: 0px;
 }
 
-/* Highlight styling for Fygus results */
+/* Highlight styling for Dictionary results */
 .highlight {
     background-color: #ffeb3b;
     color: #000;
     padding: 2px 4px;
     border-radius: 3px;
     font-weight: bold;
+}
+#resultDisplay {
+  user-select: text;
+  -webkit-user-select: text;
+}
+.gardiner-highlight {
+    background-color: #ffeb3b;
+    /* Light yellow */
+}
+
+.hieroglyph-highlight {
+    background-color: #698faa57;
+    /* Light blue */
 }
 
 /* Result styling */
@@ -844,14 +978,17 @@ canvas {
 }
 
 .result-matches {
-    color: #af9393;
+    color: #e0d8c8;
     padding: 8px;
 }
 
 .result-separator {
     border: 0;
-    border-top: 1px solid #333;
-    /* margin: rem 0; */
+    border-top: 1px solid #444;
+}
+
+time {
+    color: #d68a8a;
 }
 
 /* Existing styles for large text */
@@ -860,38 +997,67 @@ canvas {
     font-weight: normal;
 }
 
-.file-upload-row {
-    margin-bottom: .25rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.upload-button {
-    padding: 8px 16px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.upload-button:hover {
-    background-color: #45a049;
-}
-
-.file-status {
-    font-size: 0.9em;
-    color: #833838;
-}
+/* (Duplicate .file-upload-row / .upload-button / .file-status removed — see canonical defs near line 181.) */
 
 .search-button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
+
 /* Media query for minimum width support */
 @media screen and (max-width: 1200px) {
     #searchContainer {
-        width: 300px; /* Minimum width when viewport is narrow */
+        width: var(--palette-w, 300px);
     }
+}
+
+/* Right-click context menu shown over the canvas. Replaces the browser's
+   default menu, whose "Save image" / "Copy image" entries only see the
+   Fabric upper-canvas (mostly transparent) and miss the background image. */
+.canvas-ctx-menu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 170px;
+    background: #1e1e1e;
+    border: 1px solid #555;
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+}
+.canvas-ctx-menu.hidden { display: none; }
+.canvas-ctx-menu button {
+    background: transparent;
+    color: #ddd;
+    border: none;
+    padding: 7px 14px;
+    text-align: left;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+}
+.canvas-ctx-menu button:hover { background: #2f2f2f; color: #fff; }
+
+/* Brief confirmation toast for clipboard copy etc. */
+#canvasToast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20, 20, 20, 0.92);
+    color: #e6d4b8;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid #8a5c2b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease, transform 180ms ease;
+    z-index: 10001;
+}
+#canvasToast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }

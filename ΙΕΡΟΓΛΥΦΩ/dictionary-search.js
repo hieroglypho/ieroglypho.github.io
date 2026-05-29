@@ -139,7 +139,7 @@ async function handleFileUpload(event) {
 
 // Initialize search listeners
 function initializeSearchListeners() {
-    const searchInput = document.getElementById('fygusSearchInput');
+    const searchInput = document.getElementById('dictionarySearchInput');
     searchInput.addEventListener('keydown', handleSearchKeydown);
 }
 
@@ -184,15 +184,15 @@ function processLineSegments(line) {
 // Handle keydown events
 function handleSearchKeydown(e) {
     if (e.key === 'Enter') {
-        searchFygusFile();
+        searchDictionary();
     } else if (e.key === 'Backspace') {
         e.stopPropagation();
     }
 }
 
 // Main search function
-async function searchFygusFile() {
-    const searchInput = document.getElementById('fygusSearchInput').value.trim();
+async function searchDictionary() {
+    const searchInput = document.getElementById('dictionarySearchInput').value.trim();
     const resultDisplay = document.getElementById('resultDisplay');
     
     resultDisplay.innerHTML = '';

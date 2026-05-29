@@ -84,6 +84,7 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 | `fonts/NotoSansEgyptianHieroglyphs-Regular.ttf` | Fetched + base64-encoded for jsPDF font embedding. |
 | `fonts/HieroglyphicaExtended-Regular.woff2` | Web font (`@font-face` in `main.css`). |
 | `favicon.ico`, `robot.txt` | Misc. |
+| `MDC-TIERS.md` | Roadmap + status for Manuel de Codage layout support (the `handleMdCInput` engine in `glyph-input.js`). Source of truth for which MdC operators are implemented; update as tiers land. |
 
 ### Orphans removed (2026-05-29)
 - `pdf.js` — was a dead standalone PDF snippet; the real export is `saveToPDF()` in `export.js`.

@@ -502,7 +502,7 @@ function parseMdCInput(input) {
 // a paste never hard-fails.
 
 const MDC_BASE = 60;            // fontSize glyphs are added at (matches addCharacterToCanvas)
-const MDC_GAP = 4;              // gap between siblings inside a cadrat, at scale 1
+const MDC_GAP = 6;              // gap between siblings inside a cadrat, at scale 1
 const MDC_MAX_CADRAT = 130;     // cap on a single cadrat's width/height before downscaling
 const MDC_FONT = '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif';
 const MDC_CADRAT_GAP = 10;      // '-' separator: cadrats within a word
@@ -510,6 +510,60 @@ const MDC_WORD_GAP = 28;        // single space / '_' : word boundary
 const MDC_SENTENCE_GAP = 50;    // double space / '__' : sentence boundary
 const MDC_LINE_VGAP = 18;       // vertical gap between rows (normal wrap / '!')
 const MDC_PAGE_VGAP = 70;       // extra vertical gap added for a '!!' page break
+
+// --- Ink-box measurement -----------------------------------------------------
+// fabric.Text reports a uniform *line-box* height (~fontSize·1.3) for every
+// glyph, so short signs (sun, water) get a tall box full of dead space — which
+// makes vertical stacks gappy and breaks baseline alignment across a row. We
+// instead measure each glyph's real ink box via Canvas measureText() and place
+// glyphs by that box, so stacks pack tight and cadrats share an ink baseline.
+let _mdcMeasureCtx = null;
+const _mdcInkCache = new Map();
+let _mdcFontBox = null;
+
+function mdcMeasureCtx() {
+    if (!_mdcMeasureCtx) _mdcMeasureCtx = document.createElement('canvas').getContext('2d');
+    _mdcMeasureCtx.font = `${MDC_BASE}px ${MDC_FONT}`;
+    _mdcMeasureCtx.textAlign = 'left';
+    _mdcMeasureCtx.textBaseline = 'alphabetic';
+    return _mdcMeasureCtx;
+}
+
+// Ink box of a single glyph at MDC_BASE, relative to the text origin
+// (x = pen start, y = alphabetic baseline). Cached per glyph.
+function measureGlyphInk(ch) {
+    if (_mdcInkCache.has(ch)) return _mdcInkCache.get(ch);
+    const m = mdcMeasureCtx().measureText(ch);
+    let ink;
+    if (typeof m.actualBoundingBoxAscent === 'number') {
+        ink = {
+            w: Math.max(1, m.actualBoundingBoxLeft + m.actualBoundingBoxRight),
+            h: Math.max(1, m.actualBoundingBoxAscent + m.actualBoundingBoxDescent),
+            ascent: m.actualBoundingBoxAscent,    // baseline → ink top  (up, +)
+            descent: m.actualBoundingBoxDescent,  // baseline → ink bottom (down, +)
+            left: m.actualBoundingBoxLeft,        // origin → ink left (left, +)
+        };
+    } else {
+        // Old browser without actualBoundingBox*: fall back to advance + full em.
+        const w = Math.max(1, m.width);
+        ink = { w, h: MDC_BASE, ascent: MDC_BASE * 0.8, descent: MDC_BASE * 0.2, left: 0 };
+    }
+    _mdcInkCache.set(ch, ink);
+    return ink;
+}
+
+// Distance from a fabric.Text's top edge down to its alphabetic baseline for a
+// line-box height Hf, derived from the font's own ascent/descent. Lets us place
+// a glyph by its ink box instead of fabric's uniform line box.
+function mdcBaselineFromTop(Hf) {
+    if (!_mdcFontBox) {
+        const m = mdcMeasureCtx().measureText('\u{13000}');  // any hieroglyph (A1)
+        _mdcFontBox = (typeof m.fontBoundingBoxAscent === 'number')
+            ? { asc: m.fontBoundingBoxAscent, desc: m.fontBoundingBoxDescent }
+            : { asc: MDC_BASE * 0.8, desc: MDC_BASE * 0.2 };
+    }
+    return (Hf - (_mdcFontBox.asc + _mdcFontBox.desc)) / 2 + _mdcFontBox.asc;
+}
 
 function handleMdCInput(mdcString) {
     let tree = null;
@@ -670,9 +724,10 @@ function parseMdCTree(tokens) {
 // Compute each node's natural (unscaled) box, storing w/h on the node.
 function measureMdCNode(node) {
     if (node.type === 'glyph') {
-        const t = new fabric.Text(node.entry[1], { fontSize: MDC_BASE, fontFamily: MDC_FONT });
-        node.w = t.width || MDC_BASE;
-        node.h = t.height || MDC_BASE;
+        const ink = measureGlyphInk(node.entry[1]);
+        node.w = ink.w;
+        node.h = ink.h;
+        node.ink = ink;
         return node;
     }
     node.children.forEach(measureMdCNode);
@@ -695,8 +750,20 @@ function placeMdCNode(node, x, y, scale) {
     const boxH = node.h * scale;
 
     if (node.type === 'glyph') {
+        const ink = node.ink;
         const obj = addCharacterToCanvas(node.entry[1], node.entry[0], 0, 0);
-        obj.set({ scaleX: scale, scaleY: scale, left: x + boxW / 2, top: y + boxH / 2 });
+        const Wf = obj.width || ink.w;     // fabric line-box width/height (unscaled)
+        const Hf = obj.height || ink.h;
+        // (x, y) is the ink box's top-left. Position the fabric object (centre
+        // origin) so the glyph's ink lands exactly there.
+        const fabricLeftEdge = x + scale * ink.left;
+        const baselineY = y + scale * ink.ascent;
+        obj.set({
+            scaleX: scale,
+            scaleY: scale,
+            left: fabricLeftEdge + scale * Wf / 2,
+            top: baselineY - scale * mdcBaselineFromTop(Hf) + scale * Hf / 2,
+        });
         obj.setCoords();
         return;
     }

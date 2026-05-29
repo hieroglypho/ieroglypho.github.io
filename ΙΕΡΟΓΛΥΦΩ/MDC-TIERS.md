@@ -102,3 +102,9 @@ construction rather than packing bounding boxes. Tackle last.
   `_`, double for sentence), line break `!`, page break `!!`. Row is now an item
   list with per-cadrat gap strength + break items; tokenizer indexes by code
   point for `!!` / `__` / space-run look-ahead; dialog auto-route adds `!`.
+- **2026-05-29** — Ink-box measurement (refinement to Tiers 1–2): glyphs are now
+  measured by their real ink box via Canvas `measureText()` (actualBoundingBox*)
+  instead of fabric's uniform line-box height, and placed by that box. Fixes
+  gappy vertical stacks (short signs like sun/water now pack tight) and aligns
+  all non-stacked cadrats on a true ink baseline. NOT yet full proportional
+  cadrat fitting (scaling sub-glyphs to fill a square quadrat) — still pending.

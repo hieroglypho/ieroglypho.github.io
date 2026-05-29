@@ -846,30 +846,33 @@ function placeMdCNode(node, x, y, scale) {
 // serekh (rectangle + a simplified paneled facade strip along the bottom).
 function buildEnclosureFrame(variant, x, y, w, h) {
     const stroke = 'black', sw = 2;
-    const place = { left: x, top: y, originX: 'left', originY: 'top', selectable: true };
+    // Centre-origin throughout (matches the working addCartouche pattern): a
+    // group placed by top-left origin lands ~half its height too high in fabric.
+    const cx = x + w / 2, cy = y + h / 2;
+    const half = { originX: 'center', originY: 'center' };
+    const rect = new fabric.Rect({ left: 0, top: 0, width: w, height: h, fill: 'transparent', stroke, strokeWidth: sw, ...half });
 
     if (variant === 'F') {
-        return new fabric.Rect({ ...place, width: w, height: h, fill: 'transparent', stroke, strokeWidth: sw });
+        rect.set({ left: cx, top: cy, selectable: true });
+        return rect;
     }
 
-    const rectAt0 = new fabric.Rect({ left: 0, top: 0, width: w, height: h, fill: 'transparent', stroke, strokeWidth: sw, originX: 'left', originY: 'top' });
-
+    const parts = [rect];
     if (variant === 'H') {
+        // doorway notch: short upright near the bottom-left (centre-relative coords)
         const doorH = Math.min(14, h * 0.3);
-        const door = new fabric.Line([10, h, 10, h - doorH], { stroke, strokeWidth: sw, originX: 'left', originY: 'top' });
-        return new fabric.Group([rectAt0, door], place);
+        parts.push(new fabric.Line([-w / 2 + 10, h / 2, -w / 2 + 10, h / 2 - doorH], { stroke, strokeWidth: sw, ...half }));
+    } else {
+        // 'S' serekh: divider above the bottom panel + a few niche uprights.
+        const yPanel = h / 2 - MDC_SEREKH_PANEL;
+        parts.push(new fabric.Line([-w / 2, yPanel, w / 2, yPanel], { stroke, strokeWidth: sw, ...half }));
+        const niches = Math.max(2, Math.round(w / 18));
+        for (let k = 1; k < niches; k++) {
+            const nx = -w / 2 + w * k / niches;
+            parts.push(new fabric.Line([nx, yPanel, nx, h / 2], { stroke, strokeWidth: 1, ...half }));
+        }
     }
-
-    // 'S' — serekh: divider above the bottom panel plus a few niche uprights.
-    const parts = [rectAt0];
-    const panelTop = h - MDC_SEREKH_PANEL;
-    parts.push(new fabric.Line([0, panelTop, w, panelTop], { stroke, strokeWidth: sw, originX: 'left', originY: 'top' }));
-    const niches = Math.max(2, Math.round(w / 18));
-    for (let k = 1; k < niches; k++) {
-        const nx = w * k / niches;
-        parts.push(new fabric.Line([nx, panelTop, nx, h], { stroke, strokeWidth: 1, originX: 'left', originY: 'top' }));
-    }
-    return new fabric.Group(parts, place);
+    return new fabric.Group(parts, { left: cx, top: cy, originX: 'center', originY: 'center', selectable: true });
 }
 
 // Add an enclosure frame to the canvas with an id + undo entry (mirrors how the

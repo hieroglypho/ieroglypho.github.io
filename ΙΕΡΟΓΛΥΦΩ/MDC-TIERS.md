@@ -120,6 +120,11 @@ construction rather than packing bounding boxes. Tackle last.
   doorway notch), `<S >S` (serekh, simplified paneled facade). Cartouche `< >`
   excluded by design (manual tool); part-letters deferred. Enclosure parses as
   one cadrat; frame drawn behind glyphs as a separate selectable object.
+- **2026-05-29** — Fix: serekh/hwt frames floated ~half their height above the
+  baseline (misaligned with neighbouring signs). They were built as a top-origin
+  `fabric.Group`, which fabric positions from the centre. Rebuilt with the
+  centre-origin pattern (as `addCartouche` does); frame bottom now sits on the
+  shared baseline.
 - **2026-05-29** — Fix: a second paste overlapped an existing enclosure. The
   "place below existing content" math assumed centre origin (`top+h/2`), but
   frames use top origin, so their bottom was underestimated. Now computes each

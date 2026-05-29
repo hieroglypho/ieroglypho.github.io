@@ -48,7 +48,26 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 1. `fabric.min.js` — Fabric.js 5.2.4 from cdnjs (the canvas engine).
 2. `chars.js` — glyph data: the encoded `table` (decoded by `loadCharacters`) + the
    `horizontalGlyphs` / `verticalGlyphs` / `smallGlyphs` / `largeGlyphs` category arrays.
-3. `script.js` (3174 lines) — the entire editor (see sections below).
+3. **The editor, split into 7 parts** (formerly one 3174-line `script.js`). Load order is
+   load-bearing — they share one global scope; see the breakdown below.
+   1. `editor-core.js` — state/globals, canvas + grid init, glyph table decode +
+      catalog rendering, `addCharacterToCanvas`. Runs the load-time bootstrap
+      (`drawGrid()`, `displayCharactersInRows()`), so it must stay first.
+   2. `canvas-interactions.js` — `canvas.on(...)` mouse handlers (drag, marquee, pan,
+      zoom, drop, dblclick, moving/rotating/scaling/modified), undo, delete/cleanup,
+      `mirrorTextObject`, `alignObjects`.
+   3. `workspace.js` — `saveWorkspace`, `loadWorkspace`, `syncPastedNamesWithCanvas`.
+   4. `export.js` — `saveToSVG`, `saveToPNG`, `saveToPDF`, `copyCanvasImage`, watermark
+      stamping, hiero-font embedding (`ensureHieroTtfBase64`, `ensureJsPDFLoaded`).
+   5. `drawing-tools.js` — the search/filter dropdown wiring + shape tools
+      (`addCartouche`, `addCircle`, `addLine`, `addArrow`, `addSquareBracket`,
+      `addCustomRect`, `addPencilLine`, `addSpeechBubble`).
+   6. `glyph-input.js` — on-screen keyboard dialog, glyph-text dialog, three-line
+      linked blocks, transliteration palette, MdC paste handler (`parseMdCInput`,
+      `handleMdCInput`).
+   7. `editor-init.js` — `initMainMenu`, DOM event wiring, background image,
+      the single `DOMContentLoaded` dispatcher, color popup, layout/resize/keydown
+      lifecycle. Runs last because it wires everything defined above.
 4. `dictionary-search.js` — dictionary upload + search + IndexedDB caching
    (formerly `fjgus.js`; renamed this session).
 
@@ -67,26 +86,12 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 | `favicon.ico`, `robot.txt` | Misc. |
 
 ### Orphans removed (2026-05-29)
-- `pdf.js` — was a dead standalone PDF snippet; the real export is `saveToPDF()` in `script.js`.
+- `pdf.js` — was a dead standalone PDF snippet; the real export is `saveToPDF()` in `export.js`.
 - `keyboard-styles.css` — was unlinked; keyboard styles live in `main.css`.
 
-### What's inside `script.js` (major sections)
-- **Canvas + grid** — `getCanvasDimensions`, `drawGrid`, viewport/zoom/pan.
-- **Glyph catalog** — `loadCharacters` (decode), `displayCharactersInRows`,
-  `filterAndDisplayCharacters`, `addCharacterToCanvas`.
-- **History / undo** — `undoLastAction`, `deleteSelectedObjects`, `storeAndRemoveCharacter`.
-- **Transforms** — `mirrorTextObject`, `alignObjects`, `snapToGrid`.
-- **Workspace** — `saveWorkspace`, `loadWorkspace`, `syncPastedNamesWithCanvas`.
-- **Export** — `saveToSVG`, `saveToPNG`, `saveToPDF`, `copyCanvasImage`, watermark stamping,
-  hiero-font embedding helpers.
-- **Shapes** — `addCartouche`, `addCircle`, `addLine`, `addArrow`, `addSquareBracket`,
-  `addCustomRect`, `addPencilLine`, `addSpeechBubble`.
-- **Keyboard dialog** — `openKeyboard`, `addKeyboardText`, `closeKeyboard`.
-- **Transliteration / glyph-text / three-line blocks** — `setupTranslitPalette`,
-  `openGlyphTextDialog`, `addGlyphsFromDialog`, `addThreeLineBlock`, block linkage.
-- **MdC input** — `parseMdCInput`, `handleMdCInput`.
-- **Background image** — `initBackgroundImage`.
-- **UI / init** — context menu, palette + results resizers, color popup, main menu, bootstrap.
+> The editor's major sections now live in the 7 files listed under **Load order** above.
+> `editor-core.js` opens with a module map in its header comment. There is no longer a
+> single `script.js`.
 
 ---
 
@@ -94,16 +99,20 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 
 - **Classic scripts only.** Top-level `function` / `let` / `const` declarations are shared
   across the separate `<script>` files via the global lexical environment, and `var` /
-  implicit globals attach to `window`. This is why `dictionary-search.js` can call into
-  `script.js` with no imports.
+  implicit globals attach to `window`. This is why the 7 editor parts and
+  `dictionary-search.js` call into each other with no imports.
 - **Do NOT convert the editor files to `type="module"`.** The editor HTML has ~23 inline
   `onclick="someFn()"` handlers (`addCartouche()`, `openKeyboard()`, `searchDictionary()`, …)
   that require those functions to be **global**. ES modules hide them and every button
-  silently breaks. If `script.js` is ever split into smaller files, keep them classic and
-  keep the handler functions global.
-- **Load order is load-bearing:** data/setup first (`chars.js`), then `script.js`, then
-  `dictionary-search.js`. Never redeclare the same top-level `let`/`const` name in two files
-  (it's a hard SyntaxError that blanks the whole app).
+  silently breaks. The editor was split into 7 classic files (2026-05-29) precisely so it
+  could be modularized *without* going ESM — keep new files classic and keep handler
+  functions global.
+- **Load order is load-bearing:** `chars.js` → the 7 editor parts in the fixed order
+  (`editor-core` first, `editor-init` last) → `dictionary-search.js`. `editor-core.js` runs
+  the load-time bootstrap and `editor-init.js` holds the sole `DOMContentLoaded` dispatcher,
+  so those two anchor the ends. No top-level statement calls forward into a later file at
+  load time — preserve that if you move code between parts. Never redeclare the same
+  top-level `let`/`const` name in two files (it's a hard SyntaxError that blanks the app).
 - **All editor code lives in `ΙΕΡΟΓΛΥΦΩ/`** — there is no longer a root copy. Note the
   glyph table in `ΙΕΡΟΓΛΥΦΩ/chars.js` is the large/complete encoding (~136k chars); the old
   root `chars.js` held a much smaller, superseded set and was removed.
@@ -124,3 +133,10 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 - **2026-05-29** — Removed orphans: root `script.js`, `chars.js`, `main.css` (stale older-editor
   duplicates, loaded by nothing) and `ΙΕΡΟΓΛΥΦΩ/pdf.js`, `ΙΕΡΟΓΛΥΦΩ/keyboard-styles.css`
   (dead/unlinked). All recoverable via git history if ever needed.
+- **2026-05-29** — Split the editor `ΙΕΡΟΓΛΥΦΩ/script.js` (3174 lines) into 7 classic
+  `<script defer>` files along its existing section boundaries: `editor-core.js`,
+  `canvas-interactions.js`, `workspace.js`, `export.js`, `drawing-tools.js`,
+  `glyph-input.js`, `editor-init.js` (loaded in that order, between `chars.js` and
+  `dictionary-search.js`). Byte-for-byte the same code, just partitioned — verified the
+  concatenation reproduces the original and each file passes `node --check`. Kept classic
+  scripts / global functions (no ESM). `script.js` removed.

@@ -387,7 +387,14 @@
         </div>
 
         <script defer src="chars.js"></script>
-        <script defer src="script.js"></script>
+        <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
+        <script defer src="editor-core.js"></script>
+        <script defer src="canvas-interactions.js"></script>
+        <script defer src="workspace.js"></script>
+        <script defer src="export.js"></script>
+        <script defer src="drawing-tools.js"></script>
+        <script defer src="glyph-input.js"></script>
+        <script defer src="editor-init.js"></script>
         <script defer src="dictionary-search.js"></script>
 
 </body>

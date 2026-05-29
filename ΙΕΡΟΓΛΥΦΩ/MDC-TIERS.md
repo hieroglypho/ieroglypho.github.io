@@ -35,8 +35,8 @@ Issues found in that summary, worth remembering:
 |------|-------|-------------------|------------|--------|
 | **1** | Core spatial layout | `*` (side-by-side), `:` (stacked), `-` (cadrat separator), `( )` (grouping) | Easy-to-moderate | ✅ done |
 | **2** | Text structure | word end (space / `_`), sentence end (double space / `__`), line break `!`, page/section break `!!` | Easy-to-moderate | ✅ done |
-| **3** | Enclosures | cartouche `< >`, serekh `<S >S`, hwt `<H >H`, frame `<F >F`; begin/middle/end parts (2nd letter b/m/f) | Moderate-to-hard | ⬜ next |
-| **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ⬜ |
+| **3** | Enclosures | serekh `<S >S`, hwt `<H >H`, frame `<F >F` (begin/middle/end parts deferred). **Cartouche `< >` excluded** — covered by the existing `addCartouche` drawing tool; bare `< >` falls back unhandled. | Moderate-to-hard | ✅ done |
+| **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ⬜ next |
 | **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ⬜ |
 | **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | ⬜ |
 
@@ -71,11 +71,25 @@ Layered onto `layoutMdCRow`; the row is now a list of items
 - The dialog auto-route trigger now also fires on `!` (a linear text run can't
   line-break), in addition to `:` `*` `(` `)`.
 
-### Tier 3 — enclosures  ⬜
-Wrap a laid-out group in a drawn frame (Fabric path/rect/ellipse):
-cartouche oval `< >`, serekh `<S >S`, hwt box `<H >H`, frame `<F >F`. The
-optional begin/middle/end part letter controls which segment of the frame is
-drawn (for splitting an enclosure across lines).
+### Tier 3 — enclosures  ✅
+Wrap a laid-out group in a drawn Fabric frame: frame `<F >F` (plain rect), hwt
+`<H >H` (box + small doorway notch), serekh `<S >S` (rect + simplified paneled
+facade strip: a divider line + niche uprights). The tokenizer emits
+`encOpen`/`encClose` ops (variant letter S/H/F); `parseAtom` collects the
+enclosed cadrat sequence into an `{type:'enclosure',variant,children}` node that
+behaves as one cadrat in the row. The frame is added to the canvas *before* its
+glyphs so they render on top; the frame is a separate selectable object (not
+grouped with the glyphs — consistent with how glyphs stay independent). Inner
+cadrats are bottom-aligned inside the content box. Builders:
+`buildEnclosureFrame` + `addEnclosureFrame` in `glyph-input.js`.
+
+**Cartouche `< >` is intentionally out of scope** — the user creates cartouches
+manually via the toolbar's `addCartouche` tool (`drawing-tools.js`), so the MdC
+parser does not handle bare `< >` (it falls back unhandled).
+
+Begin/middle/end part letters (for splitting an enclosure across lines) are
+**deferred** — rare, and ~40–60 lines of fiddly path math. Whole enclosures
+first.
 
 ### Tier 4 — flags / toggles  ⬜
 A small state machine over the token stream: ink colour (`$r`/`$b`), shading for
@@ -102,6 +116,10 @@ construction rather than packing bounding boxes. Tackle last.
   `_`, double for sentence), line break `!`, page break `!!`. Row is now an item
   list with per-cadrat gap strength + break items; tokenizer indexes by code
   point for `!!` / `__` / space-run look-ahead; dialog auto-route adds `!`.
+- **2026-05-29** — Tier 3 shipped: enclosures `<F >F` (rect), `<H >H` (box +
+  doorway notch), `<S >S` (serekh, simplified paneled facade). Cartouche `< >`
+  excluded by design (manual tool); part-letters deferred. Enclosure parses as
+  one cadrat; frame drawn behind glyphs as a separate selectable object.
 - **2026-05-29** — Ink-box measurement (refinement to Tiers 1–2): glyphs are now
   measured by their real ink box via Canvas `measureText()` (actualBoundingBox*)
   instead of fabric's uniform line-box height, and placed by that box. Fixes

@@ -175,7 +175,7 @@ async function addGlyphsFromDialog() {
     // the individual-sign layout engine whenever the user picks that mode OR
     // the input contains a spatial operator — so e.g. "(M17:X1)*N35" lays out
     // correctly even if "Single text run" happens to be selected.
-    const hasSpatialMdC = /[:*()!]/.test(raw);
+    const hasSpatialMdC = /[:*()!<>]/.test(raw);
     if (mode === 'individual' || hasSpatialMdC) {
         handleMdCInput(raw);
         closeGlyphTextDialog();
@@ -510,6 +510,8 @@ const MDC_WORD_GAP = 28;        // single space / '_' : word boundary
 const MDC_SENTENCE_GAP = 50;    // double space / '__' : sentence boundary
 const MDC_LINE_VGAP = 18;       // vertical gap between rows (normal wrap / '!')
 const MDC_PAGE_VGAP = 70;       // extra vertical gap added for a '!!' page break
+const MDC_ENC_PAD = 8;          // inner padding between enclosure content and its frame
+const MDC_SEREKH_PANEL = 14;    // height of the serekh's (simplified) paneled facade strip
 
 // --- Ink-box measurement -----------------------------------------------------
 // fabric.Text reports a uniform *line-box* height (~fontSize·1.3) for every
@@ -632,6 +634,18 @@ function tokenizeMdC(input) {
             let n = 0;
             while (i < chars.length && /\s/.test(chars[i])) { n++; i++; }
             tokens.push({ type: 'op', op: n >= 2 ? 'sgap' : 'wgap' });
+        } else if (ch === '<' || ch === '>') {
+            flushWord();
+            const v = 'SHFshf'.includes(chars[i + 1] || '') ? chars[i + 1].toUpperCase() : null;
+            if (v) {
+                tokens.push({ type: 'op', op: ch === '<' ? 'encOpen' : 'encClose', variant: v });
+                i += 2;
+            } else {
+                // Bare '<'/'>' (cartouche) is out of scope — treat as a cadrat
+                // break so it doesn't swallow the adjacent code.
+                tokens.push({ type: 'op', op: '-' });
+                i++;
+            }
         } else if (ch === ',' || ch === ';') {
             flushWord();
             tokens.push({ type: 'op', op: '-' });   // legacy paste convenience = cadrat break
@@ -666,6 +680,24 @@ function parseMdCTree(tokens) {
             if (!isOp(peek(), ')')) throw new Error('unbalanced parens');
             eat();
             return inner;
+        }
+        if (isOp(t, 'encOpen')) {
+            const variant = t.variant;
+            eat();
+            // Collect the enclosed cadrat sequence (skipping separators) until
+            // the matching close. The frame is drawn around the whole group.
+            const children = [];
+            while (peek() && !isOp(peek(), 'encClose')) {
+                const p = peek();
+                if (p.type === 'op' && (p.op === '-' || p.op === 'wgap' || p.op === 'sgap')) {
+                    eat();
+                    continue;
+                }
+                children.push(parseStack());
+            }
+            if (!isOp(peek(), 'encClose')) throw new Error('unclosed enclosure');
+            eat();
+            return { type: 'enclosure', variant, children };
         }
         if (t && t.type === 'glyph') { eat(); return { type: 'glyph', entry: t.entry }; }
         throw new Error('unexpected token');
@@ -730,6 +762,15 @@ function measureMdCNode(node) {
         node.ink = ink;
         return node;
     }
+    if (node.type === 'enclosure') {
+        node.children.forEach(measureMdCNode);
+        const n = node.children.length;
+        node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_GAP * Math.max(0, n - 1);
+        node.innerH = n ? Math.max(...node.children.map(c => c.h)) : MDC_BASE;
+        node.w = node.innerW + 2 * MDC_ENC_PAD;
+        node.h = node.innerH + 2 * MDC_ENC_PAD + (node.variant === 'S' ? MDC_SEREKH_PANEL : 0);
+        return node;
+    }
     node.children.forEach(measureMdCNode);
     const gaps = MDC_GAP * (node.children.length - 1);
     if (node.type === 'h') {
@@ -768,6 +809,21 @@ function placeMdCNode(node, x, y, scale) {
         return;
     }
 
+    if (node.type === 'enclosure') {
+        // Frame first so the glyphs (added afterwards) render on top of it.
+        addEnclosureFrame(buildEnclosureFrame(node.variant, x, y, boxW, boxH));
+        const pad = MDC_ENC_PAD * scale;
+        const contentTop = y + pad;
+        const contentH = node.innerH * scale;
+        let cx = x + pad;
+        for (const c of node.children) {
+            const ch = c.h * scale;
+            placeMdCNode(c, cx, contentTop + (contentH - ch), scale);  // bottom-align in content
+            cx += c.w * scale + MDC_GAP * scale;
+        }
+        return;
+    }
+
     if (node.type === 'h') {
         let cx = x;
         for (const c of node.children) {
@@ -783,6 +839,46 @@ function placeMdCNode(node, x, y, scale) {
             cy += c.h * scale + MDC_GAP * scale;
         }
     }
+}
+
+// Build the Fabric frame for an enclosure variant, sized w×h with its top-left
+// at (x, y). 'F' = plain rectangle, 'H' = box with a small doorway notch, 'S' =
+// serekh (rectangle + a simplified paneled facade strip along the bottom).
+function buildEnclosureFrame(variant, x, y, w, h) {
+    const stroke = 'black', sw = 2;
+    const place = { left: x, top: y, originX: 'left', originY: 'top', selectable: true };
+
+    if (variant === 'F') {
+        return new fabric.Rect({ ...place, width: w, height: h, fill: 'transparent', stroke, strokeWidth: sw });
+    }
+
+    const rectAt0 = new fabric.Rect({ left: 0, top: 0, width: w, height: h, fill: 'transparent', stroke, strokeWidth: sw, originX: 'left', originY: 'top' });
+
+    if (variant === 'H') {
+        const doorH = Math.min(14, h * 0.3);
+        const door = new fabric.Line([10, h, 10, h - doorH], { stroke, strokeWidth: sw, originX: 'left', originY: 'top' });
+        return new fabric.Group([rectAt0, door], place);
+    }
+
+    // 'S' — serekh: divider above the bottom panel plus a few niche uprights.
+    const parts = [rectAt0];
+    const panelTop = h - MDC_SEREKH_PANEL;
+    parts.push(new fabric.Line([0, panelTop, w, panelTop], { stroke, strokeWidth: sw, originX: 'left', originY: 'top' }));
+    const niches = Math.max(2, Math.round(w / 18));
+    for (let k = 1; k < niches; k++) {
+        const nx = w * k / niches;
+        parts.push(new fabric.Line([nx, panelTop, nx, h], { stroke, strokeWidth: 1, originX: 'left', originY: 'top' }));
+    }
+    return new fabric.Group(parts, place);
+}
+
+// Add an enclosure frame to the canvas with an id + undo entry (mirrors how the
+// shape tools register their objects).
+function addEnclosureFrame(obj) {
+    obj.id = generateUniqueId();
+    canvas.add(obj);
+    undoHistory.push({ type: 'add', object: obj.toJSON(['id']), id: obj.id });
+    return obj;
 }
 
 // Lay the row items out: cadrats bottom-aligned and wrapping at the right edge,

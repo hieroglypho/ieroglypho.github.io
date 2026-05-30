@@ -510,7 +510,8 @@ const MDC_WORD_GAP = 28;        // single space / '_' : word boundary
 const MDC_SENTENCE_GAP = 50;    // double space / '__' : sentence boundary
 const MDC_LINE_VGAP = 18;       // vertical gap between rows (normal wrap / '!')
 const MDC_PAGE_VGAP = 70;       // extra vertical gap added for a '!!' page break
-const MDC_ENC_PAD = 8;          // inner padding between enclosure content and its frame
+const MDC_ENC_PAD = 14;         // inner padding: sides + gap below content (to panel/base)
+const MDC_ENC_PAD_TOP = 30;     // inner padding above content (generous: figure stands, sky above)
 const MDC_SEREKH_PANEL = 14;    // height of the serekh's (simplified) paneled facade strip
 
 // --- Ink-box measurement -----------------------------------------------------
@@ -768,7 +769,7 @@ function measureMdCNode(node) {
         node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_GAP * Math.max(0, n - 1);
         node.innerH = n ? Math.max(...node.children.map(c => c.h)) : MDC_BASE;
         node.w = node.innerW + 2 * MDC_ENC_PAD;
-        node.h = node.innerH + 2 * MDC_ENC_PAD + (node.variant === 'S' ? MDC_SEREKH_PANEL : 0);
+        node.h = MDC_ENC_PAD_TOP + node.innerH + MDC_ENC_PAD + (node.variant === 'S' ? MDC_SEREKH_PANEL : 0);
         return node;
     }
     node.children.forEach(measureMdCNode);
@@ -812,10 +813,9 @@ function placeMdCNode(node, x, y, scale) {
     if (node.type === 'enclosure') {
         // Frame first so the glyphs (added afterwards) render on top of it.
         addEnclosureFrame(buildEnclosureFrame(node.variant, x, y, boxW, boxH));
-        const pad = MDC_ENC_PAD * scale;
-        const contentTop = y + pad;
+        const contentTop = y + MDC_ENC_PAD_TOP * scale;
         const contentH = node.innerH * scale;
-        let cx = x + pad;
+        let cx = x + MDC_ENC_PAD * scale;
         for (const c of node.children) {
             const ch = c.h * scale;
             placeMdCNode(c, cx, contentTop + (contentH - ch), scale);  // bottom-align in content

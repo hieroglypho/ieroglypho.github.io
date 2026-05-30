@@ -37,7 +37,7 @@ Issues found in that summary, worth remembering:
 | **2** | Text structure | word end (space / `_`), sentence end (double space / `__`), line break `!`, page/section break `!!` | Easy-to-moderate | ✅ done |
 | **3** | Enclosures | serekh `<S >S`, hwt `<H >H`, frame `<F >F` (begin/middle/end parts deferred). **Cartouche `< >` excluded** — covered by the existing `addCartouche` drawing tool; bare `< >` falls back unhandled. | Moderate-to-hard | ✅ done |
 | **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ✅ done |
-| **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ⬜ |
+| **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ✅ done |
 | **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | ⬜ |
 
 ---
@@ -112,10 +112,32 @@ quadrat. Both render via `buildLacunaBox` / `buildShadeBox` and register through
 delegates to). The dialog auto-route trigger gained `$ # ?` so flag-only input
 still reaches the layout engine.
 
-### Tier 5 — editorial brackets  ⬜
-Render bracket pairs around spans with the appropriate glyphs/styling: erased
-`[[ ]]`, superfluous `[{ }]`, vanished `[" "]`, scribal `[' ']`, editorial
-`[& &]`.
+### Tier 5 — editorial brackets  ✅
+Wrap a laid-out span in a bracket pair drawn as **distinct line marks** on each
+side (Leiden conventions). Parallels Tier 3 enclosures but lighter — just the two
+side marks, no full frame. Encoding (open / close): erased `[[` `]]`, superfluous
+`[{` `}]`, vanished `["` `"]`, scribal `['` `']`, editorial `[&` `&]`. The
+tokenizer reads the second char of `[…` to pick the variant and matches the
+close codes by their first char (`]}"'&` followed by `]`); a **bare `[`** with no
+variant char falls back to a cadrat break (the toolbar `[ ]` drawing tool is the
+separate, manual annotation — unrelated to this typed markup). `parseAtom`
+collects the span into `{type:'brackets',variant,children}` (tolerating a
+mismatched close variant so a typo can't drop the whole paste to the flat
+fallback). `buildBracketMark(variant, side, …)` returns one stroked `fabric.Path`
+per side, in absolute coords, drawn so the same formulae mirror left/right:
+erased = double square ⟦⟧, superfluous = curly brace {} , vanished = dashed
+square (`strokeDashArray`), scribal = corner ticks ⌜⌝, editorial = angle ⟨⟩. Marks
+are separate selectable objects added via `addMdCAuxObject`. The dialog
+auto-route trigger gained `[ ] { } & " '`.
+
+Part-letters / splitting a bracket across a line break are **not** handled (same
+deferral as Tier 3 enclosures).
+
+### Tier 6 — ligatures & overlay  ⬜
+Hardest: true glyph fusion/overlap (`&`). Requires merging signs into a single
+construction rather than packing bounding boxes. Tackle last. **Note:** a bare
+`&` (ligature) is still free — Tier 5 only consumes `&` when it is part of an
+editorial bracket code (`[&` / `&]`), so the Tier 6 operator is unaffected.
 
 ### Tier 6 — ligatures & overlay  ⬜
 Hardest: true glyph fusion/overlap (`&`). Requires merging signs into a single
@@ -125,6 +147,24 @@ construction rather than packing bounding boxes. Tackle last.
 
 ## Changelog
 
+- **2026-05-29** — Tier 5 shipped: editorial brackets. Five bracket-pair codes
+  (`[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal,
+  `[& &]` editorial) parse into a `brackets` node and render as distinct
+  line-drawn marks per side (double square / curly brace / dashed / corner ticks
+  / angle) via `buildBracketMark`. Bare `[` → cadrat break; mismatched close
+  tolerated; auto-route extended with `[ ] { } & " '`. Bare `&` left free for
+  Tier 6. Tokenize/parse verified in Node across all five variants plus stacks,
+  enclosure nesting, mismatch, and the bare-`[` fallback.
+- **2026-05-29** — Fix (Tier 5): editorial brackets sat low, worst on signs like
+  N35 whose font metrics carry a large empty descent below the visible glyph.
+  The marks were sized from the full ink box (incl. that descent), so they ran
+  well below the sign. Now brackets are sized and placed by the signs' **ascent**
+  (visible height above the baseline) via `mdcNodeAscent`: each sign is
+  baseline-aligned and the marks rise `MDC_BRK_VPAD_TOP` (5) above the tallest
+  ascent and drop only `MDC_BRK_VPAD_BOT` (2) below the baseline — tight to the
+  visible signs regardless of descent. Also: the individual/spatial dialog route
+  now awaits the hieroglyph font before layout, so ink measurement no longer
+  risks a fallback-font (wrong-metrics) read.
 - **2026-05-29** — Tier 1 shipped (commit `947b8f2`): core spatial operators
   `* : - ( )` with precedence, cadrat capping, flat-row fallback, and dialog
   auto-routing of spatial input.

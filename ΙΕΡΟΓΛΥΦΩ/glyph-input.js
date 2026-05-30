@@ -171,14 +171,18 @@ async function addGlyphsFromDialog() {
     }
 
     // MdC spatial operators (':' stack, '*' juxtapose, parentheses) arrange
-    // glyphs in 2D, and the Tier 2–4 markup (breaks '!', enclosures '<>',
-    // colour '$', shading '#', lacunae '?') can't be rendered by a single linear
-    // text run either. Route to the individual-sign layout engine whenever the
-    // user picks that mode OR the input contains any such markup — so e.g.
-    // "(M17:X1)*N35" or "$rA1#b-B1-#e" lays out correctly even if "Single text
-    // run" happens to be selected.
-    const hasSpatialMdC = /[:*()!<>$#?]/.test(raw);
+    // glyphs in 2D, and the Tier 2–5 markup (breaks '!', enclosures '<>',
+    // colour '$', shading '#', lacunae '?', editorial brackets '[ ] { } & " \'')
+    // can't be rendered by a single linear text run either. Route to the
+    // individual-sign layout engine whenever the user picks that mode OR the
+    // input contains any such markup — so e.g. "(M17:X1)*N35" or "[[A1-B1]]"
+    // lays out correctly even if "Single text run" happens to be selected.
+    const hasSpatialMdC = /[:*()!<>$#?[\]{}&"']/.test(raw);
     if (mode === 'individual' || hasSpatialMdC) {
+        // Ensure the hieroglyph font is ready before layout: the engine measures
+        // glyph ink boxes with the Canvas API, which silently uses a fallback
+        // font (wrong metrics) if this hasn't loaded yet.
+        try { await document.fonts.load(`${MDC_BASE}px ${MDC_FONT}`); } catch (_) { /* best-effort */ }
         handleMdCInput(raw);
         closeGlyphTextDialog();
         return;
@@ -528,6 +532,15 @@ const MDC_LACUNA_FILL = 'rgba(0,0,0,0.05)';  // lacuna gap tint
 const MDC_LACUNA_STROKE = '#888';            // lacuna gap border (dashed)
 const MDC_LACUNA_SMALL = 0.6;                // '?' box edge as a fraction of MDC_BASE
 
+// Tier 5 — editorial brackets -------------------------------------------------
+// A bracket pair (variant: erased/superfluous/vanished/scribal/editorial) wraps
+// a laid-out span and draws a distinct line mark on each side. Parallels Tier 3
+// enclosures but lighter: just the two side marks, no full frame.
+const MDC_BRK_ARM = 9;     // arm length / mark column width at scale 1
+const MDC_BRK_GAP = 6;     // gap between a bracket mark and the enclosed glyphs
+const MDC_BRK_VPAD_TOP = 5; // marks rise this far above the tallest enclosed sign
+const MDC_BRK_VPAD_BOT = 2; // …and drop only slightly below the baseline
+
 
 // --- Ink-box measurement -----------------------------------------------------
 // fabric.Text reports a uniform *line-box* height (~fontSize·1.3) for every
@@ -684,6 +697,24 @@ function tokenizeMdC(input) {
             flushWord();
             if (chars[i + 1] === '?') { tokens.push({ type: 'lacuna', size: 'large' }); i += 2; }
             else { tokens.push({ type: 'lacuna', size: 'small' }); i++; }
+        } else if (ch === '[') {
+            // Editorial bracket OPEN: the second char selects the variant
+            // ('[['=erased, '[{'=superfluous, '["'=vanished, "['"=scribal,
+            // '[&'=editorial). A bare '[' (no variant char) is a cadrat break.
+            flushWord();
+            const nx = chars[i + 1];
+            const v = nx === '[' ? 'erased' : nx === '{' ? 'superfluous'
+                : nx === '"' ? 'vanished' : nx === "'" ? 'scribal'
+                    : nx === '&' ? 'editorial' : null;
+            if (v) { tokens.push({ type: 'op', op: 'brkOpen', variant: v }); i += 2; }
+            else { tokens.push({ type: 'op', op: '-' }); i++; }
+        } else if (']}"\'&'.includes(ch) && chars[i + 1] === ']') {
+            // Editorial bracket CLOSE: ']]' / '}]' / '"]' / "']" / '&]'.
+            flushWord();
+            const v = ch === ']' ? 'erased' : ch === '}' ? 'superfluous'
+                : ch === '"' ? 'vanished' : ch === "'" ? 'scribal' : 'editorial';
+            tokens.push({ type: 'op', op: 'brkClose', variant: v });
+            i += 2;
         } else if (ch === ',' || ch === ';') {
             flushWord();
             tokens.push({ type: 'op', op: '-' });   // legacy paste convenience = cadrat break
@@ -736,6 +767,25 @@ function parseMdCTree(tokens) {
             if (!isOp(peek(), 'encClose')) throw new Error('unclosed enclosure');
             eat();
             return { type: 'enclosure', variant, children };
+        }
+        if (isOp(t, 'brkOpen')) {
+            const variant = t.variant;
+            eat();
+            // Collect the bracketed span (skipping separators) until any close.
+            // Mismatched close variants are tolerated (we keep the open variant)
+            // so a typo can't drop the whole paste to the flat fallback.
+            const children = [];
+            while (peek() && !isOp(peek(), 'brkClose')) {
+                const p = peek();
+                if (p.type === 'op' && (p.op === '-' || p.op === 'wgap' || p.op === 'sgap')) {
+                    eat();
+                    continue;
+                }
+                children.push(parseStack());
+            }
+            if (!isOp(peek(), 'brkClose')) throw new Error('unclosed brackets');
+            eat();
+            return { type: 'brackets', variant, children };
         }
         if (t && t.type === 'lacuna') { eat(); return { type: 'lacuna', size: t.size }; }
         if (t && t.type === 'shadebox') { eat(); return { type: 'shadebox' }; }
@@ -793,6 +843,14 @@ function parseMdCTree(tokens) {
     return tree;
 }
 
+// A node's ascent: the height it occupies above the writing baseline. For a
+// glyph that's its ink ascent (ignoring the font's often-oversized descent);
+// any other node is treated as a block sitting on the line, so its ascent is its
+// full height. Used to size editorial brackets to the visible signs.
+function mdcNodeAscent(node) {
+    return node.type === 'glyph' ? node.ink.ascent : node.h;
+}
+
 // Compute each node's natural (unscaled) box, storing w/h on the node.
 function measureMdCNode(node) {
     if (node.type === 'glyph') {
@@ -811,6 +869,21 @@ function measureMdCNode(node) {
     if (node.type === 'shadebox') {
         node.w = MDC_BASE;
         node.h = MDC_BASE;
+        return node;
+    }
+    if (node.type === 'brackets') {
+        node.children.forEach(measureMdCNode);
+        const n = node.children.length;
+        node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_GAP * Math.max(0, n - 1);
+        // Size the marks by the signs' ASCENT (visible height above the
+        // baseline), not the full ink box: some signs (e.g. N35) carry a large
+        // empty descent in the font metrics, which would push the marks well
+        // below the visible glyph. A glyph contributes its ink ascent; any other
+        // node (stack/enclosure) contributes its full height (it sits above the
+        // line as a block).
+        node.innerAsc = n ? Math.max(...node.children.map(mdcNodeAscent)) : MDC_BASE;
+        node.w = node.innerW + 2 * (MDC_BRK_ARM + MDC_BRK_GAP);
+        node.h = node.innerAsc + MDC_BRK_VPAD_TOP + MDC_BRK_VPAD_BOT;
         return node;
     }
     if (node.type === 'enclosure') {
@@ -888,6 +961,25 @@ function placeMdCNode(node, x, y, scale) {
         return;
     }
 
+    if (node.type === 'brackets') {
+        const arm = MDC_BRK_ARM * scale;
+        const pad = MDC_BRK_GAP * scale;
+        // Each sign sits with its baseline on `baseY`; the marks span the box,
+        // rising VPAD_TOP above the tallest sign's ascent and dropping only
+        // VPAD_BOT below the baseline. Sizing by ascent (see measureMdCNode)
+        // keeps the marks tight to the visible signs even when a sign carries a
+        // large empty descent in its metrics.
+        const baseY = y + boxH - MDC_BRK_VPAD_BOT * scale;
+        addMdCAuxObject(buildBracketMark(node.variant, 'left', x, y, boxH, arm));
+        let cx = x + arm + pad;
+        for (const c of node.children) {
+            placeMdCNode(c, cx, baseY - mdcNodeAscent(c) * scale, scale);  // baseline-align
+            cx += c.w * scale + MDC_GAP * scale;
+        }
+        addMdCAuxObject(buildBracketMark(node.variant, 'right', x + boxW - arm, y, boxH, arm));
+        return;
+    }
+
     if (node.type === 'h') {
         let cx = x;
         for (const c of node.children) {
@@ -937,6 +1029,51 @@ function buildEnclosureFrame(variant, x, y, w, h) {
         }
     }
     return new fabric.Group(parts, { left: cx, top: cy, originX: 'center', originY: 'center', selectable: true });
+}
+
+// Build one side ('left'/'right') of an editorial bracket pair as a stroked
+// fabric.Path, drawn in absolute canvas coords spanning the column [X, X+arm]
+// vertically over [Ytop, Ytop+H]. `vx` is the outer (vertical) edge and `ax` the
+// inner arm tip toward the enclosed glyphs, so the same formulae mirror for both
+// sides. Variants: erased = double square, superfluous = curly brace, vanished =
+// dashed square, scribal = corner ticks, editorial = angle.
+function buildBracketMark(variant, side, X, Ytop, H, arm) {
+    const Y = Ytop, B = Ytop + H;
+    const vx = side === 'left' ? X : X + arm;   // outer / vertical edge
+    const ax = side === 'left' ? X + arm : X;   // arm tip (content side)
+    let d;
+    switch (variant) {
+        case 'editorial':   // angle ⟨ ⟩
+            d = `M ${ax} ${Y} L ${vx} ${(Y + B) / 2} L ${ax} ${B}`;
+            break;
+        case 'scribal': {   // corner ticks ⌜ ⌝ (top + bottom, no full vertical)
+            const t = H * 0.25;
+            d = `M ${ax} ${Y} L ${vx} ${Y} L ${vx} ${Y + t} M ${vx} ${B - t} L ${vx} ${B} L ${ax} ${B}`;
+            break;
+        }
+        case 'erased': {    // double square ⟦ ⟧ (outer bracket + inner vertical)
+            const io = (ax - vx) * 0.35;
+            d = `M ${ax} ${Y} L ${vx} ${Y} L ${vx} ${B} L ${ax} ${B} M ${vx + io} ${Y} L ${vx + io} ${B}`;
+            break;
+        }
+        case 'superfluous': {   // curly brace { } (cusp at outer edge, mid-height)
+            const my = (Y + B) / 2, sx = ax + (vx - ax) * 0.45, q = H * 0.18, e = H * 0.08;
+            d = `M ${ax} ${Y} Q ${sx} ${Y} ${sx} ${Y + q} L ${sx} ${my - e} Q ${sx} ${my} ${vx} ${my}`
+                + ` Q ${sx} ${my} ${sx} ${my + e} L ${sx} ${B - q} Q ${sx} ${B} ${ax} ${B}`;
+            break;
+        }
+        case 'vanished':    // dashed square (handled by strokeDashArray below)
+        default:
+            d = `M ${ax} ${Y} L ${vx} ${Y} L ${vx} ${B} L ${ax} ${B}`;
+    }
+    return new fabric.Path(d, {
+        fill: '',
+        stroke: 'black',
+        strokeWidth: 2,
+        strokeDashArray: variant === 'vanished' ? [4, 3] : null,
+        objectCaching: false,
+        selectable: true,
+    });
 }
 
 // Damaged-sign shading wash — a translucent grey box. Drawn over a glyph's ink

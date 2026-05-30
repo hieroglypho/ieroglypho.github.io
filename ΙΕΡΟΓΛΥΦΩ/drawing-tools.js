@@ -227,55 +227,42 @@ function addArrow() {
     canvas.renderAll();
     return group;
 }
+// Build a single bracket as a fabric.Group at (left, top). `facing` is 'open'
+// for '[' (arms point right) or 'close' for ']' (arms point left).
+function buildBracketGroup(facing, left, top) {
+    const arm = facing === 'close' ? -15 : 15;   // direction the horizontal stubs point
+    const lineOpts = { stroke: 'black', strokeWidth: 2, originX: 'center', originY: 'center' };
+    const line = new fabric.Line([0, -50, 0, 50], lineOpts);
+    const topLine = new fabric.Line([0, -50, arm, -50], lineOpts);
+    const bottomLine = new fabric.Line([0, 50, arm, 50], lineOpts);
+    return new fabric.Group([line, topLine, bottomLine], {
+        left, top, originX: 'center', originY: 'center'
+    });
+}
+
+// Add a bracket-pair annotation: an opening '[' and a closing ']' facing inward.
+// They are placed a short distance apart as two independent objects, so the user
+// can drag each to enclose content of any width. Epigraphic brackets are always
+// paired and face inward (Leiden conventions), so a single tool drops both.
 function addSquareBracket() {
     const off = nextToolOffset();
-    // Create the main vertical line
-    const line = new fabric.Line([0, -50, 0, 50], {
-        stroke: 'black',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center'
-    });
+    const cy = 300 + off.dy;
+    const gap = 120;                  // initial space between the two brackets
+    const leftX = 400 + off.dx - gap / 2;
 
-    // Create top horizontal line
-    const topLine = new fabric.Line([-15, -50, 0, -50], {
-        stroke: 'black',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center'
-    });
+    const pair = [
+        buildBracketGroup('open', leftX, cy),
+        buildBracketGroup('close', leftX + gap, cy),
+    ];
 
-    // Create bottom horizontal line
-    const bottomLine = new fabric.Line([-15, 50, 0, 50], {
-        stroke: 'black',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center'
-    });
-
-    // Create a group with all lines
-    const group = new fabric.Group([line, topLine, bottomLine], {
-        left: 400 + off.dx,
-        top: 300 + off.dy,
-        originX: 'center',
-        originY: 'center'
-    });
-
-    // Generate unique ID
-    group.id = generateUniqueId();
-
-    // Add to canvas
-    canvas.add(group);
-
-    // Add to history for undo
-    undoHistory.push({
-        type: 'add',
-        object: group.toJSON(['id']),
-        id: group.id
+    pair.forEach(group => {
+        group.id = generateUniqueId();
+        canvas.add(group);
+        undoHistory.push({ type: 'add', object: group.toJSON(['id']), id: group.id });
     });
 
     canvas.requestRenderAll();
-    return group;
+    return pair;
 }
 function addCustomRect(options = {}) {
     const off = nextToolOffset();

@@ -25,9 +25,11 @@ _(none)_
 - ~~**MdC Tier 5 — editorial brackets:** `[[ ]]` erased, `[{ }]` superfluous,
   `[" "]` vanished, `[' ']` scribal, `[& &]` editorial (with their meanings).~~
   ✅ added 2026-05-30.
-- **Toolbar §3 is stale:** the bracket tool now drops an inward-facing `[ ]`
+- ~~**Toolbar §3 is stale:** the bracket tool now drops an inward-facing `[ ]`
   **pair** (drag each), not a single "Square brackets"; and the `𓂀…`
-  hieroglyph-input button (orange-highlighted) is missing from the list.
+  hieroglyph-input button (orange-highlighted) is missing from the list.~~ ✅
+  fixed 2026-05-30 (bracket entry reworded; `𓂀` hieroglyph-input entry added;
+  grid reordered/icons aligned to the real toolbar).
 - (When **Tier 6** ligatures `&` land, document those too.)
 
 **The real problem — organization:** the page is a flat 1–10 numbered list and is

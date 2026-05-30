@@ -157,6 +157,11 @@
             color: var(--accent);
             text-align: center;
         }
+        /* The hieroglyph-input legend uses an actual Egyptian glyph, which the
+           body's Arial stack can't render — use the same font stack as headings. */
+        .tool-grid .glyph-icon {
+            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
+        }
 
         .tip {
             border-left: 3px solid var(--accent-strong);
@@ -246,16 +251,17 @@
     <div class="tool-grid">
         <div><span class="icon">▭</span>Cartouche — royal-name oval</div>
         <div><span class="icon">──</span>Line</div>
-        <div><span class="icon">⟶</span>Arrow</div>
+        <div><span class="icon">→</span>Arrow</div>
         <div><span class="icon">▭</span>Rectangle</div>
         <div><span class="icon">◯</span>Circle</div>
         <div><span class="icon">✎</span>Freehand pencil</div>
-        <div><span class="icon">[</span>Square brackets</div>
+        <div><span class="icon">[&nbsp;]</span>Bracket pair — drops an inward-facing <code>[ ]</code>; drag each half to enclose text</div>
         <div><span class="icon">💬</span>Speech bubble</div>
         <div><span class="icon">⌨</span>Text input (incl. transliteration &amp; Coptic)</div>
+        <div><span class="icon glyph-icon">𓂀</span><strong>Hieroglyph input</strong> (highlighted button) — opens the dialog for a text run, individual signs (MdC spatial layout), or a three-line block</div>
         <div><span class="icon">BG</span>Upload a background image</div>
-        <div><span class="icon">🎨</span>Set the canvas color</div>
         <div><span class="icon">BG&nbsp;α</span>Background opacity slider</div>
+        <div><span class="icon">🎨</span>Set the canvas color</div>
     </div>
 
     <h2>4. Selecting and moving objects</h2>

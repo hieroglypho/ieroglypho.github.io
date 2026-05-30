@@ -18,11 +18,13 @@ _(none)_
 **Area:** `help-content.html` (loaded into the in-app help overlay).
 **Filed:** 2026-05-29.
 
-**Content that is now missing or stale** (help still only covers MdC Tiers 1–3):
-- **MdC Tier 4 — flags/toggles:** colour rubric `$r` / `$g` / `$b`, damaged-sign
-  shading `#b … #e` and the destroyed quadrat `-#-`, lacunae `?` / `??`.
-- **MdC Tier 5 — editorial brackets:** `[[ ]]` erased, `[{ }]` superfluous,
-  `[" "]` vanished, `[' ']` scribal, `[& &]` editorial (with their meanings).
+**Content that is now missing or stale:**
+- ~~**MdC Tier 4 — flags/toggles:** colour rubric `$r` / `$g` / `$b`, damaged-sign
+  shading `#b … #e` and the destroyed quadrat `-#-`, lacunae `?` / `??`.~~ ✅ added
+  to the MdC section 2026-05-30.
+- ~~**MdC Tier 5 — editorial brackets:** `[[ ]]` erased, `[{ }]` superfluous,
+  `[" "]` vanished, `[' ']` scribal, `[& &]` editorial (with their meanings).~~
+  ✅ added 2026-05-30.
 - **Toolbar §3 is stale:** the bracket tool now drops an inward-facing `[ ]`
   **pair** (drag each), not a single "Square brackets"; and the `𓂀…`
   hieroglyph-input button (orange-highlighted) is missing from the list.

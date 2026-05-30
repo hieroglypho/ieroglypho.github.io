@@ -538,8 +538,11 @@ const MDC_LACUNA_SMALL = 0.6;                // '?' box edge as a fraction of MD
 // enclosures but lighter: just the two side marks, no full frame.
 const MDC_BRK_ARM = 9;     // arm length / mark column width at scale 1
 const MDC_BRK_GAP = 6;     // gap between a bracket mark and the enclosed glyphs
-const MDC_BRK_VPAD_TOP = 5; // marks rise this far above the tallest enclosed sign
-const MDC_BRK_VPAD_BOT = 2; // …and drop only slightly below the baseline
+const MDC_BRK_VPAD_TOP = 10; // marks rise this far above the tallest enclosed sign
+                             // — enough headroom that a tall sign's apex (e.g. the
+                             // A1 figure's head) clears the top mark rather than
+                             // grazing it
+const MDC_BRK_VPAD_BOT = 3;  // …and drop just below the baseline
 
 
 // --- Ink-box measurement -----------------------------------------------------
@@ -882,6 +885,10 @@ function measureMdCNode(node) {
         // node (stack/enclosure) contributes its full height (it sits above the
         // line as a block).
         node.innerAsc = n ? Math.max(...node.children.map(mdcNodeAscent)) : MDC_BASE;
+        // Marks are sized proportionally to the enclosed content's visible ascent
+        // (not a fixed line height): the bracket hugs its own sign, tall around a
+        // tall sign, short around a low one. VPAD_TOP gives the apex headroom;
+        // VPAD_BOT sits the marks just below the baseline.
         node.w = node.innerW + 2 * (MDC_BRK_ARM + MDC_BRK_GAP);
         node.h = node.innerAsc + MDC_BRK_VPAD_TOP + MDC_BRK_VPAD_BOT;
         return node;

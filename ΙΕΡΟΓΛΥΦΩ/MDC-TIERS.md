@@ -139,14 +139,19 @@ construction rather than packing bounding boxes. Tackle last. **Note:** a bare
 `&` (ligature) is still free — Tier 5 only consumes `&` when it is part of an
 editorial bracket code (`[&` / `&]`), so the Tier 6 operator is unaffected.
 
-### Tier 6 — ligatures & overlay  ⬜
-Hardest: true glyph fusion/overlap (`&`). Requires merging signs into a single
-construction rather than packing bounding boxes. Tackle last.
-
 ---
 
 ## Changelog
 
+- **2026-05-30** — Fix (Tier 5, BUG-1): editorial bracket alignment. A first pass
+  clamped marks to a uniform nominal line height (`MDC_BRK_LINE_H`), but the user
+  prefers the **proportional, per-sign** look (each bracket hugging its own sign),
+  so the clamp was reverted — sizing is back to the enclosed content's visible
+  ascent. The real defect was headroom: marks rose only 5px above the sign's apex,
+  so a tall sign's top (A1's head) grazed the top mark. Bumped `MDC_BRK_VPAD_TOP`
+  5→10 and `MDC_BRK_VPAD_BOT` 2→3 for clean clearance. The descent-dip fix (size
+  by visible ascent, ignore the font's empty descent) is retained. Also removed a
+  duplicate Tier 6 heading.
 - **2026-05-29** — Tier 5 shipped: editorial brackets. Five bracket-pair codes
   (`[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal,
   `[& &]` editorial) parse into a `brackets` node and render as distinct

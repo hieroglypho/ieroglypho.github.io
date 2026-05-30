@@ -489,7 +489,7 @@ canvas {
 }
 
 #tools button {
-    padding: 8px 8px;
+    padding: 0 8px;
     border: 1px solid #4a4a4a;
     background-color: #2a2a2a;
     color: #ffffff;
@@ -498,6 +498,26 @@ canvas {
     transition: all 0.2s ease;
     font-size: 16px;
     min-width: 40px;
+    /* Fixed height + flex centring so every tool button is the same height
+       regardless of its glyph (emoji and hieroglyphs have taller line boxes
+       than plain text/symbols). */
+    height: 40px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* Primary action: the hieroglyph-input (MdC widget) launcher gets an accent
+   gold fill so it stands out among the annotation tools without being moved. */
+#tools button#glyphWidgetBtn {
+    background-color: #b8860b;
+    border-color: #d4a418;
+}
+
+#tools button#glyphWidgetBtn:hover {
+    background-color: #d4a418;
 }
 
 #tools button:hover {
@@ -693,7 +713,9 @@ canvas {
     height: 100%;
 }
 
-.rainbow-donate {
+/* Scoped to #tools so width/height/padding outrank the generic
+   `#tools button` rule (higher specificity) — the donate button stays big. */
+#tools .rainbow-donate {
     display: grid;
     /* Using grid for perfect centering */
     place-items: center;
@@ -859,11 +881,17 @@ canvas {
     /* margin-bottom: 5px; */
 }
 
-.save-menu button {
+/* Scoped under #tools so it outranks the generic `#tools button` rule and the
+   dropdown items keep their left-aligned, auto-height list layout (the toolbar
+   fixed-height + flex-centring must not leak into this menu). */
+#tools .save-menu button {
     padding: 8px 10px;
     /* Adjusted padding */
     text-align: left;
     width: 100%;
+    height: auto;
+    min-width: 0;
+    display: block;
     border: none;
     background: none;
     cursor: pointer;

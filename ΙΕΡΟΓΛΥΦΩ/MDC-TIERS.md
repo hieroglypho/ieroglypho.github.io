@@ -36,7 +36,7 @@ Issues found in that summary, worth remembering:
 | **1** | Core spatial layout | `*` (side-by-side), `:` (stacked), `-` (cadrat separator), `( )` (grouping) | Easy-to-moderate | ✅ done |
 | **2** | Text structure | word end (space / `_`), sentence end (double space / `__`), line break `!`, page/section break `!!` | Easy-to-moderate | ✅ done |
 | **3** | Enclosures | serekh `<S >S`, hwt `<H >H`, frame `<F >F` (begin/middle/end parts deferred). **Cartouche `< >` excluded** — covered by the existing `addCartouche` drawing tool; bare `< >` falls back unhandled. | Moderate-to-hard | ✅ done |
-| **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ⬜ next |
+| **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ✅ done |
 | **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ⬜ |
 | **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | ⬜ |
 
@@ -91,10 +91,26 @@ Begin/middle/end part letters (for splitting an enclosure across lines) are
 **deferred** — rare, and ~40–60 lines of fiddly path math. Whole enclosures
 first.
 
-### Tier 4 — flags / toggles  ⬜
+### Tier 4 — flags / toggles  ✅
 A small state machine over the token stream: ink colour (`$r`/`$b`), shading for
 damaged signs (`#b`/`#e`, `-#-`), lacuna markers (`?`/`??`). State persists until
 toggled again.
+
+Implementation — **colour and shade are stream state held in the tokenizer**, not
+parse-tree structure: `tokenizeMdC` keeps `curColor` / `curShade` and stamps each
+glyph token with its current `color`/`shade` as it is emitted, so a `$r` /`#b`
+toggle affects every following glyph (across cadrats) until reset. `parseAtom`
+copies those onto glyph nodes; `placeMdCNode` sets the glyph's `fill` for colour
+and lays a translucent grey wash (`MDC_SHADE_FILL`) over the ink box for shade.
+Colours: `$r` red (`#c0392b`), `$g` green, `$b`/`$k`/unknown → black.
+
+Two new **leaf nodes** (siblings of `glyph`, so they pack as cadrats and can be
+`*`/`:` operands): `lacuna` (`?` small / `??` large) → a dashed tinted gap box,
+and `shadebox` (lone `#`, e.g. the canonical `-#-`) → a fully-shaded destroyed
+quadrat. Both render via `buildLacunaBox` / `buildShadeBox` and register through
+`addMdCAuxObject` (the shared id+undo adder that `addEnclosureFrame` now also
+delegates to). The dialog auto-route trigger gained `$ # ?` so flag-only input
+still reaches the layout engine.
 
 ### Tier 5 — editorial brackets  ⬜
 Render bracket pairs around spans with the appropriate glyphs/styling: erased
@@ -135,6 +151,15 @@ construction rather than packing bounding boxes. Tackle last.
   "place below existing content" math assumed centre origin (`top+h/2`), but
   frames use top origin, so their bottom was underestimated. Now computes each
   object's true bottom by origin and reserves the tallest block's height.
+- **2026-05-29** — Tier 4 shipped: flags / toggles. Colour (`$r`/`$g`/`$b`) and
+  damaged-sign shading (`#b`…`#e`) are stream state in the tokenizer, stamped
+  onto each glyph token (persist until re-toggled); colour sets the glyph `fill`,
+  shade lays a translucent grey wash over the ink box. New leaf nodes `lacuna`
+  (`?`/`??`, dashed gap box) and `shadebox` (lone `#` / `-#-`, destroyed quadrat)
+  pack as cadrats. Shared `addMdCAuxObject` adder (enclosure/shade/lacuna);
+  dialog auto-route extended with `$ # ?`. Tokenize/parse verified in Node
+  across colour toggles, shade runs, `-#-`, lacunae, and composition with
+  stacks/enclosures/juxtaposition.
 - **2026-05-29** — Ink-box measurement (refinement to Tiers 1–2): glyphs are now
   measured by their real ink box via Canvas `measureText()` (actualBoundingBox*)
   instead of fabric's uniform line-box height, and placed by that box. Fixes

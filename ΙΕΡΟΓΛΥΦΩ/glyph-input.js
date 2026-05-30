@@ -171,11 +171,13 @@ async function addGlyphsFromDialog() {
     }
 
     // MdC spatial operators (':' stack, '*' juxtapose, parentheses) arrange
-    // glyphs in 2D, which a single linear text run cannot represent. Route to
-    // the individual-sign layout engine whenever the user picks that mode OR
-    // the input contains a spatial operator — so e.g. "(M17:X1)*N35" lays out
-    // correctly even if "Single text run" happens to be selected.
-    const hasSpatialMdC = /[:*()!<>]/.test(raw);
+    // glyphs in 2D, and the Tier 2–4 markup (breaks '!', enclosures '<>',
+    // colour '$', shading '#', lacunae '?') can't be rendered by a single linear
+    // text run either. Route to the individual-sign layout engine whenever the
+    // user picks that mode OR the input contains any such markup — so e.g.
+    // "(M17:X1)*N35" or "$rA1#b-B1-#e" lays out correctly even if "Single text
+    // run" happens to be selected.
+    const hasSpatialMdC = /[:*()!<>$#?]/.test(raw);
     if (mode === 'individual' || hasSpatialMdC) {
         handleMdCInput(raw);
         closeGlyphTextDialog();
@@ -514,6 +516,19 @@ const MDC_ENC_PAD = 14;         // inner padding: sides + gap below content (to 
 const MDC_ENC_PAD_TOP = 30;     // inner padding above content (generous: figure stands, sky above)
 const MDC_SEREKH_PANEL = 14;    // height of the serekh's (simplified) paneled facade strip
 
+// Tier 4 — flags / toggles ----------------------------------------------------
+// Colour rubric: $r red, $g green, $b/$k back to black. Unknown letters reset to
+// black. Shading ('#b'…'#e', lone '#') marks damaged signs with a translucent
+// grey wash; lacunae ('?' small, '??' large) are dashed gap boxes. Colour and
+// shade are stream state (persist until re-toggled), so they live in the
+// tokenizer and are stamped onto each glyph token as it is emitted.
+const MDC_COLORS = { r: '#c0392b', g: '#1e7d34', b: null, k: null };  // null = black
+const MDC_SHADE_FILL = 'rgba(0,0,0,0.18)';   // damaged-sign wash (drawn over the glyph)
+const MDC_LACUNA_FILL = 'rgba(0,0,0,0.05)';  // lacuna gap tint
+const MDC_LACUNA_STROKE = '#888';            // lacuna gap border (dashed)
+const MDC_LACUNA_SMALL = 0.6;                // '?' box edge as a fraction of MDC_BASE
+
+
 // --- Ink-box measurement -----------------------------------------------------
 // fabric.Text reports a uniform *line-box* height (~fontSize·1.3) for every
 // glyph, so short signs (sun, water) get a tall box full of dead space — which
@@ -591,12 +606,14 @@ function handleMdCInput(mdcString) {
 function tokenizeMdC(input) {
     const tokens = [];
     let word = '';
+    let curColor = null;    // stream state: ink colour (null = black)
+    let curShade = false;   // stream state: '#b'…'#e' damaged-sign shading
 
     const flushWord = () => {
         if (!word) return;
         const code = charsByCode.get(word.toUpperCase());
         if (code) {
-            tokens.push({ type: 'glyph', entry: code });
+            tokens.push({ type: 'glyph', entry: code, color: curColor, shade: curShade });
         } else {
             const leaves = [];
             for (const ch of word) {
@@ -605,7 +622,7 @@ function tokenizeMdC(input) {
             }
             leaves.forEach((g, i) => {
                 if (i > 0) tokens.push({ type: 'op', op: '-' });
-                tokens.push({ type: 'glyph', entry: g });
+                tokens.push({ type: 'glyph', entry: g, color: curColor, shade: curShade });
             });
         }
         word = '';
@@ -647,6 +664,26 @@ function tokenizeMdC(input) {
                 tokens.push({ type: 'op', op: '-' });
                 i++;
             }
+        } else if (ch === '$') {
+            // Colour rubric: '$r'/'$g' set red/green, '$b'/'$k' (or anything
+            // else, incl. bare '$') reset to black. Persists as stream state.
+            flushWord();
+            const c = (chars[i + 1] || '').toLowerCase();
+            if (/[a-z]/.test(c)) { curColor = (c in MDC_COLORS) ? MDC_COLORS[c] : null; i += 2; }
+            else { curColor = null; i++; }
+        } else if (ch === '#') {
+            // '#b' begins / '#e' ends damaged-sign shading; a lone '#' is a
+            // fully-shaded (destroyed) quadrat — e.g. the canonical '-#-'.
+            flushWord();
+            const c = (chars[i + 1] || '').toLowerCase();
+            if (c === 'b') { curShade = true; i += 2; }
+            else if (c === 'e') { curShade = false; i += 2; }
+            else { tokens.push({ type: 'shadebox' }); i++; }
+        } else if (ch === '?') {
+            // Lacuna: '?' small gap, '??' large gap.
+            flushWord();
+            if (chars[i + 1] === '?') { tokens.push({ type: 'lacuna', size: 'large' }); i += 2; }
+            else { tokens.push({ type: 'lacuna', size: 'small' }); i++; }
         } else if (ch === ',' || ch === ';') {
             flushWord();
             tokens.push({ type: 'op', op: '-' });   // legacy paste convenience = cadrat break
@@ -700,7 +737,9 @@ function parseMdCTree(tokens) {
             eat();
             return { type: 'enclosure', variant, children };
         }
-        if (t && t.type === 'glyph') { eat(); return { type: 'glyph', entry: t.entry }; }
+        if (t && t.type === 'lacuna') { eat(); return { type: 'lacuna', size: t.size }; }
+        if (t && t.type === 'shadebox') { eat(); return { type: 'shadebox' }; }
+        if (t && t.type === 'glyph') { eat(); return { type: 'glyph', entry: t.entry, color: t.color, shade: t.shade }; }
         throw new Error('unexpected token');
     }
 
@@ -763,6 +802,17 @@ function measureMdCNode(node) {
         node.ink = ink;
         return node;
     }
+    if (node.type === 'lacuna') {
+        const s = node.size === 'large' ? MDC_BASE : MDC_BASE * MDC_LACUNA_SMALL;
+        node.w = s;
+        node.h = s;
+        return node;
+    }
+    if (node.type === 'shadebox') {
+        node.w = MDC_BASE;
+        node.h = MDC_BASE;
+        return node;
+    }
     if (node.type === 'enclosure') {
         node.children.forEach(measureMdCNode);
         const n = node.children.length;
@@ -791,6 +841,16 @@ function placeMdCNode(node, x, y, scale) {
     const boxW = node.w * scale;
     const boxH = node.h * scale;
 
+    if (node.type === 'lacuna') {
+        addMdCAuxObject(buildLacunaBox(x, y, boxW, boxH));
+        return;
+    }
+
+    if (node.type === 'shadebox') {
+        addMdCAuxObject(buildShadeBox(x, y, boxW, boxH));
+        return;
+    }
+
     if (node.type === 'glyph') {
         const ink = node.ink;
         const obj = addCharacterToCanvas(node.entry[1], node.entry[0], 0, 0);
@@ -806,7 +866,11 @@ function placeMdCNode(node, x, y, scale) {
             left: fabricLeftEdge + scale * Wf / 2,
             top: baselineY - scale * mdcBaselineFromTop(Hf) + scale * Hf / 2,
         });
+        if (node.color) obj.set({ fill: node.color });
         obj.setCoords();
+        // Damaged-sign shading: a translucent wash over the glyph's ink box
+        // (added after the glyph so it reads as overlaid damage).
+        if (node.shade) addMdCAuxObject(buildShadeBox(x, y, boxW, boxH));
         return;
     }
 
@@ -875,13 +939,41 @@ function buildEnclosureFrame(variant, x, y, w, h) {
     return new fabric.Group(parts, { left: cx, top: cy, originX: 'center', originY: 'center', selectable: true });
 }
 
-// Add an enclosure frame to the canvas with an id + undo entry (mirrors how the
-// shape tools register their objects).
-function addEnclosureFrame(obj) {
+// Damaged-sign shading wash — a translucent grey box. Drawn over a glyph's ink
+// box (Tier 4 '#b'…'#e') or as a standalone destroyed quadrat (lone '#').
+function buildShadeBox(x, y, w, h) {
+    return new fabric.Rect({
+        left: x, top: y, width: w, height: h,
+        originX: 'left', originY: 'top',
+        fill: MDC_SHADE_FILL, stroke: null, selectable: true,
+    });
+}
+
+// Lacuna gap box — a dashed-border tinted rectangle marking a destroyed area
+// ('?' small, '??' large).
+function buildLacunaBox(x, y, w, h) {
+    return new fabric.Rect({
+        left: x, top: y, width: w, height: h,
+        originX: 'left', originY: 'top',
+        fill: MDC_LACUNA_FILL, stroke: MDC_LACUNA_STROKE, strokeWidth: 1,
+        strokeDashArray: [4, 3], selectable: true,
+    });
+}
+
+// Register an MdC-generated auxiliary object (enclosure frame, shade wash,
+// lacuna box) on the canvas with an id + undo entry — mirrors how the shape
+// tools register their objects.
+function addMdCAuxObject(obj) {
     obj.id = generateUniqueId();
     canvas.add(obj);
     undoHistory.push({ type: 'add', object: obj.toJSON(['id']), id: obj.id });
     return obj;
+}
+
+// Add an enclosure frame to the canvas. Kept as a named wrapper for the
+// enclosure call site; delegates to the shared aux-object adder.
+function addEnclosureFrame(obj) {
+    return addMdCAuxObject(obj);
 }
 
 // Lay the row items out: cadrats bottom-aligned and wrapping at the right edge,

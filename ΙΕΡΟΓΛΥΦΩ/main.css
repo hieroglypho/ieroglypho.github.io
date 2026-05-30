@@ -509,15 +509,10 @@ canvas {
     line-height: 1;
 }
 
-/* Primary action: the hieroglyph-input (MdC widget) launcher gets an accent
-   gold fill so it stands out among the annotation tools without being moved. */
+/* Primary action: the hieroglyph-input (MdC widget) launcher looks like the
+   other tool buttons but is highlighted with an orange border. */
 #tools button#glyphWidgetBtn {
-    background-color: #b8860b;
-    border-color: #d4a418;
-}
-
-#tools button#glyphWidgetBtn:hover {
-    background-color: #d4a418;
+    border-color: #e8851a;
 }
 
 #tools button:hover {

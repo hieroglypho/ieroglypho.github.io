@@ -429,6 +429,7 @@ function initMainMenu() {
     const saveAsPdfBtn = document.getElementById('saveAsPdfBtn');
     const openBtn = document.getElementById('loadWorkspaceBtn');
     const wikiBtn = document.getElementById('wikiBtn');
+    const aboutBtn = document.getElementById('aboutBtn');
 
     menu.classList.add('hidden');
 
@@ -445,6 +446,7 @@ function initMainMenu() {
     saveAsSvgBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToSVG(); close(); });
     saveAsPdfBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPDF(); close(); });
     openBtn.addEventListener('click', (e) => { e.stopPropagation(); loadWorkspace(); close(); });
+    if (aboutBtn) aboutBtn.addEventListener('click', (e) => { e.stopPropagation(); openAbout(); close(); });
     wikiBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         window.open('https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner', '_blank');

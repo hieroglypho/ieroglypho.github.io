@@ -14,20 +14,6 @@ _(none)_
 
 ## TODO
 
-### TODO-2 — workspace autosave + save reminder
-**Area:** new persistence layer; `editor-init.js` (unload warning already exists),
-export/load JSON path. **Priority:** high (biggest robustness gap).
-
-The workspace is **not** persisted — a refresh or crash loses all work. Only UI
-prefs (`paletteW`, `charListH`, `glyphMode`) hit localStorage today. Two parts,
-ship either or both:
-- **Autosave:** debounced serialize of the canvas to `localStorage` on change;
-  on load, detect a saved session and offer "Restore last session?" (don't
-  silently overwrite a fresh start).
-- **Save reminder:** if autosave is too heavy, a lighter fallback — a periodic /
-  on-unload nudge ("You have unsaved changes — Save as JSON?") that ties into the
-  existing `canvasModified` flag and `beforeunload` handler.
-
 ### TODO-3 — redo (complete the undo pair)
 **Area:** `canvas-interactions.js` (`undoLastAction`, `undoHistory`), keybinding
 in `editor-init.js` (~L686, the Ctrl+Z handler). **Priority:** medium.
@@ -63,6 +49,25 @@ who work in MdC notation.
 ---
 
 ## Fixed
+
+### TODO-2 — workspace autosave + save reminder
+**Fixed:** 2026-05-31. **Area:** `workspace.js` (autosave layer + extracted
+`serializeWorkspace`/`applyWorkspace`), `editor-init.js` (bg-image downscale on
+upload). The `beforeunload` reminder already shipped.
+
+Crash-recovery autosave: a debounced (~1s) snapshot of the workspace to
+`localStorage` (`ieroglypho:autosave`), streamed off Fabric's
+`object:added/modified/removed`. On load a recoverable snapshot is offered via a
+non-destructive **"Recovered unsaved work…"** banner (Restore / Dismiss) — never
+silently overwrites a fresh start; Dismiss drops the snapshot so it doesn't
+re-nag. Quota-safe: on `QuotaExceededError` it retries with all image payloads
+stripped so the irreplaceable glyph work always fits. To avoid duplicated logic,
+the JSON download (`saveWorkspace`) and file-open (`loadWorkspace`) were
+refactored to share `serializeWorkspace()` / `applyWorkspace()` with the
+autosave. Background images are also **capped on upload** (downscale to 2000px
+longest side, re-encode JPEG q0.82) — keeps a big photo out of the ~5MB budget
+and turns the source into a persistent data-URL (so the bg now survives reload
+instead of dying with its blob: URL).
 
 ### TODO-1 — reorganize the help modal
 **Fixed:** 2026-05-31. **Area:** `help-content.html`.

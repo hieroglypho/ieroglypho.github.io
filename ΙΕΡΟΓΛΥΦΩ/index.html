@@ -172,12 +172,18 @@
         <div class="workspace-actions" style="position: relative;">
             <button id="mainMenuBtn" class="action-btn" title="File menu">≡</button>
             <div id="mainMenu" class="save-menu hidden">
-                <button id="saveAsJsonBtn">Save as JSON</button>
-                <button id="saveAsPngBtn">Save as PNG</button>
-                <button id="saveAsSvgBtn">Save as SVG</button>
-                <button id="saveAsPdfBtn">Save as PDF</button>
-                <button id="loadWorkspaceBtn">Open JSON…</button>
-                <button id="wikiBtn">Gardiner signs (Wiki)</button>
+                <!-- Workspace (native, round-trippable JSON) -->
+                <button id="saveAsJsonBtn" data-icon="💾">Save as JSON</button>
+                <button id="loadWorkspaceBtn" data-icon="📂">Open JSON…</button>
+                <hr class="save-menu-sep">
+                <!-- Export (flattened image / document formats) -->
+                <button id="saveAsPngBtn" data-icon="🖼">Save as PNG</button>
+                <button id="saveAsSvgBtn" data-icon="🖌">Save as SVG</button>
+                <button id="saveAsPdfBtn" data-icon="📄">Save as PDF</button>
+                <hr class="save-menu-sep">
+                <!-- Reference -->
+                <button id="wikiBtn" data-icon="📖">Gardiner signs (Wiki)</button>
+                <button id="aboutBtn" data-icon="𓂀">About</button>
             </div>
         </div>
         <div class="tool-group">
@@ -239,6 +245,32 @@
     <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
     <div class="help-overlay" id="helpOverlay">
         <iframe src="help-content.html" class="help-content-frame" id="helpContent"></iframe>
+    </div>
+
+    <!-- About overlay (reuses the .help-overlay backdrop; body-level) -->
+    <div class="help-overlay" id="aboutOverlay">
+        <div class="about-card" role="dialog" aria-label="About ΙΕΡΟΓΛΥΦΩ">
+            <button class="about-close" id="aboutCloseBtn" title="Close" aria-label="Close">×</button>
+            <div class="about-glyph">𓂀</div>
+            <h2>ΙΕΡΟΓΛΥΦΩ</h2>
+            <p class="about-tagline">A free, browser-based editor for writing, studying, and
+                exporting ancient Egyptian hieroglyphs.</p>
+            <p>Drag-and-drop signs, build cartouches, lay out text with MdC spatial
+                notation, trace over reference images, and export clean PNG, SVG, or
+                print-ready PDF — all in the browser, nothing to install.</p>
+            <p class="about-brag">Backed by the <strong>full extended hieroglyph
+                set</strong> — thousands of signs reaching well past the Gardiner basics,
+                with the spacing and stacking the script actually needs. Frankly, it
+                runs rings around JSesh: no install, no fuss, and it looks good doing it. 𓋹</p>
+            <ul class="about-links">
+                <li><a href="/about.html" target="_blank" rel="noopener">𓊧 About the project</a></li>
+                <li><a href="/tutorials.html" target="_blank" rel="noopener">𓏛 Tutorials</a></li>
+                <li><a href="/research.html" target="_blank" rel="noopener">𓍿 Research</a></li>
+                <li><a href="/TOS.html" target="_blank" rel="noopener">𓎟 Terms of service</a></li>
+                <li><a href="https://www.paypal.com/ncp/payment/PMWMHAY55RZSE" target="_blank" rel="noopener">𓋹 Support the project</a></li>
+            </ul>
+            <p class="about-credit">Created by Massimo Mazzon · © 2024</p>
+        </div>
     </div>
 
     <!-- POPUP KEYBOARD -->

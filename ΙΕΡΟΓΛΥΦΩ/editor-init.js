@@ -29,6 +29,21 @@ document.getElementById('helpOverlay').addEventListener('click', function (e) {
         this.style.display = 'none';
     }
 });
+
+// About modal — opened from the file menu (see initMainMenu). Mirrors the help
+// overlay: show as flex, close on backdrop click or the × button.
+function openAbout() {
+    const overlay = document.getElementById('aboutOverlay');
+    if (overlay) overlay.style.display = 'flex';
+}
+(function initAbout() {
+    const overlay = document.getElementById('aboutOverlay');
+    if (!overlay) return;
+    const closeBtn = document.getElementById('aboutCloseBtn');
+    const close = () => { overlay.style.display = 'none'; };
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    if (closeBtn) closeBtn.addEventListener('click', close);
+})();
 document.getElementById('searchInput').addEventListener('input', (e) => {
     // Filter and display characters based on the search query
     filterAndDisplayCharacters(characters, e.target.value);
@@ -140,11 +155,45 @@ function initBackgroundImage() {
         canvas.requestRenderAll();
     });
 }
-    // Background image handling
-// Background image handling with privacy safeguards
+    // Background image handling with privacy safeguards.
+    //
+    // Tracing images are reference-only, so we cap their megabytes on upload:
+    // downscale to a max longest-side and re-encode as JPEG. This keeps a big
+    // photo from bloating the canvas (and the crash-recovery autosave, which
+    // serializes the image inline into localStorage's ~5MB budget). It also
+    // turns the source into a persistent data-URL instead of an ephemeral
+    // blob: URL, so the background actually survives save/reload.
+    const BG_MAX_DIM = 2000;        // px, longest side
+    const BG_JPEG_QUALITY = 0.82;
+
+    function loadResizedBackground(file, done) {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+            URL.revokeObjectURL(url);
+            const longest = Math.max(img.width, img.height);
+            const scale = longest > BG_MAX_DIM ? BG_MAX_DIM / longest : 1;
+            const w = Math.max(1, Math.round(img.width * scale));
+            const h = Math.max(1, Math.round(img.height * scale));
+            const off = document.createElement('canvas');
+            off.width = w;
+            off.height = h;
+            off.getContext('2d').drawImage(img, 0, 0, w, h);
+            // JPEG (not PNG): far smaller for photos; transparency isn't
+            // meaningful for a tracing background.
+            done(off.toDataURL('image/jpeg', BG_JPEG_QUALITY));
+        };
+        img.onerror = function () {
+            // Decode failed — fall back to the raw file so upload still works.
+            done(URL.createObjectURL(file));
+        };
+        img.src = url;
+    }
+
 bgImageInput.addEventListener('change', function (e) {
     const file = e.target.files[0];
-    
+    if (!file) return;
+
     // Validate file type before processing
     if (!file.type.startsWith('image/')) {
         console.error('Please select an image file');
@@ -152,10 +201,7 @@ bgImageInput.addEventListener('change', function (e) {
         return;
     }
 
-    // Use the file directly as an object URL — no FileReader needed.
-    const tempUrl = URL.createObjectURL(file);
-    handleImageLoad(tempUrl);
-    setTimeout(() => URL.revokeObjectURL(tempUrl), 1000);
+    loadResizedBackground(file, handleImageLoad);
     bgImageInput.value = '';
 });
 

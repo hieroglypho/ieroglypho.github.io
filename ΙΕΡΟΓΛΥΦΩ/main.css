@@ -54,9 +54,13 @@ body {
 
 #colorPopup {
     position: absolute;
-    bottom: 45px;
-    /* Adjust this value to move it higher */
-    right: 330px;
+    /* Anchor just above the 🎨 button. .workspace-actions is the positioned
+       offset parent and the button is its first (left-most) flex child, so
+       bottom:100% sits the popup directly above and left:0 aligns to it.
+       (The old fixed right:330px was tuned for a since-removed layout and
+       left the popup floating out in the middle of the toolbar.) */
+    bottom: calc(100% + 6px);
+    left: 0;
     z-index: 999;
     /* Ensure it's above other content */
     display: none;
@@ -502,6 +506,114 @@ canvas {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
+/* About modal — shares the .help-overlay backdrop, dark card to match help. */
+.about-card {
+    position: relative;
+    width: min(520px, 92vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 30px 32px 26px;
+    background-color: #1a1a1a;
+    color: #e8e8e8;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    text-align: center;
+}
+
+.about-card .about-glyph {
+    font-size: 40px;
+    line-height: 1;
+    color: #c9a227;
+    margin-bottom: 6px;
+}
+
+.about-card h2 {
+    margin: 0 0 14px;
+    font-size: 24px;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+.about-card p {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #c2c2c2;
+    text-align: left;
+}
+
+.about-card .about-tagline {
+    font-size: 15px;
+    color: #e8e8e8;
+    text-align: center;
+}
+
+.about-card .about-brag {
+    border-left: 3px solid #c9a227;
+    padding-left: 12px;
+    color: #d8d8d8;
+}
+
+.about-card .about-brag strong {
+    color: #f0d781;
+}
+
+.about-links {
+    list-style: none;
+    margin: 18px 0 16px;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+    text-align: left;
+}
+
+.about-links a {
+    display: block;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #242424;
+    border: 1px solid #333;
+    color: #8fd3f4;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.about-links a:hover {
+    background: #2d2d2d;
+    border-color: #4a4a4a;
+}
+
+.about-card .about-credit {
+    margin: 6px 0 0;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+}
+
+.about-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: #aaa;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.about-close:hover {
+    background: #2d2d2d;
+    color: #fff;
+}
+
 #tools {
     position: fixed;
     bottom: 20px;
@@ -925,40 +1037,62 @@ canvas {
     display: flex;
     flex-direction: column;
     position: absolute;
-    background: #fff;
-    border: 1px solid #ccc;
-    /* box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); */
+    /* Dark theme to match the help / About modals (a white block was too loud). */
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     z-index: 100;
-    padding: 2px 2px;
-    /* Reduced vertical padding */
-    border-radius: 4px;
-    bottom: 100%;
+    padding: 6px;
+    border-radius: 10px;
+    bottom: calc(100% + 8px);
     left: 0;
-    /* margin-bottom: 5px; */
+    /* Wider by default so labels read on one line instead of wrapping. */
+    min-width: 210px;
 }
 
 /* Scoped under #tools so it outranks the generic `#tools button` rule and the
    dropdown items keep their left-aligned, auto-height list layout (the toolbar
    fixed-height + flex-centring must not leak into this menu). */
 #tools .save-menu button {
-    padding: 8px 10px;
-    /* Adjusted padding */
+    padding: 9px 12px;
     text-align: left;
     width: 100%;
     height: auto;
     min-width: 0;
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 9px;
     border: none;
     background: none;
-    /* Override the white `#tools button` color — these sit on the white
-       .save-menu background, so white text would render the menu blank. */
-    color: #333;
+    /* Light text on the dark .save-menu background. */
+    color: #e8e8e8;
     cursor: pointer;
-    font-size: 12px !important;
+    font-size: 13px !important;
+    border-radius: 6px;
+    /* Keep each label on a single line; min-width gives the room for it. */
+    white-space: nowrap;
+    transition: background 0.12s ease;
+}
+
+/* Leading glyph in each menu item — fixed box so labels align in a column. */
+#tools .save-menu button::before {
+    content: attr(data-icon);
+    width: 1.15em;
+    text-align: center;
+    flex: 0 0 auto;
+    opacity: 0.85;
 }
 
 .save-menu button:hover {
-    background: #f0f0f0;
+    background: #2d2d2d;
+}
+
+/* Thin rule separating the menu's groups (save · open · reference). */
+.save-menu-sep {
+    height: 1px;
+    background: #3a3a3a;
+    border: none;
+    margin: 5px 6px;
 }
 
 

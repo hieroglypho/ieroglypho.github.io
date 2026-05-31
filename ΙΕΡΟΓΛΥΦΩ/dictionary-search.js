@@ -190,6 +190,15 @@ function handleSearchKeydown(e) {
     }
 }
 
+// Clear the dictionary search box and its results panel.
+function clearDictionarySearch() {
+    const input = document.getElementById('dictionarySearchInput');
+    const resultDisplay = document.getElementById('resultDisplay');
+    if (input) input.value = '';
+    if (resultDisplay) resultDisplay.innerHTML = '';
+    if (input) input.focus();
+}
+
 // Main search function
 async function searchDictionary() {
     const searchInput = document.getElementById('dictionarySearchInput').value.trim();

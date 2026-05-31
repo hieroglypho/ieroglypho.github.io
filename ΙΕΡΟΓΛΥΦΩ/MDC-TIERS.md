@@ -38,7 +38,7 @@ Issues found in that summary, worth remembering:
 | **3** | Enclosures | serekh `<S >S`, hwt `<H >H`, frame `<F >F` (begin/middle/end parts deferred). **Cartouche `< >` excluded** — covered by the existing `addCartouche` drawing tool; bare `< >` falls back unhandled. | Moderate-to-hard | ✅ done |
 | **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ✅ done |
 | **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ✅ done |
-| **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | ⬜ |
+| **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | 🚫 won't do — superseded by Extended-A palette |
 
 ---
 
@@ -133,16 +133,47 @@ auto-route trigger gained `[ ] { } & " '`.
 Part-letters / splitting a bracket across a line break are **not** handled (same
 deferral as Tier 3 enclosures).
 
-### Tier 6 — ligatures & overlay  ⬜
-Hardest: true glyph fusion/overlap (`&`). Requires merging signs into a single
-construction rather than packing bounding boxes. Tackle last. **Note:** a bare
-`&` (ligature) is still free — Tier 5 only consumes `&` when it is part of an
-editorial bracket code (`[&` / `&]`), so the Tier 6 operator is unaffected.
+### Tier 6 — ligatures & overlay  🚫 WON'T DO (closed 2026-05-30)
+Originally the hardest planned tier: true glyph fusion/overlap (`&`) — merging
+signs into a single construction rather than packing bounding boxes. **Decided
+against building it.** Rationale:
+
+- **The high-value cases are already solved by the palette, not by code.** The
+  editor loads ~3,995 Egyptian Hieroglyphs **Extended-A** glyphs (Hieroglyphica
+  repertoire, U+13460+) on top of the 844 base-block signs. Extended-A ships the
+  common *lexicalized composites* (a figure already holding an implement, a sign
+  already nested in another, etc.) as **atomic single codepoints**. Those fused
+  forms are already type-designer-drawn and one palette click away — there is
+  nothing to fuse.
+- **The residue is the bad part.** What a fusion engine would add is only the
+  ad-hoc overlap of arbitrary sign pairs with *no* precomposed glyph: research-
+  grade geometry, high bug surface, slow on canvas, and it rarely matches scribal
+  convention. High effort, low payoff.
+- **It's not where this editor competes.** JSesh's ligature strength is decades
+  of hand-curated fused-form data + a manual nudge tool; we can't out-complete
+  that and shouldn't try. This editor's advantage is workflow/accessibility:
+  zero-install browser app, three-line interlinear blocks, transliteration,
+  Leiden brackets, MdC input, selectable-text PDF export. A fusion engine adds
+  nothing to that.
+
+**Net:** the MdC layout engine is considered complete at Tiers 1–5. A bare `&`
+remains free (Tier 5 only consumes it inside `[& &]`); if anything is ever done
+here it should be a *lookup* from a typed sign-pair to an existing Extended-A
+codepoint — never live geometric fusion. A cheap, optional follow-up that *is*
+on-strategy: improve palette discoverability so the precomposed composites are
+easy to find (palette UX, not an engine).
 
 ---
 
 ## Changelog
 
+- **2026-05-30** — Tier 6 (ligatures & overlay) **closed as won't-do.** The
+  Extended-A palette (~3,995 Hieroglyphica glyphs) already ships the common
+  lexicalized composites as atomic codepoints, so the high-value ligatures are a
+  palette click away with no fusion code. The only thing a fusion engine would
+  add is error-prone ad-hoc overlap of pairs with no precomposed glyph — not
+  where this editor competes with JSesh. MdC layout engine considered complete at
+  Tiers 1–5. See the Tier 6 section for full rationale.
 - **2026-05-30** — Fix (Tier 5, BUG-1): editorial bracket alignment. A first pass
   clamped marks to a uniform nominal line height (`MDC_BRK_LINE_H`), but the user
   prefers the **proportional, per-sign** look (each bracket hugging its own sign),

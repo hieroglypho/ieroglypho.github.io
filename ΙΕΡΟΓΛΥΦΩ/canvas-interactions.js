@@ -453,6 +453,7 @@ function removeCharacterFromCanvas(object) {
     }
 }
 function storeAndRemoveCharacter(obj) {
+    if (!obj || obj._pageGuide) return;   // never delete the page guide
     // Three-line block: deleting any row deletes its siblings too. Guard against
     // re-entry so the sweep doesn't loop forever when called per-sibling.
     if (obj && obj.blockId && !obj._blockSweeping) {

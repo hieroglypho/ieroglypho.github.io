@@ -433,6 +433,9 @@ window.addEventListener('resize', function () {
         clearExistingGrid();
         drawGrid();
 
+        // Keep the page-size guide centred in the resized canvas
+        if (typeof repositionPageGuide === 'function') repositionPageGuide();
+
         // Update viewport transform to maintain zoom and pan
         const zoom = canvas.getZoom();
         const vpt = canvas.viewportTransform;
@@ -486,7 +489,9 @@ window.addEventListener('keydown', function (e) {
     // Cycle through objects (Ctrl + Arrow Keys)
     if (e.ctrlKey && ['ArrowRight', 'ArrowLeft'].includes(e.key)) {
         e.preventDefault();
-        const objects = canvas.getObjects();
+        // Skip the page guide — it's a non-content overlay, never selectable.
+        const objects = canvas.getObjects().filter(o => !o._pageGuide);
+        if (!objects.length) return;
         let currentIndex = objects.indexOf(activeObject);
 
         currentIndex = (e.key === 'ArrowRight')

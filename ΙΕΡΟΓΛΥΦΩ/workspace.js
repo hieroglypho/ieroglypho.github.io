@@ -13,8 +13,8 @@
 // Save and Load
 function saveWorkspace() {
     try {
-        // Get canvas objects excluding grid
-        const objects = canvas.getObjects().filter(obj => !obj.isGridGroup && !obj.grid);
+        // Get canvas objects excluding grid and the (non-content) page guide
+        const objects = canvas.getObjects().filter(obj => !obj.isGridGroup && !obj.grid && !obj._pageGuide);
 
         // Get background image state if it exists
         const bgImage = document.getElementById('bgImage');
@@ -140,6 +140,13 @@ function loadWorkspace() {
                 });
                 if (canvasData.viewportTransform) {
                     canvas.setViewportTransform(canvasData.viewportTransform);
+                }
+
+                // loadFromJSON rebuilt the canvas, dropping the page guide;
+                // re-apply it if it was showing so the toggle stays in sync.
+                if (typeof pageGuideState !== 'undefined' && pageGuideState !== 'off') {
+                    pageGuideObj = null;
+                    setPageGuide(pageGuideState);
                 }
 
                 // Restore background image if it exists

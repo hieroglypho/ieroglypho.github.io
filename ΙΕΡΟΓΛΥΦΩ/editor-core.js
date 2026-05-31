@@ -173,6 +173,110 @@ function drawGrid() {
 
 drawGrid();
 
+// =============================================================================
+// Page-size guide — a toggleable US-Letter frame drawn on the canvas so the
+// user can compose within a printable region (PDF export fits to Letter). The
+// button cycles off → portrait → landscape. The frame is excluded from every
+// export: flagged `_pageGuide` (skipped by getContentBounds + the PDF text
+// layer), `excludeFromExport:true` (SVG/JSON), and hidden in withGridHidden
+// (raster). Uses 96 DPI to match the export px→pt assumption (72/96).
+// =============================================================================
+var PAGE_GUIDE_DPI = 96;
+var pageGuideState = 'off';   // 'off' | 'p' | 'l'
+var pageGuideObj = null;
+// Breathing room (grid squares of 20px) the dashed "compose here" box is pulled
+// in past the printable margin so signs never clip in the exported PDF. The inset
+// is ASYMMETRIC because glyphs are anchored by their TOP-LEFT corner and you place
+// a sign so its head sits on the corner:
+//   • top / left  — the head/apex overhangs the anchor only slightly and the body
+//     grows *into* the box, so 2 squares is enough; keeping it tight means the
+//     top-left corner lands right on the bird's head, where you aim it.
+//   • bottom / right — the whole body (~3 squares) extends *out* toward the page
+//     edge, so these are pulled in 4 squares to keep the body on the page.
+// The full page still exports 1:1 — this box is just a safe-placement guide.
+var PAGE_GUIDE_SAFE_INSET = 40;          // top & left      (2 grid squares)
+var PAGE_GUIDE_SAFE_INSET_BR = 80;       // bottom & right  (4 grid squares)
+
+function _letterFrameDims(orientation) {
+    const wIn = orientation === 'l' ? 11 : 8.5;
+    const hIn = orientation === 'l' ? 8.5 : 11;
+    const m = 0.5, D = PAGE_GUIDE_DPI;   // 0.5" printable margin
+    return {
+        pageW: wIn * D, pageH: hIn * D, margin: m * D,
+        printW: (wIn - 2 * m) * D, printH: (hIn - 2 * m) * D
+    };
+}
+
+function _buildPageGuide(orientation) {
+    const d = _letterFrameDims(orientation);
+    const common = {
+        fill: 'transparent', selectable: false, evented: false,
+        strokeUniform: true, objectCaching: false
+    };
+    const paper = new fabric.Rect({
+        left: 0, top: 0, width: d.pageW, height: d.pageH,
+        stroke: 'rgba(90,150,255,0.7)', strokeWidth: 1.5, ...common
+    });
+    // Inner dashed "safe zone": the printable area pulled in past its margin by
+    // PAGE_GUIDE_SAFE_INSET on the top/left and PAGE_GUIDE_SAFE_INSET_BR on the
+    // bottom/right (see those constants). Compose within it and signs always export
+    // whole. The full page still exports 1:1.
+    const i = PAGE_GUIDE_SAFE_INSET, iBR = PAGE_GUIDE_SAFE_INSET_BR;
+    const printable = new fabric.Rect({
+        left: d.margin + i, top: d.margin + i,
+        width: Math.max(0, d.printW - i - iBR), height: Math.max(0, d.printH - i - iBR),
+        stroke: 'rgba(120,180,255,0.95)', strokeWidth: 1.5, strokeDashArray: [5, 4], ...common
+    });
+    const group = new fabric.Group([paper, printable], {
+        left: Math.round((canvas.width - d.pageW) / 2),
+        top: Math.round((canvas.height - d.pageH) / 2),
+        selectable: false, evented: false, hoverCursor: 'default',
+        excludeFromExport: true, objectCaching: false
+    });
+    group._pageGuide = true;
+    return group;
+}
+
+// Keep the frame centred when the canvas is resized.
+function repositionPageGuide() {
+    if (!pageGuideObj) return;
+    const b = pageGuideObj.getBoundingRect(true, true);
+    pageGuideObj.set({
+        left: Math.round((canvas.width - b.width) / 2),
+        top: Math.round((canvas.height - b.height) / 2)
+    });
+    pageGuideObj.setCoords();
+    canvas.requestRenderAll();
+}
+
+function setPageGuide(state) {
+    if (pageGuideObj) { canvas.remove(pageGuideObj); pageGuideObj = null; }
+    pageGuideState = state;
+    if (state === 'p' || state === 'l') {
+        pageGuideObj = _buildPageGuide(state);
+        canvas.add(pageGuideObj);
+        canvas.sendToBack(pageGuideObj);   // behind content; grid bg sits further back
+    }
+    canvas.requestRenderAll();
+    _updatePageGuideBtn();
+}
+
+function cyclePageGuide() {
+    setPageGuide(pageGuideState === 'off' ? 'p' : pageGuideState === 'p' ? 'l' : 'off');
+}
+
+function _updatePageGuideBtn() {
+    const btn = document.getElementById('pageGuideBtn');
+    if (!btn) return;
+    btn.textContent = pageGuideState === 'p' ? 'Page ▯'
+                    : pageGuideState === 'l' ? 'Page ▭' : 'Page';
+    btn.classList.toggle('active', pageGuideState !== 'off');
+    btn.title = 'Page guide (US-Letter): ' + (
+        pageGuideState === 'off' ? 'hidden — click for portrait'
+      : pageGuideState === 'p'   ? 'portrait — click for landscape'
+      :                            'landscape — click to hide');
+}
+
 // Hide the full-canvas brand watermark on the first interaction so it doesn't
 // clutter the workspace. It still appears in PNG/PDF exports (stamped in
 // compositeCanvasWithBg), just as a small corner mark.

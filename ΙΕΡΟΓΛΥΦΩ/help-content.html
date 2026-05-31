@@ -257,6 +257,7 @@
         <div><span class="icon">✎</span>Freehand pencil</div>
         <div><span class="icon">[&nbsp;]</span>Bracket pair — drops an inward-facing <code>[ ]</code>; drag each half to enclose text</div>
         <div><span class="icon">💬</span>Speech bubble</div>
+        <div><span class="icon">Page</span><strong>Page guide</strong> — cycles off → portrait → landscape. Draws a US-Letter frame: solid line = paper edge, dotted line = printable area</div>
         <div><span class="icon">⌨</span>Text input (incl. transliteration &amp; Coptic)</div>
         <div><span class="icon glyph-icon">𓂀</span><strong>Hieroglyph input</strong> (highlighted button) — opens the dialog for a text run, individual signs (MdC spatial layout), or a three-line block</div>
         <div><span class="icon">BG</span>Upload a background image</div>
@@ -318,7 +319,7 @@
     <p>The <strong>≡</strong> button on the right side of the toolbar opens a single menu:</p>
     <ul>
         <li><strong>Save as JSON</strong>: full workspace snapshot (canvas + Gardiner strip).</li>
-        <li><strong>Save as PDF</strong>: rasterized export (the PDF library loads lazily on first click).</li>
+        <li><strong>Save as PDF</strong>: exports a US-Letter page. With the <strong>Page guide on</strong>, the PDF is <em>exactly the page you see</em> — glyphs keep their positions at 1:1 (turn the guide on, lay out within it, then export). With the guide <strong>off</strong>, the export crops tightly to your glyphs and centres them, scaling down only if the work is larger than the page (you'll see a "scaled to N%" note). The PDF library loads lazily on first click.</li>
         <li><strong>Open JSON…</strong>: load a previously saved workspace.</li>
         <li><strong>Gardiner signs (Wiki)</strong>: opens the Wikipedia sign list in a new tab.</li>
         <li><strong>Right-click</strong> the canvas to use the browser's native save / copy on the rendered image.</li>
@@ -328,6 +329,16 @@
         <strong>Tip — workflow:</strong> build the line of glyphs first, then use
         <kbd>H</kbd> or <kbd>T</kbd> to snap them to a shared baseline, and
         <kbd>Ctrl</kbd>+<kbd>D</kbd> to distribute them evenly.
+    </div>
+
+    <div class="tip">
+        <strong>Tip — laying out a page:</strong> turn on the <strong>Page</strong>
+        guide and arrange your glyphs inside the frame. The PDF then comes out
+        <em>exactly as shown</em> — the solid line is the paper edge, the dotted
+        line is the printable margin. Keep signs inside the dotted line and they
+        print 1:1 in place; anything outside the solid edge is off the page. The
+        guide itself is locked — it can't be selected, moved, or deleted, and it
+        never appears in the export.
     </div>
 
     <h2>9. Background image</h2>

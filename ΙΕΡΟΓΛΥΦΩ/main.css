@@ -521,6 +521,12 @@ canvas {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Toggled-on state, e.g. the page-guide button while a frame is shown. */
+#tools button.active {
+    border-color: #5a96ff;
+    background-color: #24405f;
+}
+
 #tools button:active {
     transform: translateY(0);
     box-shadow: none;
@@ -889,6 +895,9 @@ canvas {
     display: block;
     border: none;
     background: none;
+    /* Override the white `#tools button` color — these sit on the white
+       .save-menu background, so white text would render the menu blank. */
+    color: #333;
     cursor: pointer;
     font-size: 12px !important;
 }

@@ -164,15 +164,19 @@ async function withGridHidden(fn) {
     // The page-size guide is a visible on-canvas object; hide it too so it never
     // bakes into a raster export (excludeFromExport already covers SVG/JSON).
     const guides = canvas.getObjects().filter(o => o._pageGuide && o.visible);
+    // Drop any active selection so its border/handles don't bake into the raster.
+    const active = canvas.getActiveObject();
     if (gridBg) canvas.backgroundImage = null;
     guides.forEach(o => { o.visible = false; });
-    if (gridBg || guides.length) canvas.renderAll();
+    if (active) canvas.discardActiveObject();
+    if (gridBg || guides.length || active) canvas.renderAll();
     try {
         return await fn();
     } finally {
         if (gridBg) canvas.backgroundImage = gridBg;
         guides.forEach(o => { o.visible = true; });
-        if (gridBg || guides.length) canvas.renderAll();
+        if (active) canvas.setActiveObject(active);
+        if (gridBg || guides.length || active) canvas.renderAll();
     }
 }
 
@@ -308,8 +312,10 @@ async function withIdentityViewport(fn) {
 function _scanInkBounds() {
     const gridBg = canvas.backgroundImage;
     const guides = canvas.getObjects().filter(o => o._pageGuide && o.visible);
+    const active = canvas.getActiveObject();   // selection handles are ink too
     if (gridBg) canvas.backgroundImage = null;
     guides.forEach(o => { o.visible = false; });
+    if (active) canvas.discardActiveObject();
     canvas.renderAll();
     try {
         const el = canvas.getElement();
@@ -336,6 +342,7 @@ function _scanInkBounds() {
     } finally {
         if (gridBg) canvas.backgroundImage = gridBg;
         guides.forEach(o => { o.visible = true; });
+        if (active) canvas.setActiveObject(active);
         canvas.renderAll();
     }
 }

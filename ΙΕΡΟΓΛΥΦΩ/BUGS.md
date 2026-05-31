@@ -14,27 +14,15 @@ _(none)_
 
 ## TODO
 
-### TODO-1 — update & reorganize the help modal for recent upgrades
+### TODO-1 — reorganize the help modal
 **Area:** `help-content.html` (loaded into the in-app help overlay).
 **Filed:** 2026-05-29.
 
-**Content that is now missing or stale:**
-- ~~**MdC Tier 4 — flags/toggles:** colour rubric `$r` / `$g` / `$b`, damaged-sign
-  shading `#b … #e` and the destroyed quadrat `-#-`, lacunae `?` / `??`.~~ ✅ added
-  to the MdC section 2026-05-30.
-- ~~**MdC Tier 5 — editorial brackets:** `[[ ]]` erased, `[{ }]` superfluous,
-  `[" "]` vanished, `[' ']` scribal, `[& &]` editorial (with their meanings).~~
-  ✅ added 2026-05-30.
-- ~~**Toolbar §3 is stale:** the bracket tool now drops an inward-facing `[ ]`
-  **pair** (drag each), not a single "Square brackets"; and the `𓂀…`
-  hieroglyph-input button (orange-highlighted) is missing from the list.~~ ✅
-  fixed 2026-05-30 (bracket entry reworded; `𓂀` hieroglyph-input entry added;
-  grid reordered/icons aligned to the real toolbar).
-- (When **Tier 6** ligatures `&` land, document those too.)
-
-**The real problem — organization:** the page is a flat 1–10 numbered list and is
-getting crowded; the MdC operator/markup reference especially needs to be
-scannable. Figure out a structure before piling more in. Options to weigh:
+The stale content has been refreshed (MdC Tiers 4/5 and toolbar §3, 2026-05-30;
+page-guide + PDF export modes, b985813). What remains is **structure**: the page
+is a flat 1–10 numbered list and is getting crowded, and the MdC operator/markup
+reference especially needs to be scannable. Figure out a structure before piling
+more in. Options to weigh:
 - Group the ten sections into a few buckets (Getting started · MdC reference ·
   Toolbar · Editing & shortcuts · Save/export) with a clickable table of
   contents or collapsible `<details>` sections.

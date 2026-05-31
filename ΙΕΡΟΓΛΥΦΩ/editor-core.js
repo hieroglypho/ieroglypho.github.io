@@ -195,7 +195,7 @@ var pageGuideObj = null;
 //     edge, so these are pulled in 4 squares to keep the body on the page.
 // The full page still exports 1:1 — this box is just a safe-placement guide.
 var PAGE_GUIDE_SAFE_INSET = 40;          // top & left      (2 grid squares)
-var PAGE_GUIDE_SAFE_INSET_BR = 80;       // bottom & right  (4 grid squares)
+var PAGE_GUIDE_SAFE_INSET_BR = 40;       // bottom & right  (2 grid squares)
 
 function _letterFrameDims(orientation) {
     const wIn = orientation === 'l' ? 11 : 8.5;

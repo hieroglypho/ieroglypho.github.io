@@ -14,28 +14,21 @@ _(none)_
 
 ## TODO
 
-### TODO-1 — reorganize the help modal
-**Area:** `help-content.html` (loaded into the in-app help overlay).
-**Filed:** 2026-05-29.
-
-The stale content has been refreshed (MdC Tiers 4/5 and toolbar §3, 2026-05-30;
-page-guide + PDF export modes, b985813). What remains is **structure**: the page
-is a flat 1–10 numbered list and is getting crowded, and the MdC operator/markup
-reference especially needs to be scannable. Figure out a structure before piling
-more in. Options to weigh:
-- Group the ten sections into a few buckets (Getting started · MdC reference ·
-  Toolbar · Editing & shortcuts · Save/export) with a clickable table of
-  contents or collapsible `<details>` sections.
-- Pull all the MdC operators/markup into a single **cheat-sheet table**
-  (symbol · meaning · example), tiered, instead of scattered bullet lists.
-- Consider tabs or an accordion so the modal isn't one long scroll.
-
-**Note:** MDC-TIERS.md is the authoritative spec for the operator semantics —
-copy meanings from there so help and engine stay in sync.
+_(none)_
 
 ---
 
 ## Fixed
+
+### TODO-1 — reorganize the help modal
+**Fixed:** 2026-05-31. **Area:** `help-content.html`.
+
+The flat 1–10 scroll was restructured into five collapsible `<details>` buckets
+(Getting started · MdC spatial layout · Toolbar · Editing & shortcuts · Saving &
+exporting) under a clickable table of contents — pure HTML/CSS, no JS. The
+scattered MdC operator/markup bullet lists are now tiered **cheat-sheet tables**
+(symbol · meaning · example), one per group, with meanings copied from
+`MDC-TIERS.md` so help and engine stay in sync.
 
 ### BUG-1 — editorial bracket marks: head-poke / sizing
 **Fixed:** 2026-05-30. **Area:** `glyph-input.js` — `measureMdCNode` for the

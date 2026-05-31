@@ -71,12 +71,11 @@
             vertical-align: -2px;
         }
 
-        h2 {
-            font-size: 16px;
-            margin-top: 26px;
-            padding-bottom: 4px;
-            border-bottom: 1px dotted #444;
+        h3 {
+            font-size: 14px;
+            margin: 18px 0 6px;
         }
+        h3:first-child { margin-top: 4px; }
 
         p { margin: 6px 0 10px; color: var(--text); }
         strong { color: #fff; }
@@ -95,6 +94,15 @@
         }
         a:hover { color: #fff; border-bottom-color: #fff; }
 
+        code {
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
         kbd {
             display: inline-block;
             background: var(--kbd-bg);
@@ -110,26 +118,103 @@
             text-align: center;
         }
 
-        /* Shortcut table */
-        table.shortcuts {
+        /* Table of contents */
+        .toc {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 0 0 22px;
+        }
+        .toc .toc-title {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0 0 8px;
+        }
+        .toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 4px 18px;
+        }
+        .toc li { margin: 0; }
+        .toc a {
+            border-bottom: none;
+            color: var(--text);
+            display: inline-flex;
+            align-items: baseline;
+            gap: 9px;
+        }
+        .toc a:hover { color: var(--accent); }
+        .toc a .n {
+            color: var(--accent);
+            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
+            min-width: 14px;
+        }
+
+        /* Collapsible sections */
+        details.section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 0 0 12px;
+            overflow: hidden;
+            scroll-margin-top: 12px;
+        }
+        details.section > summary {
+            cursor: pointer;
+            list-style: none;
+            padding: 12px 16px;
+            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            user-select: none;
+        }
+        details.section > summary::-webkit-details-marker { display: none; }
+        details.section > summary::before {
+            content: '▸';
+            color: var(--muted);
+            font-size: 12px;
+            transition: transform 0.15s ease;
+        }
+        details.section[open] > summary::before { transform: rotate(90deg); }
+        details.section[open] > summary { border-bottom: 1px solid var(--border); }
+        details.section:target > summary { color: #fff; }
+        details.section:target { border-color: var(--accent-strong); }
+        .section-body { padding: 6px 16px 14px; }
+
+        /* Shortcut + cheat-sheet tables */
+        table.shortcuts,
+        table.cheat {
             width: 100%;
             border-collapse: collapse;
             margin: 8px 0 4px;
-            background: var(--panel);
+            background: var(--panel-2);
             border: 1px solid var(--border);
             border-radius: 6px;
             overflow: hidden;
         }
-        table.shortcuts th,
-        table.shortcuts td {
+        table.shortcuts th, table.shortcuts td,
+        table.cheat th, table.cheat td {
             padding: 7px 10px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             vertical-align: top;
         }
-        table.shortcuts tr:last-child td { border-bottom: none; }
-        table.shortcuts th {
-            background: var(--panel-2);
+        table.shortcuts tr:last-child td,
+        table.cheat tr:last-child td { border-bottom: none; }
+        table.shortcuts th,
+        table.cheat th {
+            background: #313131;
             color: var(--accent);
             font-weight: 600;
             font-size: 12px;
@@ -138,6 +223,12 @@
         }
         table.shortcuts td.keys { white-space: nowrap; width: 200px; }
         table.shortcuts td.keys kbd + kbd { margin-left: 2px; }
+
+        /* Cheat-sheet: symbol · meaning · example */
+        table.cheat td.sym { white-space: nowrap; width: 150px; }
+        table.cheat td.ex { white-space: nowrap; width: 140px; }
+        table.cheat td.sym code,
+        table.cheat td.ex code { background: rgba(255, 255, 255, 0.08); }
 
         /* Tool legend grid */
         .tool-grid {
@@ -206,152 +297,262 @@
 
     <p>A compact reference for building, editing, and exporting hieroglyphic
     compositions. The toolbar sits at the bottom; the character/dictionary
-    panel is on the right; the canvas fills everything else.</p>
+    panel is on the right; the canvas fills everything else. Tap a heading to
+    expand it.</p>
 
-    <h2>1. Placing glyphs on the canvas</h2>
-    <ul>
-        <li><strong>Drag &amp; drop</strong> any glyph from the character list on the right onto the canvas — it snaps to the nearest grid point.</li>
-        <li><strong>Search</strong> by Gardiner code or name in the top field of the right panel.</li>
-        <li><strong>Browse</strong> by Gardiner category from the <em>or A, B, C..</em> dropdown.</li>
-        <li>Each placed glyph also appears in the <strong>Gardiner:</strong> strip above the canvas, building a running transliteration.</li>
-    </ul>
+    <nav class="toc">
+        <p class="toc-title">Contents</p>
+        <ul>
+            <li><a href="#getting-started"><span class="n">𓏤</span>Getting started</a></li>
+            <li><a href="#mdc"><span class="n">𓏥</span>MdC spatial layout</a></li>
+            <li><a href="#toolbar"><span class="n">𓏦</span>Toolbar</a></li>
+            <li><a href="#editing"><span class="n">𓏧</span>Editing &amp; shortcuts</a></li>
+            <li><a href="#export"><span class="n">𓏨</span>Saving &amp; exporting</a></li>
+        </ul>
+    </nav>
 
-    <h2>2. Pasting a series (MdC)</h2>
-    <ul>
-        <li>The small <strong>Paste series</strong> box (lower-left, above the toolbar) accepts either:
+    <!-- ===================================================================== -->
+    <details class="section" id="getting-started" open>
+        <summary>Getting started</summary>
+        <div class="section-body">
+            <h3>Placing glyphs on the canvas</h3>
             <ul>
-                <li>Gardiner codes separated by <code>-</code>, space or comma — e.g. <code>A1-D21-N35</code>.</li>
-                <li>A run of raw hieroglyph characters — e.g. <code>𓂀𓏏𓊵</code> — pasted from any text.</li>
-                <li>A mix of the two.</li>
+                <li><strong>Drag &amp; drop</strong> any glyph from the character list on the right onto the canvas — it snaps to the nearest grid point.</li>
+                <li><strong>Search</strong> by Gardiner code or name in the top field of the right panel.</li>
+                <li><strong>Browse</strong> by Gardiner category from the <em>or A, B, C..</em> dropdown.</li>
+                <li>Each placed glyph also appears in the <strong>Gardiner:</strong> strip above the canvas, building a running transliteration.</li>
             </ul>
-        </li>
-        <li>Press <kbd>Enter</kbd> or click <strong>Add Glyphs</strong> to drop the whole sequence onto the canvas in order.</li>
-    </ul>
 
-    <h3>Spatial layout (Manuel de Codage)</h3>
-    <ul>
-        <li>Choose <strong>Individual signs</strong> in the dialog to lay glyphs out in 2D the way textbooks and JSesh do. (<strong>Single text run</strong> stays linear and can't show stacking; spatial operators auto-switch to the layout engine.)</li>
-        <li><strong>Operators</strong> (tightest&nbsp;→&nbsp;loosest):
+            <h3>Pasting a series (MdC)</h3>
             <ul>
-                <li><code>*</code> — place side by side, e.g. <code>D21*X1</code></li>
-                <li><code>:</code> — stack one over another, e.g. <code>M17:X1</code></li>
-                <li><code>-</code> — separate cadrats (groups) along the line</li>
-                <li><code>( )</code> — group, e.g. <code>(M17:X1)*N35</code></li>
+                <li>The small <strong>Paste series</strong> box (lower-left, above the toolbar) accepts either:
+                    <ul>
+                        <li>Gardiner codes separated by <code>-</code>, space or comma — e.g. <code>A1-D21-N35</code>.</li>
+                        <li>A run of raw hieroglyph characters — e.g. <code>𓂀𓏏𓊵</code> — pasted from any text.</li>
+                        <li>A mix of the two.</li>
+                    </ul>
+                </li>
+                <li>Press <kbd>Enter</kbd> or click <strong>Add Glyphs</strong> to drop the whole sequence onto the canvas in order.</li>
             </ul>
-        </li>
-        <li><strong>Spacing &amp; breaks:</strong> a space or <code>_</code> = word gap, a double space or <code>__</code> = sentence gap, <code>!</code> = new line, <code>!!</code> = page/section break.</li>
-        <li><strong>Enclosures:</strong> <code>&lt;S … &gt;S</code> serekh (paneled façade), <code>&lt;H … &gt;H</code> hwt (enclosure), <code>&lt;F … &gt;F</code> frame — e.g. <code>&lt;S-G5&gt;S</code> for the Horus-name serekh. (Royal-name <strong>cartouches</strong> are made with the toolbar tool, not here.)</li>
-        <li>Example: <code>&lt;S-G5&gt;S-F-R8</code> draws a serekh with the falcon, then the viper and the flag on the same baseline.</li>
-        <li><strong>Ink colour (rubric):</strong> <code>$r</code> red, <code>$g</code> green, <code>$b</code> black — the colour stays on for every following sign until you switch it again, e.g. <code>$r-A1-N35-$b-X1</code> writes the first two signs in red.</li>
-        <li><strong>Damaged signs:</strong> <code>#b</code> … <code>#e</code> lays a translucent grey wash over the signs between them (shading a damaged area); a lone <code>-#-</code> drops a fully destroyed quadrat; <code>?</code> / <code>??</code> mark a small / large <strong>lacuna</strong> (a dashed gap box where signs are lost).</li>
-        <li><strong>Editorial brackets</strong> wrap a span to record the editor's reading, each drawn as a distinct mark on both sides: <code>[[ … ]]</code> erased, <code>[{ … }]</code> superfluous, <code>[" … "]</code> vanished, <code>[' … ']</code> scribal addition, <code>[&amp; … &amp;]</code> editorial restoration — e.g. <code>[' A1 ']</code>.</li>
-    </ul>
 
-    <h2>3. Toolbar (bottom of the screen)</h2>
-    <div class="tool-grid">
-        <div><span class="icon">▭</span>Cartouche — royal-name oval</div>
-        <div><span class="icon">──</span>Line</div>
-        <div><span class="icon">→</span>Arrow</div>
-        <div><span class="icon">▭</span>Rectangle</div>
-        <div><span class="icon">◯</span>Circle</div>
-        <div><span class="icon">✎</span>Freehand pencil</div>
-        <div><span class="icon">[&nbsp;]</span>Bracket pair — drops an inward-facing <code>[ ]</code>; drag each half to enclose text</div>
-        <div><span class="icon">💬</span>Speech bubble</div>
-        <div><span class="icon">Page</span><strong>Page guide</strong> — cycles off → portrait → landscape. Draws a US-Letter frame: solid line = paper edge, dotted line = printable area</div>
-        <div><span class="icon">⌨</span>Text input (incl. transliteration &amp; Coptic)</div>
-        <div><span class="icon glyph-icon">𓂀</span><strong>Hieroglyph input</strong> (highlighted button) — opens the dialog for a text run, individual signs (MdC spatial layout), or a three-line block</div>
-        <div><span class="icon">BG</span>Upload a background image</div>
-        <div><span class="icon">BG&nbsp;α</span>Background opacity slider</div>
-        <div><span class="icon">🎨</span>Set the canvas color</div>
-    </div>
+            <h3>Linear vs. spatial</h3>
+            <ul>
+                <li>Choose <strong>Individual signs</strong> in the dialog to lay glyphs out in 2D the way textbooks and JSesh do.</li>
+                <li><strong>Single text run</strong> stays linear and can't show stacking — but spatial operators auto-switch to the layout engine, so you rarely have to think about it.</li>
+                <li>See <a href="#mdc">MdC spatial layout</a> for the full operator and markup reference.</li>
+            </ul>
+        </div>
+    </details>
 
-    <h2>4. Selecting and moving objects</h2>
-    <ul>
-        <li><strong>Select:</strong> click a glyph or shape. Drag to move; drag a corner to scale; drag the top handle to rotate.</li>
-        <li><strong>Multi-select:</strong> <kbd>Shift</kbd> + click, or marquee-drag an empty area.</li>
-        <li><strong>Fine move:</strong> select, then use arrow keys (hold <kbd>Shift</kbd> for 1px steps).</li>
-        <li><strong>Edit text:</strong> double-click a text object.</li>
-        <li><strong>Pan canvas:</strong> hold <kbd>Alt</kbd> and drag.</li>
-        <li><strong>Zoom:</strong> mouse wheel over the canvas.</li>
-    </ul>
+    <!-- ===================================================================== -->
+    <details class="section" id="mdc">
+        <summary>MdC spatial layout — operators &amp; markup</summary>
+        <div class="section-body">
+            <p>Manuel de Codage notation typed into the <strong>Individual signs</strong>
+            input. Operators below run <strong>tightest&nbsp;→&nbsp;loosest</strong>;
+            everything composes, so a span can be coloured, enclosed, and bracketed
+            at once. Each symbol is shown with its meaning and a worked example.</p>
 
-    <h2>5. Keyboard shortcuts</h2>
-    <table class="shortcuts">
-        <thead>
-            <tr><th>Keys</th><th>Action</th></tr>
-        </thead>
-        <tbody>
-            <tr><td class="keys"><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td><td>Move selection by 5&nbsp;px</td></tr>
-            <tr><td class="keys"><kbd>Shift</kbd> + arrow</td><td>Fine move by 1&nbsp;px</td></tr>
-            <tr><td class="keys"><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selection</td></tr>
-            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo last action</td></tr>
-            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>Cycle through objects on the canvas</td></tr>
-            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>Lock / unlock selected object(s)</td></tr>
-            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Distribute selection evenly (needs ≥&nbsp;2 objects)</td></tr>
-            <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save workspace as JSON</td></tr>
-            <tr><td class="keys"><kbd>H</kbd></td><td>Horizontal align</td></tr>
-            <tr><td class="keys"><kbd>T</kbd></td><td>Align tops</td></tr>
-            <tr><td class="keys"><kbd>B</kbd></td><td>Align bottoms</td></tr>
-            <tr><td class="keys"><kbd>L</kbd></td><td>Align lefts</td></tr>
-            <tr><td class="keys"><kbd>R</kbd></td><td>Mirror / reverse selected glyph(s)</td></tr>
-            <tr><td class="keys"><kbd>Alt</kbd> + drag</td><td>Pan canvas</td></tr>
-        </tbody>
-    </table>
-    <p><em>Alignment keys also operate on multi-selections.</em></p>
+            <h3>Spatial operators</h3>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym"><code>*</code></td><td>Place side by side</td><td class="ex"><code>D21*X1</code></td></tr>
+                    <tr><td class="sym"><code>:</code></td><td>Stack one over another</td><td class="ex"><code>M17:X1</code></td></tr>
+                    <tr><td class="sym"><code>-</code></td><td>Separate cadrats (groups) along the line</td><td class="ex"><code>A1-N35</code></td></tr>
+                    <tr><td class="sym"><code>( )</code></td><td>Group, to control precedence</td><td class="ex"><code>(M17:X1)*N35</code></td></tr>
+                </tbody>
+            </table>
 
-    <h2>6. Custom text and transliteration</h2>
-    <ul>
-        <li>Click <kbd>⌨</kbd> to open the text dialog.</li>
-        <li>The dialog includes special-character keys for Egyptological transliteration (<em>ꜣ ꜥ ḥ ḫ ẖ š ḳ ṯ ḏ</em>) and a Coptic row.</li>
-        <li>Set the font size before inserting, or double-click the text on the canvas to edit it later.</li>
-    </ul>
+            <h3>Spacing &amp; line breaks</h3>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym">space&nbsp;/&nbsp;<code>_</code></td><td>Word gap</td><td class="ex"><code>A1 N35</code></td></tr>
+                    <tr><td class="sym">2&nbsp;spaces&nbsp;/&nbsp;<code>__</code></td><td>Sentence gap (wider)</td><td class="ex"><code>A1__N35</code></td></tr>
+                    <tr><td class="sym"><code>!</code></td><td>New line</td><td class="ex"><code>A1!N35</code></td></tr>
+                    <tr><td class="sym"><code>!!</code></td><td>Page / section break (large vertical gap)</td><td class="ex"><code>A1!!N35</code></td></tr>
+                </tbody>
+            </table>
 
-    <h2>7. Dictionary search</h2>
-    <ul>
-        <li>Click <strong>Upload Dictionary</strong> and choose your <code>mazzon-dictionary.txt</code> file.</li>
-        <li>Search by Gardiner codes separated by spaces (e.g. <code>A1 Z2</code>) or by transliteration (e.g. <code>rHty</code>).</li>
-        <li>Matches are highlighted; non-ASCII text is enlarged for readability.</li>
-        <li><strong>Resize results:</strong> drag the small horizontal handle just below the character list to grow or shrink the results panel.</li>
-        <li><strong>Drag to canvas:</strong> highlight glyphs in a result (e.g. <code>𓀀𓁐𓏥</code>) and drag the selection onto the canvas — they're placed as a bottom-aligned row.</li>
-    </ul>
+            <h3>Enclosures</h3>
+            <p>Wrap a span in a drawn frame. <em>Royal-name <strong>cartouches</strong>
+            are made with the toolbar tool, not here.</em></p>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym"><code>&lt;S … &gt;S</code></td><td>Serekh (paneled façade)</td><td class="ex"><code>&lt;S-G5&gt;S</code></td></tr>
+                    <tr><td class="sym"><code>&lt;H … &gt;H</code></td><td>Hwt (enclosure)</td><td class="ex"><code>&lt;H-O1&gt;H</code></td></tr>
+                    <tr><td class="sym"><code>&lt;F … &gt;F</code></td><td>Plain frame</td><td class="ex"><code>&lt;F-A1&gt;F</code></td></tr>
+                </tbody>
+            </table>
 
-    <h2>8. File menu (≡) — save, load, export, wiki</h2>
-    <p>The <strong>≡</strong> button on the right side of the toolbar opens a single menu:</p>
-    <ul>
-        <li><strong>Save as JSON</strong>: full workspace snapshot (canvas + Gardiner strip).</li>
-        <li><strong>Save as PDF</strong>: exports a US-Letter page. With the <strong>Page guide on</strong>, the PDF is <em>exactly the page you see</em> — glyphs keep their positions at 1:1 (turn the guide on, lay out within it, then export). With the guide <strong>off</strong>, the export crops tightly to your glyphs and centres them, scaling down only if the work is larger than the page (you'll see a "scaled to N%" note). The PDF library loads lazily on first click.</li>
-        <li><strong>Open JSON…</strong>: load a previously saved workspace.</li>
-        <li><strong>Gardiner signs (Wiki)</strong>: opens the Wikipedia sign list in a new tab.</li>
-        <li><strong>Right-click</strong> the canvas to use the browser's native save / copy on the rendered image.</li>
-    </ul>
+            <h3>Ink colour (rubric)</h3>
+            <p>A colour stays on for every following sign until you switch it again.</p>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym"><code>$r</code></td><td>Red</td><td class="ex"><code>$r-A1-N35</code></td></tr>
+                    <tr><td class="sym"><code>$g</code></td><td>Green</td><td class="ex"><code>$g-A1</code></td></tr>
+                    <tr><td class="sym"><code>$b</code></td><td>Black (default)</td><td class="ex"><code>$r-A1-$b-X1</code></td></tr>
+                </tbody>
+            </table>
 
-    <div class="tip">
-        <strong>Tip — workflow:</strong> build the line of glyphs first, then use
-        <kbd>H</kbd> or <kbd>T</kbd> to snap them to a shared baseline, and
-        <kbd>Ctrl</kbd>+<kbd>D</kbd> to distribute them evenly.
-    </div>
+            <h3>Damaged &amp; lost signs</h3>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym"><code>#b … #e</code></td><td>Translucent grey wash over a damaged span</td><td class="ex"><code>#b-A1-N35-#e</code></td></tr>
+                    <tr><td class="sym"><code>-#-</code></td><td>A fully destroyed quadrat</td><td class="ex"><code>A1-#-N35</code></td></tr>
+                    <tr><td class="sym"><code>?</code>&nbsp;/&nbsp;<code>??</code></td><td>Small / large lacuna (dashed gap box)</td><td class="ex"><code>A1-?-N35</code></td></tr>
+                </tbody>
+            </table>
 
-    <div class="tip">
-        <strong>Tip — laying out a page:</strong> turn on the <strong>Page</strong>
-        guide and arrange your glyphs inside the frame. The PDF then comes out
-        <em>exactly as shown</em> — the solid line is the paper edge, the dotted
-        line is the printable margin. Keep signs inside the dotted line and they
-        print 1:1 in place; anything outside the solid edge is off the page. The
-        guide itself is locked — it can't be selected, moved, or deleted, and it
-        never appears in the export.
-    </div>
+            <h3>Editorial brackets (Leiden)</h3>
+            <p>Wrap a span to record the editor's reading; each is drawn as a
+            distinct mark on both sides.</p>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym"><code>[[ … ]]</code></td><td>Erased</td><td class="ex"><code>[[ A1 ]]</code></td></tr>
+                    <tr><td class="sym"><code>[{ … }]</code></td><td>Superfluous</td><td class="ex"><code>[{ A1 }]</code></td></tr>
+                    <tr><td class="sym"><code>[" … "]</code></td><td>Vanished</td><td class="ex"><code>[" A1 "]</code></td></tr>
+                    <tr><td class="sym"><code>[' … ']</code></td><td>Scribal addition</td><td class="ex"><code>[' A1 ']</code></td></tr>
+                    <tr><td class="sym"><code>[&amp; … &amp;]</code></td><td>Editorial restoration</td><td class="ex"><code>[&amp; A1 &amp;]</code></td></tr>
+                </tbody>
+            </table>
 
-    <h2>9. Background image</h2>
-    <ul>
-        <li><strong>BG</strong> uploads a reference image behind the canvas.</li>
-        <li><strong>BG α</strong> sets its opacity (0–100%).</li>
-        <li>Pan offsets reset when the background is hidden or replaced.</li>
-    </ul>
+            <div class="tip">
+                <strong>Worked example:</strong> <code>&lt;S-G5&gt;S-F-R8</code> draws
+                a serekh with the falcon, then the viper and the flag on the same
+                baseline.
+            </div>
+        </div>
+    </details>
 
-    <h2>10. Learn more</h2>
-    <p>The <strong>Gardiner signs (Wiki)</strong> entry in the <strong>≡</strong> menu opens the
-        <a href="https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner" target="_blank" rel="noopener">Gardiner sign list on Wikipedia</a> —
-        a useful reference for codes, categories, and meanings.</p>
+    <!-- ===================================================================== -->
+    <details class="section" id="toolbar">
+        <summary>Toolbar</summary>
+        <div class="section-body">
+            <p>The toolbar runs along the bottom of the screen.</p>
+            <div class="tool-grid">
+                <div><span class="icon">▭</span>Cartouche — royal-name oval</div>
+                <div><span class="icon">──</span>Line</div>
+                <div><span class="icon">→</span>Arrow</div>
+                <div><span class="icon">▭</span>Rectangle</div>
+                <div><span class="icon">◯</span>Circle</div>
+                <div><span class="icon">✎</span>Freehand pencil</div>
+                <div><span class="icon">[&nbsp;]</span>Bracket pair — drops an inward-facing <code>[ ]</code>; drag each half to enclose text</div>
+                <div><span class="icon">💬</span>Speech bubble</div>
+                <div><span class="icon">Page</span><strong>Page guide</strong> — cycles off → portrait → landscape. Draws a US-Letter frame: solid line = paper edge, dotted line = printable area</div>
+                <div><span class="icon">⌨</span>Text input (incl. transliteration &amp; Coptic)</div>
+                <div><span class="icon glyph-icon">𓂀</span><strong>Hieroglyph input</strong> (highlighted button) — opens the dialog for a text run, individual signs (MdC spatial layout), or a three-line block</div>
+                <div><span class="icon">BG</span>Upload a background image</div>
+                <div><span class="icon">BG&nbsp;α</span>Background opacity slider</div>
+                <div><span class="icon">🎨</span>Set the canvas color</div>
+            </div>
+        </div>
+    </details>
+
+    <!-- ===================================================================== -->
+    <details class="section" id="editing">
+        <summary>Editing &amp; shortcuts</summary>
+        <div class="section-body">
+            <h3>Selecting and moving objects</h3>
+            <ul>
+                <li><strong>Select:</strong> click a glyph or shape. Drag to move; drag a corner to scale; drag the top handle to rotate.</li>
+                <li><strong>Multi-select:</strong> <kbd>Shift</kbd> + click, or marquee-drag an empty area.</li>
+                <li><strong>Fine move:</strong> select, then use arrow keys (hold <kbd>Shift</kbd> for 1px steps).</li>
+                <li><strong>Edit text:</strong> double-click a text object.</li>
+                <li><strong>Pan canvas:</strong> hold <kbd>Alt</kbd> and drag.</li>
+                <li><strong>Zoom:</strong> mouse wheel over the canvas.</li>
+            </ul>
+
+            <h3>Keyboard shortcuts</h3>
+            <table class="shortcuts">
+                <thead>
+                    <tr><th>Keys</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="keys"><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td><td>Move selection by 5&nbsp;px</td></tr>
+                    <tr><td class="keys"><kbd>Shift</kbd> + arrow</td><td>Fine move by 1&nbsp;px</td></tr>
+                    <tr><td class="keys"><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selection</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo last action</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>Cycle through objects on the canvas</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>Lock / unlock selected object(s)</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Distribute selection evenly (needs ≥&nbsp;2 objects)</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save workspace as JSON</td></tr>
+                    <tr><td class="keys"><kbd>H</kbd></td><td>Horizontal align</td></tr>
+                    <tr><td class="keys"><kbd>T</kbd></td><td>Align tops</td></tr>
+                    <tr><td class="keys"><kbd>B</kbd></td><td>Align bottoms</td></tr>
+                    <tr><td class="keys"><kbd>L</kbd></td><td>Align lefts</td></tr>
+                    <tr><td class="keys"><kbd>R</kbd></td><td>Mirror / reverse selected glyph(s)</td></tr>
+                    <tr><td class="keys"><kbd>Alt</kbd> + drag</td><td>Pan canvas</td></tr>
+                </tbody>
+            </table>
+            <p><em>Alignment keys also operate on multi-selections.</em></p>
+
+            <h3>Custom text and transliteration</h3>
+            <ul>
+                <li>Click <kbd>⌨</kbd> to open the text dialog.</li>
+                <li>The dialog includes special-character keys for Egyptological transliteration (<em>ꜣ ꜥ ḥ ḫ ẖ š ḳ ṯ ḏ</em>) and a Coptic row.</li>
+                <li>Set the font size before inserting, or double-click the text on the canvas to edit it later.</li>
+            </ul>
+
+            <h3>Dictionary search</h3>
+            <ul>
+                <li>Click <strong>Upload Dictionary</strong> and choose your <code>mazzon-dictionary.txt</code> file.</li>
+                <li>Search by Gardiner codes separated by spaces (e.g. <code>A1 Z2</code>) or by transliteration (e.g. <code>rHty</code>).</li>
+                <li>Matches are highlighted; non-ASCII text is enlarged for readability.</li>
+                <li><strong>Resize results:</strong> drag the small horizontal handle just below the character list to grow or shrink the results panel.</li>
+                <li><strong>Drag to canvas:</strong> highlight glyphs in a result (e.g. <code>𓀀𓁐𓏥</code>) and drag the selection onto the canvas — they're placed as a bottom-aligned row.</li>
+            </ul>
+        </div>
+    </details>
+
+    <!-- ===================================================================== -->
+    <details class="section" id="export">
+        <summary>Saving &amp; exporting</summary>
+        <div class="section-body">
+            <h3>File menu (≡) — save, load, export, wiki</h3>
+            <p>The <strong>≡</strong> button on the right side of the toolbar opens a single menu:</p>
+            <ul>
+                <li><strong>Save as JSON</strong>: full workspace snapshot (canvas + Gardiner strip).</li>
+                <li><strong>Save as PDF</strong>: exports a US-Letter page. With the <strong>Page guide on</strong>, the PDF is <em>exactly the page you see</em> — glyphs keep their positions at 1:1 (turn the guide on, lay out within it, then export). With the guide <strong>off</strong>, the export crops tightly to your glyphs and centres them, scaling down only if the work is larger than the page (you'll see a "scaled to N%" note). The PDF library loads lazily on first click.</li>
+                <li><strong>Open JSON…</strong>: load a previously saved workspace.</li>
+                <li><strong>Gardiner signs (Wiki)</strong>: opens the Wikipedia sign list in a new tab.</li>
+                <li><strong>Right-click</strong> the canvas to use the browser's native save / copy on the rendered image.</li>
+            </ul>
+
+            <div class="tip">
+                <strong>Tip — workflow:</strong> build the line of glyphs first, then use
+                <kbd>H</kbd> or <kbd>T</kbd> to snap them to a shared baseline, and
+                <kbd>Ctrl</kbd>+<kbd>D</kbd> to distribute them evenly.
+            </div>
+
+            <div class="tip">
+                <strong>Tip — laying out a page:</strong> turn on the <strong>Page</strong>
+                guide and arrange your glyphs inside the frame. The PDF then comes out
+                <em>exactly as shown</em> — the solid line is the paper edge, the dotted
+                line is the printable margin. Keep signs inside the dotted line and they
+                print 1:1 in place; anything outside the solid edge is off the page. The
+                guide itself is locked — it can't be selected, moved, or deleted, and it
+                never appears in the export.
+            </div>
+
+            <h3>Background image</h3>
+            <ul>
+                <li><strong>BG</strong> uploads a reference image behind the canvas.</li>
+                <li><strong>BG α</strong> sets its opacity (0–100%).</li>
+                <li>Pan offsets reset when the background is hidden or replaced.</li>
+            </ul>
+
+            <h3>Learn more</h3>
+            <p>The <strong>Gardiner signs (Wiki)</strong> entry in the <strong>≡</strong> menu opens the
+                <a href="https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner" target="_blank" rel="noopener">Gardiner sign list on Wikipedia</a> —
+                a useful reference for codes, categories, and meanings.</p>
+        </div>
+    </details>
 
     <div class="outro">
         <span class="big">𓂀 𓏏 𓊵 𓄿</span>

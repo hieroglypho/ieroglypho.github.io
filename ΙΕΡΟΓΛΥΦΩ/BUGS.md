@@ -14,7 +14,51 @@ _(none)_
 
 ## TODO
 
-_(none)_
+### TODO-2 — workspace autosave + save reminder
+**Area:** new persistence layer; `editor-init.js` (unload warning already exists),
+export/load JSON path. **Priority:** high (biggest robustness gap).
+
+The workspace is **not** persisted — a refresh or crash loses all work. Only UI
+prefs (`paletteW`, `charListH`, `glyphMode`) hit localStorage today. Two parts,
+ship either or both:
+- **Autosave:** debounced serialize of the canvas to `localStorage` on change;
+  on load, detect a saved session and offer "Restore last session?" (don't
+  silently overwrite a fresh start).
+- **Save reminder:** if autosave is too heavy, a lighter fallback — a periodic /
+  on-unload nudge ("You have unsaved changes — Save as JSON?") that ties into the
+  existing `canvasModified` flag and `beforeunload` handler.
+
+### TODO-3 — redo (complete the undo pair)
+**Area:** `canvas-interactions.js` (`undoLastAction`, `undoHistory`), keybinding
+in `editor-init.js` (~L686, the Ctrl+Z handler). **Priority:** medium.
+
+Undo exists (action-based stack, Ctrl+Z) but there is **no redo**. Add a redo
+stack: push undone actions onto it, replay on Ctrl+Y / Ctrl+Shift+Z, and clear it
+on any new action.
+
+### TODO-4 — dictionary results: click-to-insert
+**Area:** `dictionary-search.js` (`renderResults`/`resultDisplay`), glyph-insert
+path in `glyph-input.js`. **Priority:** medium.
+
+Dictionary results are read-only — users search, then must re-type the signs in
+the keyboard. Make a result (or its Gardiner codes) **clickable to drop those
+signs straight onto the canvas**, reusing the existing glyph-insert pipeline.
+
+### TODO-5 — touch gestures ("Track 2", BIG BET / later)
+**Area:** `canvas-interactions.js` viewport transform; tablet drawer (already
+shipped, see [[responsive-track1]] in memory). **Priority:** later.
+
+Continuation of the responsive work: pinch-to-zoom, two-finger pan onto the
+existing `viewportTransform`, and larger touch targets for selection handles.
+Needs real-device iteration; not started.
+
+### TODO-6 — MdC round-trip (BIG BET / later)
+**Area:** MdC engine (Tiers 1–5 parse MdC → layout; see `MDC-TIERS.md`).
+**Priority:** later.
+
+Add the inverse of the existing parser: **paste an MdC string → auto-build the
+layout**, and **export a selection back to MdC code**. High value for scholars
+who work in MdC notation.
 
 ---
 

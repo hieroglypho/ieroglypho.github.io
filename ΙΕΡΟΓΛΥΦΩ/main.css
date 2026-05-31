@@ -141,6 +141,31 @@ body {
 #paletteResizer:active {
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
 }
+/* Persistent grip knob so users discover the drag-to-resize affordance. */
+#paletteResizer::after {
+    content: "\2194";   /* ↔ left-right arrows */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 36px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    color: #e6d4b8;
+    background: rgba(30, 30, 30, 0.92);
+    border: 1px solid #8a5c2b;
+    border-radius: 9px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    pointer-events: none;   /* let drags pass through to the bar */
+}
+#paletteResizer:hover::after {
+    border-color: #c8923f;
+    color: #fff;
+}
 
 /* Character list — columns reflow as the palette is resized. */
 #charList {
@@ -254,6 +279,7 @@ body {
 
 /* Drag handle that lets the user resize the dictionary results panel */
 #resultsResizer {
+    position: relative;
     height: 6px;
     background: linear-gradient(#666, #444);
     cursor: ns-resize;
@@ -264,6 +290,31 @@ body {
 }
 #resultsResizer:hover {
     background: linear-gradient(#888, #666);
+}
+/* Persistent grip knob so users discover the drag-to-resize affordance. */
+#resultsResizer::after {
+    content: "\2195";   /* ↕ up-down arrows */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 16px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    color: #e6d4b8;
+    background: rgba(30, 30, 30, 0.92);
+    border: 1px solid #8a5c2b;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+#resultsResizer:hover::after {
+    border-color: #c8923f;
+    color: #fff;
 }
 
 .row {

@@ -21,6 +21,7 @@ body {
     padding: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;  /* dvh tracks the visible viewport on iOS Safari */
     overflow: hidden;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -34,6 +35,7 @@ body {
     justify-content: flex-start;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background-color: #636363;
     padding: 1vh;
     box-sizing: border-box;
@@ -116,6 +118,8 @@ body {
     flex-direction: column;
     order: 2;
     height: calc(100vh - 2vh);
+    height: calc(100dvh - 2vh);  /* dvh: excludes iOS Safari chrome so the
+                                    results panel bottom isn't clipped */
     box-sizing: border-box;
     margin: 0;
     flex-shrink: 0;

@@ -93,9 +93,20 @@ let resizeTimeout;
 // =============================================================================
 // Canvas init
 // =============================================================================
+// Below this width the palette is an off-canvas drawer (see main.css), so it
+// no longer occupies layout width and must NOT be subtracted from the canvas.
+var DRAWER_BREAKPOINT = 899;
+function isDrawerMode() {
+    return window.matchMedia('(max-width: ' + DRAWER_BREAKPOINT + 'px)').matches;
+}
+
 function getCanvasDimensions() {
     const searchContainer = document.getElementById('searchContainer');
-    const searchWidth = searchContainer ? searchContainer.offsetWidth : 400; // 400 is default width
+    // In drawer mode the palette overlays the canvas (position: fixed) rather
+    // than sitting beside it, so the canvas spans the full viewport width.
+    const searchWidth = isDrawerMode()
+        ? 0
+        : (searchContainer ? searchContainer.offsetWidth : 400); // 400 is default width
 
     return {
         // Calculate width by subtracting search container width and padding

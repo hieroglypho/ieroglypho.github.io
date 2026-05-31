@@ -409,7 +409,30 @@ updateDivWidth();
 
 // Update on window resize
 
-window.addEventListener('load', () => window.outerWidth < screen.availWidth && alert('Please maximize your window for the best experience'));
+window.addEventListener('load', () => {
+    // Skip the "maximize your window" nag in drawer mode — a phone/tablet can't
+    // maximize and the message is desktop-only advice.
+    if (typeof isDrawerMode === 'function' && isDrawerMode()) return;
+    if (window.outerWidth < screen.availWidth) alert('Please maximize your window for the best experience');
+});
+
+// --- Off-canvas palette drawer (Track 1) -----------------------------------
+// Wires the floating toggle button + scrim to a `body.palette-open` class.
+// The drawer is an overlay, so opening/closing it does NOT change canvas width
+// (getCanvasDimensions already returns full width in drawer mode) — no reflow
+// needed here. Crossing the breakpoint fires `resize`, which reflows the canvas.
+(function initPaletteDrawer() {
+    const toggle = document.getElementById('paletteToggle');
+    const scrim = document.getElementById('paletteScrim');
+    if (!toggle) return;
+    const close = () => document.body.classList.remove('palette-open');
+    toggle.addEventListener('click', () => document.body.classList.toggle('palette-open'));
+    if (scrim) scrim.addEventListener('click', close);
+    // Leaving drawer mode (e.g. rotate to wide / desktop) clears the open state
+    // so the palette returns to its normal in-flow column.
+    window.matchMedia('(max-width: ' + (typeof DRAWER_BREAKPOINT !== 'undefined' ? DRAWER_BREAKPOINT : 899) + 'px)')
+        .addEventListener('change', (e) => { if (!e.matches) close(); });
+})();
 window.addEventListener('resize', function () {
     // Clear the timeout if it exists
     if (resizeTimeout) {

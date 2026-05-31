@@ -1043,6 +1043,122 @@ time {
     }
 }
 
+/* ===========================================================================
+   Tablet / drawer tier (Track 1). Below 900px the side palette becomes an
+   off-canvas drawer so the canvas can use the full viewport width. Everything
+   here is gated behind the media query, so desktop rendering is unchanged.
+   The toggle button + scrim are hidden by default (here) and revealed inside
+   the query.
+   =========================================================================== */
+.palette-toggle { display: none; }
+.palette-scrim { display: none; }
+.rotate-notice { display: none; }
+
+/* Phones are too small for a precision canvas editor in EITHER orientation, so
+   hard-block them with a "use a larger screen" overlay. Two clauses:
+     • max-width: 500px         → portrait phones (iPad portrait 768px is safe)
+     • max-height + max-width   → landscape phones (short AND narrow); the width
+                                  cap keeps short-but-wide desktop windows and
+                                  landscape tablets (height ≥768px) out of the net. */
+@media screen and (max-width: 500px),
+       screen and (max-height: 500px) and (max-width: 932px) {
+    #rotateNotice {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 32px;
+        background: #1e1e1e;
+        color: #e6d4b8;
+    }
+    .rotate-notice-inner { max-width: 340px; }
+    .rotate-icon {
+        font-size: 64px;
+        line-height: 1;
+        margin-bottom: 18px;
+        color: #c8923f;
+    }
+    .rotate-notice p {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.4;
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+}
+
+@media screen and (max-width: 899px) {
+    /* Palette slides in from the right as an overlay. !important is required to
+       beat the inline `style="position: relative"` on #searchContainer in
+       index.html (inline styles outrank a stylesheet rule); that inline
+       relative is only needed on desktop for the absolutely-positioned
+       #paletteResizer and dropdown, both of which are hidden in drawer mode. */
+    #searchContainer {
+        position: fixed !important;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        height: 100dvh;           /* dvh dodges the iOS URL-bar 100vh inflation */
+        width: var(--palette-w, 360px);
+        max-width: 92vw;
+        margin: 0;
+        z-index: 1500;
+        transform: translateX(100%);
+        transition: transform 220ms ease;
+    }
+    body.palette-open #searchContainer {
+        transform: translateX(0);
+        box-shadow: -6px 0 24px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Drag-to-resize handles are mouse-only — no place in a touch drawer. */
+    #paletteResizer,
+    #resultsResizer { display: none; }
+
+    /* Floating button that opens/closes the drawer. */
+    .palette-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 44px;
+        height: 44px;
+        z-index: 1600;
+        font-size: 22px;
+        line-height: 1;
+        color: #e6d4b8;
+        background-color: rgba(30, 30, 30, 0.95);
+        border: 1px solid #8a5c2b;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+    }
+    body.palette-open .palette-toggle {
+        /* Sit above the open drawer so it still closes it. */
+        right: calc(min(var(--palette-w, 360px), 92vw) + 10px);
+    }
+
+    /* Dim/scrim behind the open drawer; tap to dismiss. */
+    .palette-scrim {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1400;
+    }
+    body.palette-open .palette-scrim { display: block; }
+
+    /* The bottom toolbar can't fit 16 buttons in one nowrap row on a tablet —
+       let it wrap to multiple rows. No overflow clipping here: it would chop the
+       file-menu popup (which opens upward, outside the box). */
+    #tools {
+        flex-wrap: wrap;
+    }
+}
+
 /* Right-click context menu shown over the canvas. Replaces the browser's
    default menu, whose "Save image" / "Copy image" entries only see the
    Fabric upper-canvas (mostly transparent) and miss the background image. */

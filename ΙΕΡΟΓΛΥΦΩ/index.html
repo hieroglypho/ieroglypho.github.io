@@ -150,6 +150,22 @@
         </div>
     </div>
 
+    <!-- Off-canvas palette controls (visible only below the drawer breakpoint;
+         CSS hides them on desktop). Toggle slides #searchContainer in/out. -->
+    <button id="paletteToggle" class="palette-toggle" title="Show / hide character palette"
+        aria-label="Toggle character palette">𓏞</button>
+    <div id="paletteScrim" class="palette-scrim" aria-hidden="true"></div>
+
+    <!-- Phones (either orientation) are too small for a precision canvas editor.
+         This overlay hard-blocks them and points users to a larger screen (see
+         the phone media query in main.css). Tablets and desktop are unaffected. -->
+    <div id="rotateNotice" class="rotate-notice">
+        <div class="rotate-notice-inner">
+            <div class="rotate-icon">𓂀</div>
+            <p>The hieroglyph editor needs a larger screen.<br>Please use a tablet or desktop.</p>
+        </div>
+    </div>
+
     <!-- Workspace Control Buttons -->
     <div id="tools">
         <div class="workspace-actions" style="position: relative;">

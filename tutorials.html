@@ -59,7 +59,7 @@
             font-family: var(--font-main);
             letter-spacing: 0.5px;
             margin: 0;
-            padding: 0 0 100px 0;
+            padding: 0 0 180px 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
         }
@@ -224,20 +224,16 @@
             }
         }
     
+        /* Donate sits inline in the social row (also carries .social-btn for sizing). */
         .rainbow-donate {
-            display: grid;
-            place-items: center;
-            padding: 0;
+            justify-content: center;
             background: #2a2a2a;
             border: 1px solid #3a3a3a;
-            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            width: 50px;
-            height: 50px;
-            line-height: 1;
+            font-size: 15px;
+            line-height: 1.4;
         }
+        .rainbow-donate:hover { background: #353535; }
 
         .rainbow-donate span {
             display: block;
@@ -254,6 +250,207 @@
             0% { background-position: 0 center; }
             100% { background-position: -200% center; }
         }
+
+        /* ---- Featured header tutorial (the main YouTube walkthrough) ---- */
+        .featured {
+            max-width: 760px;
+            margin: 0 auto 34px;
+            background: var(--feature-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 22px 24px 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        }
+        .featured h2 {
+            font-family: var(--font-main);
+            font-weight: 600;
+            font-size: 22px;
+            margin: 0 0 14px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .featured h2 .glyph { font-family: var(--font-hieroglyph); color: var(--button-bg); font-size: 24px; }
+        .featured iframe {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border: 0;
+            border-radius: 8px;
+            display: block;
+        }
+        .featured p { font-size: 15px; line-height: 1.6; margin: 14px 0 0; }
+        .divider-label {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin: 4px auto 14px;
+        }
+
+        /* ---- Searchable help library ---- */
+        .help-intro {
+            max-width: 760px;
+            margin: 0 auto 18px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .help-search {
+            position: relative;
+            max-width: 560px;
+            margin: 0 auto 8px;
+        }
+        .help-search input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 44px 13px 16px;
+            font-size: 16px;
+            font-family: var(--font-main);
+            color: var(--text-color);
+            background: var(--feature-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+        }
+        .help-search input:focus {
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.18);
+        }
+        .help-search .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--button-bg);
+            pointer-events: none;
+        }
+        .help-count {
+            max-width: 560px;
+            margin: 0 auto 22px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+            min-height: 18px;
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--feature-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 22px 24px 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            scroll-margin-top: 90px;
+        }
+        .card.hit { animation: cardflash 1.2s ease; }
+        @keyframes cardflash {
+            0%, 100% { box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+            30%      { box-shadow: 0 0 0 3px var(--button-bg); }
+        }
+        .card h3 {
+            font-family: var(--font-main);
+            font-weight: 600;
+            font-size: 19px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: baseline;
+            gap: 9px;
+        }
+        .card h3 .glyph {
+            font-family: var(--font-hieroglyph);
+            color: var(--button-bg);
+            font-size: 22px;
+        }
+        .card .lead {
+            font-size: 14px;
+            color: #888;
+            margin: 0 0 14px;
+            font-style: italic;
+        }
+        .card ol, .card ul { padding-left: 20px; margin: 10px 0; }
+        .card li { margin-bottom: 7px; line-height: 1.55; font-size: 15px; }
+        .card p { font-size: 15px; line-height: 1.6; margin: 8px 0; }
+        .card code {
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 13px;
+            background: rgba(127,127,127,0.16);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        .card .tip {
+            border-left: 3px solid var(--button-bg);
+            background: rgba(22, 160, 133, 0.10);
+            padding: 9px 13px;
+            margin: 12px 0 2px;
+            border-radius: 0 5px 5px 0;
+            font-size: 14px;
+        }
+
+        /* Looping MP4 demo — behaves like a GIF (muted, autoplay, loop). */
+        .demo { margin: 0 0 16px; }
+        .demo-vid {
+            display: block;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #1a1a1a;
+        }
+        .demo-cap {
+            text-align: center;
+            font-size: 12.5px;
+            color: #888;
+            margin: 6px 0 0;
+            font-style: italic;
+        }
+        .demo-soon {
+            display: grid;
+            place-items: center;
+            aspect-ratio: 16 / 10;
+            max-width: 520px;
+            margin: 0 auto 16px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            color: #888;
+            font-size: 14px;
+            background: rgba(127,127,127,0.06);
+        }
+        .demo-soon .glyph { font-family: var(--font-hieroglyph); font-size: 26px; margin-right: 8px; color: var(--button-bg); }
+
+        /* Optional "watch the Short" YouTube launcher */
+        .watch-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background: #c4302b;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .watch-btn:hover { background: #a52722; }
+        .yt-embed { width: 100%; aspect-ratio: 16/9; margin-top: 14px; border-radius: 8px; }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #888;
+            padding: 40px 20px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -268,31 +465,121 @@
     </nav>
 
     <div class="content">
-        <div class="video-grid">
-            <div class="video-container">
-                <h3>Getting Started</h3>
-                    <iframe class="video-frame" 
-                        src="https://www.youtube.com/embed/5bKCBR9sVxs"
-                        title="Getting Started Tutorial"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                <p class="video-description">Learn the basics of hieroglyphic writing and how to use our digital tools effectively.</p>
-            </div>
-            <div class="video-container">
-                <h3>Advanced Techniques</h3>
-                <p class="video-description">Explore advanced features and learn professional transcription techniques.</p>
-            </div>
+        <!-- Featured header tutorial: the main YouTube walkthrough -->
+        <section class="featured">
+            <h2><span class="glyph">𓂀</span>Getting started</h2>
+            <iframe src="https://www.youtube.com/embed/5bKCBR9sVxs"
+                    title="Getting Started Tutorial"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            <p>Learn the basics of hieroglyphic writing and how to use the editor
+            effectively — then dig into any feature with the task-by-task guides below.</p>
+        </section>
+
+        <p class="divider-label">Feature guides</p>
+
+        <p class="help-intro">Short, task-by-task guides to the ΙΕΡΟΓΛΥΦΩ editor —
+        each with a written walkthrough and a quick looping demo. Search by what you
+        want to do.</p>
+
+        <div class="help-search">
+            <input type="search" id="helpSearch" placeholder="Search tutorials — e.g. cartouche, transliteration, dictionary…"
+                   autocomplete="off" aria-label="Search tutorials">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="help-count" id="helpCount" aria-live="polite"></div>
+
+        <div class="help-grid" id="helpGrid">
+
+            <!-- ============ Card: First cartouche ============ -->
+            <article class="card" id="cartouche"
+                     data-tags="cartouche royal name ring oval pharaoh king badge png pdf export save getting started first beginner toolbar">
+                <h3><span class="glyph">𓍶</span>Make your first cartouche</h3>
+                <p class="lead">Zero to a finished, royal-looking name ring — browser only, nothing to install.</p>
+                <p>The cartouche is the oval that wraps a royal name — the ancient
+                world's verified badge. Here's the whole trip:</p>
+                <ol>
+                    <li>Open the hieroglyph dialog (the highlighted <code>𓂀…</code>
+                        button on the toolbar) and drop in a few signs.</li>
+                    <li>Click <strong>Cartouche</strong> on the toolbar — the ring frames
+                        your signs. Drag either end to hug the name snugly.</li>
+                    <li>Open the <strong>≡</strong> menu → <strong>Save as PNG</strong>
+                        (or PDF) and it's ready to share.</li>
+                </ol>
+                <div class="tip"><strong>Note:</strong> the Cartouche tool is for royal-name
+                    rings. For a <em>serekh</em>, <em>hwt</em>-enclosure or plain frame,
+                    use the MdC enclosure codes (<code>&lt;S…&gt;S</code>,
+                    <code>&lt;H…&gt;H</code>, <code>&lt;F…&gt;F</code>) instead.</div>
+                <div class="demo">
+                    <video class="demo-vid" src="assets/tut/cartouche.mp4"
+                           poster="assets/tut/cartouche.jpg"
+                           muted autoplay loop playsinline preload="metadata"></video>
+                    <p class="demo-cap">Type a royal name, then frame it with the Cartouche tool.</p>
+                </div>
+            </article>
+
+            <!-- ============ Card: Three ways to enter signs ============ -->
+            <article class="card" id="enter-signs"
+                     data-tags="input enter signs typing dialog text run individual signs three line block stack transliteration coptic keyboard manuel de codage mdc font size">
+                <h3><span class="glyph">𓂋</span>Three ways to enter signs</h3>
+                <p class="lead">The feature most people never discover on their own.</p>
+                <p>One button — the highlighted <code>𓂀…</code> — opens a dialog with
+                three layouts:</p>
+                <ul>
+                    <li><strong>Text run</strong> — signs flow in a single line, like a word.</li>
+                    <li><strong>Individual signs</strong> — each sign lands as its own
+                        movable object, laid out in 2D the way textbooks and JSesh do.
+                        Spatial (MdC) operators like <code>*</code> <code>:</code>
+                        <code>-</code> auto-switch to this engine.</li>
+                    <li><strong>Three-line block</strong> — signs stack into a tidy
+                        three-row column, perfect for labels.</li>
+                </ul>
+                <p>Need proper transliteration letters
+                (<em>ꜣ ꜥ ḥ ḫ ẖ š ḳ ṯ ḏ</em>) or Coptic? Click the <code>⌨</code>
+                keyboard — it has the characters your regular keyboard pretends don't
+                exist. Set the font size before inserting, or double-click text on the
+                canvas to edit it later.</p>
+                <div class="demo">
+                    <video class="demo-vid" src="assets/tut/sign-entry.mp4"
+                           poster="assets/tut/sign-entry.jpg"
+                           muted autoplay loop playsinline preload="metadata"></video>
+                    <p class="demo-cap">Individual signs — typing Manuel de Codage, no mouse.</p>
+                </div>
+            </article>
+
+            <!-- ============ Card: Dictionary search ============ -->
+            <article class="card" id="dictionary"
+                     data-tags="dictionary search lookup find meaning transliteration gardiner code mazzon results clear drag to canvas reference">
+                <h3><span class="glyph">𓏛</span>Find any sign in the dictionary</h3>
+                <p class="lead">Forgot the sign? Just ask.</p>
+                <p>Nobody memorizes a thousand signs — not even the scribes did. So
+                just search:</p>
+                <ol>
+                    <li>Click <strong>Upload Dictionary</strong> and choose the
+                        <code>dictionary.txt</code> file (once per session).</li>
+                    <li>Search by Gardiner codes separated by spaces (e.g.
+                        <code>A1 Z2</code>) or by transliteration (e.g. <code>rHty</code>,
+                        <code>pr</code>). Results populate live and are highlighted;
+                        non-ASCII text is enlarged for readability.</li>
+                    <li><strong>Drag to canvas:</strong> highlight the glyphs in a result
+                        (e.g. <code>𓀀𓁐𓏥</code>) and drag the selection onto the
+                        canvas — they're placed as a bottom-aligned row.</li>
+                </ol>
+                <p>Drag the small handle just below the character list to grow or shrink
+                the results panel; <strong>Clear</strong> resets the box instantly. It's
+                a reference desk and a keyboard in one.</p>
+                <div class="demo">
+                    <video class="demo-vid" src="assets/tut/dictionary.mp4"
+                           poster="assets/tut/dictionary.jpg"
+                           muted autoplay loop playsinline preload="metadata"></video>
+                    <p class="demo-cap">Type a meaning or transliteration — matches appear live.</p>
+                </div>
+            </article>
+
         </div>
     </div>
 
         <footer>
-        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="rainbow-donate" title="Donate!">
-                <span>$:)</span>
-            </button>
-        </div>
-        
             <div style="margin-bottom: 15px;">
                 © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. • 
                 <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
@@ -307,6 +594,9 @@
                 <a href="https://www.tumblr.com/share/link?url=https://www.hieroglyphica.org&name=ΙΕΡΟΓΛΥΦΩ&description=Egyptian%20Hieroglyphs%20Tool" class="social-btn tumblr" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-tumblr"></i>Tumblr
                 </a>
+                <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="social-btn rainbow-donate" title="Donate!">
+                    <span>$ :)</span>
+                </button>
                 <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-linkedin-in"></i>LinkedIn
                 </a>
@@ -319,5 +609,79 @@
             </div>
         </footer>
 
+    <script>
+        (function () {
+            const input = document.getElementById('helpSearch');
+            const grid  = document.getElementById('helpGrid');
+            const count = document.getElementById('helpCount');
+            const cards = Array.from(grid.querySelectorAll('.card'));
+
+            // Pre-index each card's searchable text (visible text + data-tags).
+            cards.forEach(c => {
+                c._text = (c.textContent + ' ' + (c.dataset.tags || '')).toLowerCase();
+            });
+
+            let noResults = null;
+            function filter(q) {
+                q = q.trim().toLowerCase();
+                let shown = 0;
+                cards.forEach(c => {
+                    const match = !q || c._text.includes(q);
+                    c.style.display = match ? '' : 'none';
+                    if (match) shown++;
+                });
+                if (noResults) { noResults.remove(); noResults = null; }
+                if (shown === 0) {
+                    noResults = document.createElement('p');
+                    noResults.className = 'no-results';
+                    noResults.textContent = 'No tutorials match “' + input.value.trim() + '”. Try a feature name, like “cartouche” or “transliteration”.';
+                    grid.appendChild(noResults);
+                }
+                count.textContent = q
+                    ? shown + ' of ' + cards.length + ' tutorials'
+                    : '';
+            }
+
+            input.addEventListener('input', () => filter(input.value));
+
+            // Deep-link: #cartouche etc. — scroll to and flash the card.
+            function flashHash() {
+                if (!location.hash) return;
+                const el = document.querySelector(location.hash);
+                if (el && el.classList.contains('card')) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    el.classList.remove('hit');
+                    void el.offsetWidth;            // restart the animation
+                    el.classList.add('hit');
+                }
+            }
+            window.addEventListener('hashchange', flashHash);
+            flashHash();
+
+            // Lazy YouTube: swap the button for an embed only on click (no
+            // third-party load until the viewer asks for it).
+            grid.addEventListener('click', e => {
+                const btn = e.target.closest('.watch-btn');
+                if (!btn) return;
+                const id = btn.dataset.yt;
+                const frame = document.createElement('iframe');
+                frame.className = 'yt-embed';
+                frame.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+                frame.title = 'Tutorial video';
+                frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                frame.allowFullscreen = true;
+                btn.replaceWith(frame);
+            });
+
+            // Respect reduced-motion: don't autoplay looping demos.
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelectorAll('video.demo-vid').forEach(v => {
+                    v.removeAttribute('autoplay');
+                    v.pause();
+                    v.setAttribute('controls', '');
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

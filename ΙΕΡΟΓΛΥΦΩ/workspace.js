@@ -32,7 +32,7 @@ function serializeWorkspace() {
 
     // Preserve app-level custom properties on each object so reload
     // reconstitutes link state, glyph-run marker, etc.
-    const CUSTOM_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow'];
+    const CUSTOM_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow', 'enclosureId'];
 
     return {
         canvas: {

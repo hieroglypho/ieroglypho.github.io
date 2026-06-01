@@ -32,7 +32,14 @@ canvas.on('mouse:down', function (options) {
         canvas.selection = false;
         return;
     }
-    const clickedObject = canvas.getObjects().find(obj => obj.containsPoint(pointer));
+    // Manual hit-test, but only over INTERACTIVE objects. Skip non-selectable /
+    // non-evented overlays (the page guide, the grid): the guide sits at the back
+    // and spans the whole page, so `containsPoint` is true for it on every
+    // interior click — without this filter `find` returns the guide first (it's
+    // first in the back-to-front array) and selects the whole "page" instead of
+    // the glyph under the cursor.
+    const clickedObject = canvas.getObjects().find(obj =>
+        obj.selectable && obj.evented !== false && !obj._pageGuide && obj.containsPoint(pointer));
     const activeObject = canvas.getActiveObject();
 
     if (clickedObject) {
@@ -636,9 +643,10 @@ function recordBatch(actions) {
 // multi-select delete (or a swept block) undoes in a single Ctrl+Z.
 function collectDeletion(obj, actions) {
     if (!obj || obj._pageGuide) return;   // never delete the page guide
-    // Three-line block: deleting any row deletes its siblings too. Guard against
-    // re-entry so the sweep doesn't loop forever when called per-sibling.
-    if (obj.blockId && !obj._blockSweeping) {
+    // Soft-linked set (three-line block OR MdC enclosure): deleting any member
+    // deletes its siblings too. Guard against re-entry so the sweep doesn't loop
+    // forever when called per-sibling.
+    if ((obj.blockId || obj.enclosureId) && !obj._blockSweeping) {
         const siblings = getBlockSiblings(obj);
         if (siblings.length) {
             obj._blockSweeping = true;
@@ -667,85 +675,61 @@ function storeAndRemoveCharacter(obj) {
 // Mirror + alignment
 // =============================================================================
 function mirrorTextObject() {
-    const activeObject = canvas.getActiveObject();
-    if (!activeObject) return;
+    const initialSelection = canvas.getActiveObjects();
+    if (initialSelection.length === 0) return;
 
     try {
-        const objects = activeObject.type === 'activeSelection'
-            ? activeObject.getObjects()
-            : [activeObject];
+        // Read ABSOLUTE coordinates: inside an ActiveSelection each child's
+        // left/top is group-relative, so drop the selection first and let Fabric
+        // write canvas coords back. (This is what the old code missed — it
+        // reversed positions across a mix of frame + glyphs and scrambled them.)
+        canvas.discardActiveObject();
 
-        // Snapshot every involved object before mutation so undo can restore.
-        const capturedObjects = objects.map(o => ({
-            id: o.id,
-            state: o.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
-        }));
-        const capturedGroupState = activeObject.type === 'activeSelection' ? {
-            left: activeObject.left,
-            top: activeObject.top,
-            angle: activeObject.angle,
-            scaleX: activeObject.scaleX,
-            scaleY: activeObject.scaleY,
-            width: activeObject.width,
-            height: activeObject.height
-        } : null;
+        // Expand to whole soft-linked enclosures so mirroring any member — even
+        // just the frame — mirrors the unit. Three-line blocks are left alone
+        // (flipping Latin transliteration would be wrong).
+        const set = new Set(initialSelection);
+        initialSelection.forEach(o => {
+            if (o.enclosureId) getBlockSiblings(o).forEach(s => set.add(s));
+        });
+        const objects = [...set];
 
-        if (objects.length > 1) {
-            // Determine if the text is arranged vertically
-            const isVertical = isArrangedVertically(objects);
-
-            if (isVertical) {
-                // For vertical text, just mirror in place
-                objects.forEach(obj => {
-                    obj.set('flipX', !obj.flipX);
-                    obj.setCoords();
-                });
-            } else {
-                // For horizontal text, mirror and reverse positions
-                const originalPositions = objects.map(obj => ({
-                    left: obj.left,
-                    top: obj.top
-                }));
-
-                const reversedObjects = [...objects].reverse();
-
-                reversedObjects.forEach((obj, i) => {
-                    obj.set({
-                        left: originalPositions[i].left,
-                        top: originalPositions[i].top,
-                        flipX: !obj.flipX
-                    });
-                    obj.setCoords();
-                });
+        // Snapshot each object's absolute pre-mirror state as a per-object undo
+        // (a batch of single 'modify's — no fragile group reconstruction).
+        const undoActions = objects.map(o => ({
+            type: 'modify', actionType: 'moving',
+            state: {
+                type: 'single', id: o.id,
+                state: o.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
             }
+        }));
 
-            pushUndo({
-                type: 'modify',
-                actionType: 'moving',
-                state: {
-                    type: 'group',
-                    groupState: capturedGroupState,
-                    objects: capturedObjects
-                }
+        // Only the GLYPHS reverse order among themselves; the enclosure frame,
+        // bracket marks and any shapes mirror in place (they are not part of the
+        // sign sequence). Splitting on type is what keeps the frame still.
+        const glyphs = objects.filter(o => o.type === 'text');
+        const others = objects.filter(o => o.type !== 'text');
+
+        if (glyphs.length > 1 && !isArrangedVertically(glyphs)) {
+            // Horizontal row: swap the glyphs into reversed positions (G5↔G6) and
+            // flip each, so the row reads mirror-image.
+            const positions = glyphs.map(o => ({ left: o.left, top: o.top }));
+            [...glyphs].reverse().forEach((o, i) => {
+                o.set({ left: positions[i].left, top: positions[i].top, flipX: !o.flipX });
+                o.setCoords();
             });
         } else {
-            // Single object handling
-            const obj = objects[0];
-            obj.set('flipX', !obj.flipX);
-            obj.setCoords();
-
-            pushUndo({
-                type: 'modify',
-                actionType: 'moving',
-                state: {
-                    type: 'single',
-                    id: obj.id,
-                    state: capturedObjects[0].state
-                }
-            });
+            // Vertical column (or a lone glyph): just flip each in place.
+            glyphs.forEach(o => { o.set('flipX', !o.flipX); o.setCoords(); });
         }
+        others.forEach(o => { o.set('flipX', !o.flipX); o.setCoords(); });
 
-        if (activeObject.type === 'activeSelection') activeObject.setCoords();
+        recordBatch(undoActions);
+
+        // Restore a selection of everything we touched.
+        canvas.setActiveObject(objects.length === 1
+            ? objects[0]
+            : new fabric.ActiveSelection(objects, { canvas }));
         canvas.requestRenderAll();
     } catch (error) {
         console.error('Error mirroring object(s):', error);

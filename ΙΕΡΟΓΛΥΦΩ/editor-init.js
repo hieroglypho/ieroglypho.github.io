@@ -707,6 +707,11 @@ window.addEventListener('keydown', function (e) {
             mirrorTextObject(activeObject);
             return;
         }
+        // Copy the selection as MdC code (guard against firing while typing).
+        if (!isInTextField && e.key.toLowerCase() === 'm') {
+            exportSelectionToMdC();
+            return;
+        }
     }
 
     // Move objects with arrow keys

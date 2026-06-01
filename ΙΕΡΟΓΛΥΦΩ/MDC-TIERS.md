@@ -167,6 +167,19 @@ easy to find (palette UX, not an engine).
 
 ## Changelog
 
+- **2026-06-01** — **MdC round-trip closed (BUGS TODO-6): export a selection →
+  MdC code**, the inverse of the Tier 1–5 parser. `exportSelectionToMdC` in
+  `glyph-input.js` reads the selected signs' canvas boxes and recursively
+  guillotine-partitions them — MdC's `* : -` operators *are* guillotine cuts, so
+  it splits on the more-separated axis, emits the implied operator, and recurses
+  (rows split first on large vertical gaps → `!`). Reading order L→R then T→B
+  matches the layout engine, so paste→export→paste round-trips; operands are
+  parenthesised only when they bind looser than the joining operator. Emits
+  canonical Gardiner codes (re-imports cleanly), copies to clipboard. Triggered
+  by the **→MdC** toolbar button / **m** shortcut. Verified with Node unit tests
+  over 10 layouts (rows, touching & gapped stacks, tight `*`, nested parens,
+  two-cadrat rows, line breaks, heavy overlap). The import half was already
+  `handleMdCInput`.
 - **2026-05-30** — Tier 6 (ligatures & overlay) **closed as won't-do.** The
   Extended-A palette (~3,995 Hieroglyphica glyphs) already ships the common
   lexicalized composites as atomic codepoints, so the high-value ligatures are a

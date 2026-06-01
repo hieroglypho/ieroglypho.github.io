@@ -299,9 +299,19 @@ async function addThreeLineBlock(glyphsRaw, translit, translation, glyphSize) {
     canvas.requestRenderAll();
 }
 
+// A soft link key shared by objects that move / delete together but stay
+// individually selectable and editable (NO fabric grouping): three-line blocks
+// (`blockId`) and MdC enclosures (`enclosureId`). The two namespaces are
+// prefix-distinct, so one generic key cannot cross-match a block with an
+// enclosure.
+function objLinkKey(obj) {
+    return obj ? (obj.blockId || obj.enclosureId || null) : null;
+}
+
 function getBlockSiblings(obj) {
-    if (!obj || !obj.blockId) return [];
-    return canvas.getObjects().filter(o => o.blockId === obj.blockId && o !== obj);
+    const key = objLinkKey(obj);
+    if (!key) return [];
+    return canvas.getObjects().filter(o => objLinkKey(o) === key && o !== obj);
 }
 
 // Wires drag propagation: moving any row moves all siblings by the same delta.
@@ -313,7 +323,7 @@ function initBlockLinkage() {
 
     canvas.on('mouse:down', (opt) => {
         const obj = opt.target;
-        if (obj && obj.blockId) {
+        if (obj && objLinkKey(obj)) {
             obj._lastLeft = obj.left;
             obj._lastTop = obj.top;
         }
@@ -321,7 +331,7 @@ function initBlockLinkage() {
 
     canvas.on('object:moving', (e) => {
         const obj = e.target;
-        if (!obj || !obj.blockId || suppress) return;
+        if (!obj || !objLinkKey(obj) || suppress) return;
         if (obj._lastLeft == null) {
             obj._lastLeft = obj.left;
             obj._lastTop = obj.top;
@@ -958,6 +968,7 @@ function placeMdCNode(node, x, y, scale) {
 
     if (node.type === 'enclosure') {
         // Frame first so the glyphs (added afterwards) render on top of it.
+        const startIdx = canvas.getObjects().length;
         addEnclosureFrame(buildEnclosureFrame(node.variant, x, y, boxW, boxH));
         const contentTop = y + MDC_ENC_PAD_TOP * scale;
         const contentH = node.innerH * scale;
@@ -967,6 +978,12 @@ function placeMdCNode(node, x, y, scale) {
             placeMdCNode(c, cx, contentTop + (contentH - ch), scale);  // bottom-align in content
             cx += c.w * scale + MDC_GAP * scale;
         }
+        // Soft-link the frame and everything inside it: each member stays
+        // independently editable, but moves/mirrors/deletes as one unit (the same
+        // mechanism as a three-line block — see objLinkKey / getBlockSiblings).
+        // canvas.add only appends, so the new objects are exactly the tail slice.
+        const enclosureId = `enc_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+        canvas.getObjects().slice(startIdx).forEach(o => { o.enclosureId = enclosureId; });
         return;
     }
 
@@ -1279,4 +1296,131 @@ function handleMdCInputFlat(mdcString) {
     }
 
     canvas.requestRenderAll();
+}
+
+// =============================================================================
+// Export: canvas selection → MdC code (the inverse of the layout engine)
+// =============================================================================
+// MdC's spatial operators are guillotine cuts: `*` (side-by-side), `:` (stack),
+// `-` (cadrat separator along the row). So we recover the code by recursively
+// finding a clean axis-aligned gap that splits the signs in two, emitting the
+// operator that gap implies, and recursing — the reverse of how layoutMdCRow
+// packs them. Reading order is left→right then top→bottom, matching the engine's
+// own output, so paste → export → paste round-trips.
+
+// Operator precedence (tightest → loosest), mirroring parseMdCTree: * > : > -.
+const MDC_OP_RANK = { '*': 3, ':': 2, '-': 1 };
+const MDC_LEAF_RANK = 99;   // a bare sign never needs parentheses
+
+function mdcCodeFor(obj) {
+    // Prefer the canonical Gardiner code the importer is keyed on (charsByCode),
+    // so the string re-imports cleanly; fall back to the stored key, then the
+    // raw glyph (the tokenizer also accepts bare Unicode).
+    const entry = charsByGlyph.get(obj.text);
+    if (entry) return entry[0];
+    if (obj.characterKey) return obj.characterKey;
+    return obj.text;
+}
+
+// The widest separation along an axis: the neighbouring pair (ordered by start
+// edge) with the largest start-minus-running-max distance. A positive value is a
+// real gap; zero means the boxes touch (still a clean guillotine cut); negative
+// means they overlap. Returns { gap, pos } (pos = the dividing line) or null for
+// <2 boxes. Boxes are canvas-plane rects {left, top, width, height}.
+function mdcWidestGap(boxes, axis) {
+    const lo = axis === 'x' ? b => b.left : b => b.top;
+    const hi = axis === 'x' ? b => b.left + b.width : b => b.top + b.height;
+    const sorted = [...boxes].sort((a, b) => lo(a) - lo(b));
+    let runMax = hi(sorted[0]);
+    let best = null;
+    for (let i = 1; i < sorted.length; i++) {
+        const gap = lo(sorted[i]) - runMax;
+        if (!best || gap > best.gap) best = { gap, pos: runMax + gap / 2 };
+        runMax = Math.max(runMax, hi(sorted[i]));
+    }
+    return best;
+}
+
+// Recursively turn a set of sign-boxes into { str, rank }. We split on whichever
+// axis is the more separated (its widest gap is larger), so a row decomposes
+// into cadrats before a cadrat decomposes into stacks. `avgW`/`avgH` only set
+// thresholds: a horizontal gap wide enough is a cadrat separator (`-`) else tight
+// juxtaposition (`*`); a vertical split is always a stack (`:`).
+function mdcFromBoxes(boxes, avgW, avgH) {
+    if (boxes.length === 1) return { str: mdcCodeFor(boxes[0].obj), rank: MDC_LEAF_RANK };
+
+    const xGap = mdcWidestGap(boxes, 'x');
+    const yGap = mdcWidestGap(boxes, 'y');
+    const axis = (xGap.gap >= yGap.gap) ? 'x' : 'y';
+    const cut = axis === 'x' ? xGap : yGap;
+
+    // Both axes overlap heavily (e.g. fused/ligatured signs): no sensible
+    // guillotine, so just emit in reading order joined by `-`.
+    if (cut.gap < -(axis === 'x' ? avgW : avgH) * 0.5) {
+        const ordered = [...boxes].sort((a, b) => (a.top - b.top) || (a.left - b.left));
+        return { str: ordered.map(b => mdcCodeFor(b.obj)).join('-'), rank: MDC_OP_RANK['-'] };
+    }
+
+    const op = axis === 'x' ? (cut.gap >= avgW * 0.4 ? '-' : '*') : ':';
+    const center = axis === 'x'
+        ? b => b.left + b.width / 2
+        : b => b.top + b.height / 2;
+    const first = boxes.filter(b => center(b) < cut.pos);
+    const second = boxes.filter(b => center(b) >= cut.pos);
+
+    const rank = MDC_OP_RANK[op];
+    const a = mdcFromBoxes(first, avgW, avgH);
+    const c = mdcFromBoxes(second, avgW, avgH);
+    // Parenthesize an operand only when it binds looser than the joining
+    // operator (e.g. a stack inside a juxtaposition: A*(B:C)).
+    const wrap = part => part.rank < rank ? `(${part.str})` : part.str;
+    return { str: wrap(a) + op + wrap(c), rank };
+}
+
+// Group boxes top-to-bottom into rows, breaking only on a clean vertical gap
+// wider than a sign (genuine line spacing). A stack's internal gap is smaller,
+// so aligned cadrats stay in one row instead of being mistaken for two lines.
+function mdcSplitRows(boxes, avgH) {
+    const sorted = [...boxes].sort((a, b) => a.top - b.top);
+    const rows = [];
+    let cur = [];
+    let runMax = -Infinity;
+    for (const b of sorted) {
+        if (cur.length && b.top - runMax >= avgH * 0.9) { rows.push(cur); cur = []; runMax = -Infinity; }
+        cur.push(b);
+        runMax = Math.max(runMax, b.top + b.height);
+    }
+    if (cur.length) rows.push(cur);
+    return rows;
+}
+
+// Copy the current selection to the clipboard as MdC code. Bound to the toolbar
+// "→MdC" button and the `m` shortcut.
+function exportSelectionToMdC() {
+    const signs = canvas.getActiveObjects().filter(o => o.type === 'text' && !o._pageGuide);
+    if (signs.length === 0) {
+        showCanvasToast('Select some signs to copy as MdC');
+        return;
+    }
+
+    const boxes = signs.map(o => {
+        o.setCoords();
+        const r = o.getBoundingRect(true);   // canvas-plane box, zoom-independent
+        return { obj: o, left: r.left, top: r.top, width: r.width, height: r.height };
+    });
+    const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
+    const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
+
+    // Rows first (line breaks), then guillotine each row into cadrats.
+    const mdc = mdcSplitRows(boxes, avgH)
+        .map(row => mdcFromBoxes(row, avgW, avgH).str)
+        .join(' ! ');
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(mdc)
+            .then(() => showCanvasToast('MdC copied: ' + mdc))
+            .catch(() => window.prompt('MdC for selection (copy):', mdc));
+    } else {
+        window.prompt('MdC for selection (copy):', mdc);
+    }
 }

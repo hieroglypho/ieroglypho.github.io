@@ -459,7 +459,7 @@
     <nav class="nav-tabs">
         <a href="about.html">ABOUT</a>
         <a href="index.html">HOME</a>
-        <a href="tutorials.html">TUTORIAL</a>
+        <a href="tutorials.html">TUTORIALS</a>
         <a href="research.html">RESEARCH</a>
         <a href="dictionary.html">DICTIONARY</a>
     </nav>
@@ -573,6 +573,64 @@
                            poster="assets/tut/dictionary.jpg"
                            muted autoplay loop playsinline preload="metadata"></video>
                     <p class="demo-cap">Type a meaning or transliteration — matches appear live.</p>
+                </div>
+            </article>
+
+            <!-- ============ Card: MdC spatial layout ============ -->
+            <article class="card" id="mdc-layout"
+                     data-tags="mdc manuel de codage spatial layout operators stack juxtapose group cadrat star asterisk colon dash hyphen parentheses exclamation new line precedence order of operations formula offering htp di nsw academic 2d arrangement individual signs jsesh">
+                <h3><span class="glyph">𓊵</span>Type the layout with Manuel de Codage</h3>
+                <p class="lead">Hieroglyphs don't politely march in a line — so you type the arrangement too.</p>
+                <p>Open the hieroglyph dialog and type Gardiner codes joined by spatial
+                operators. The layout engine arranges the signs in 2D the way textbooks
+                and JSesh do — and it respects the order of operations, so you don't
+                have to fight it:</p>
+                <ul>
+                    <li><code>*</code> — <strong>side by side</strong> (juxtapose), e.g. <code>M17*M17</code>.</li>
+                    <li><code>:</code> — <strong>stack</strong> top over bottom, e.g. <code>D21:N35</code>.</li>
+                    <li><code>-</code> — <strong>separate</strong> into the next cadrat along the row.</li>
+                    <li><code>( )</code> — <strong>group</strong>, exactly like math: <code>(M17*M17):X1</code>
+                        sets the two reeds side by side, then stacks that pair over the loaf.</li>
+                    <li><code>!</code> — force a <strong>new line</strong>.</li>
+                </ul>
+                <p>Binding runs tightest → loosest: <code>( )</code> &gt; <code>*</code> &gt;
+                <code>:</code> &gt; <code>-</code>. Any spatial operator auto-switches the
+                dialog to the individual-signs engine.</p>
+                <div class="tip"><strong>Reads like a formula, lays out like a wall.</strong>
+                    Type the offering formula <em>ḥtp-dỉ-nsw</em> as
+                    <code>M23-X1:R4-X8</code> and watch each cadrat fall into place.</div>
+                <div class="demo">
+                    <video class="demo-vid" src="assets/tut/mdc-layout.mp4"
+                           poster="assets/tut/mdc-layout.jpg"
+                           muted autoplay loop playsinline preload="metadata"></video>
+                    <p class="demo-cap">The offering formula <em>ḥtp-dỉ-nsw</em> — stacked and separated into cadrats automatically.</p>
+                </div>
+            </article>
+
+            <!-- ============ Card: The extended hieroglyph set ============ -->
+            <article class="card" id="extended-set"
+                     data-tags="extended set full palette jsesh unicode thousands of signs gardiner breadth rare sign no install browser comparison about panel coverage glyph library">
+                <h3><span class="glyph">𓁹</span>The extended hieroglyph set</h3>
+                <p class="lead">Way past A–Z — thousands of signs, in a browser tab.</p>
+                <p>Most people know the Gardiner list — a few hundred greatest hits. This
+                goes <em>thousands</em> of signs deeper, into the extended set, with the
+                spacing and stacking the script actually needs. Reach any of them the
+                same way:</p>
+                <ol>
+                    <li>Type its <strong>Gardiner code</strong> in the hieroglyph dialog
+                        (codes span every family — gods, mammals, birds, plants, sky,
+                        rope, and the <code>Aa</code> miscellany).</li>
+                    <li>Or look it up in the <strong>dictionary</strong> and drag the
+                        result onto the canvas.</li>
+                </ol>
+                <p>If you've used JSesh, you know the routine — download, install, wrestle
+                the interface. Here you open a tab and start typing: no install, no fuss.
+                Same ancient script, fewer modern headaches.</p>
+                <div class="demo">
+                    <video class="demo-vid" src="assets/tut/extended-set.mp4"
+                           poster="assets/tut/extended-set.jpg"
+                           muted autoplay loop playsinline preload="metadata"></video>
+                    <p class="demo-cap">A single run drawn from across the Gardiner families.</p>
                 </div>
             </article>
 

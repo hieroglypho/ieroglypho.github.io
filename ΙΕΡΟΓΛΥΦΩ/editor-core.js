@@ -84,6 +84,15 @@ let initialScaleState = null;
 // History
 let updateHistory = [];
 const undoHistory = [];
+const redoHistory = [];
+
+// Record a new user action. Any fresh action invalidates the redo stack —
+// you can't redo past a branch you just diverged from. This is the single
+// choke point for that rule; replay (redo) pushes onto undoHistory directly.
+function pushUndo(action) {
+    undoHistory.push(action);
+    redoHistory.length = 0;
+}
 
 // Grid + canvas flags
 let currentGrid = null;
@@ -501,7 +510,7 @@ function addCharacterToCanvas(text, characterKey, x, y) {
     }
 
     // Record the addition for undo functionality
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: textObj.toJSON(['id', 'characterKey', 'left', 'top', 'angle']), // Store necessary properties
         id: textObj.id,

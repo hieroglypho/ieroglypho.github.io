@@ -58,21 +58,8 @@ canvas.on('mouse:move', function (options) {
         vpt[4] += deltaX;
         vpt[5] += deltaY;
 
-        // Update background image position if it exists
-        const bgImage = document.getElementById('bgImage');
-        if (bgImage && bgImage.style.display !== 'none') {
-            // Accumulate the offsets
-            bgOffsetX += deltaX;
-            bgOffsetY += deltaY;
-
-            // Get current scale
-            const currentTransform = bgImage.style.transform;
-            const matches = currentTransform.match(/scale\(([\d.]+)\)/);
-            const scale = matches ? parseFloat(matches[1]) : 1;
-
-            // Apply accumulated offsets
-            bgImage.style.transform = `translate(calc(-50% + ${bgOffsetX}px), calc(-50% + ${bgOffsetY}px)) scale(${scale})`;
-        }
+        // Keep the background image gliding along with the pan.
+        panBackgroundImage(deltaX, deltaY);
 
         lastPosX = options.e.clientX;
         lastPosY = options.e.clientY;
@@ -91,7 +78,7 @@ canvas.on('mouse:up', function (options) {
     if (initialMoveState !== null) {
         const obj = options.target;
         if (obj) {
-            undoHistory.push({
+            pushUndo({
                 type: 'modify',  // Changed from 'move' to 'modify' to match switch case
                 actionType: 'moving',
                 state: initialMoveState
@@ -120,6 +107,112 @@ canvas.on('mouse:wheel', function (opt) {
     opt.e.preventDefault();
     opt.e.stopPropagation();
 });
+
+// Slide the background-image DOM layer by (dx, dy) screen px so it tracks a
+// viewport pan. Shared by the Alt-drag pan and the two-finger touch pan; reads
+// the current scale out of the inline transform so a zoomed bg stays put.
+function panBackgroundImage(dx, dy) {
+    const bgImage = document.getElementById('bgImage');
+    if (!bgImage || bgImage.style.display === 'none') return;
+    bgOffsetX += dx;
+    bgOffsetY += dy;
+    const matches = bgImage.style.transform.match(/scale\(([\d.]+)\)/);
+    const scale = matches ? parseFloat(matches[1]) : 1;
+    bgImage.style.transform =
+        `translate(calc(-50% + ${bgOffsetX}px), calc(-50% + ${bgOffsetY}px)) scale(${scale})`;
+}
+
+// =============================================================================
+// Touch gestures (tablets): two-finger pinch-zoom + two-finger pan
+// =============================================================================
+// Fabric 5's optional gesture module isn't in the CDN build, so we drive the
+// viewport straight off native touch events, reusing the same maths as the
+// wheel-zoom and Alt-drag-pan above. We act ONLY on two-finger touches; a single
+// finger is left untouched so Fabric's own tap-to-select and one-finger drag
+// keep working. Listeners sit on the wrapper in the CAPTURE phase and
+// stopPropagation on a two-finger event, so Fabric's handlers (bound to the
+// child upper-canvas) never see it — that's how we avoid two handlers fighting
+// over the same gesture without reaching for stopImmediatePropagation.
+(function initTouchGestures() {
+    if (!('ontouchstart' in window) && !(navigator.maxTouchPoints > 0)) return;
+    const wrapper = canvas.wrapperEl;
+    const upper = canvas.upperCanvasEl;
+    if (!wrapper || !upper) return;
+
+    // Bigger invisible hit area on the selection handles for fingertips (the
+    // 24px default is fiddly on glass); desktop corner visuals are unchanged.
+    fabric.Object.prototype.touchCornerSize = 40;
+
+    let active = false;       // a two-finger gesture is in progress
+    let lastDist = 0;         // finger spread on the previous move (for zoom ratio)
+    let lastMid = { x: 0, y: 0 };  // pinch midpoint on the previous move (for pan)
+
+    const spread = (a, b) => Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+    const midpoint = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+
+    function onStart(e) {
+        if (e.touches.length !== 2) return;   // single touch → hand off to Fabric
+        active = true;
+        canvas.selection = false;
+        lastDist = spread(e.touches[0], e.touches[1]);
+        lastMid = midpoint(e.touches[0], e.touches[1]);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function onMove(e) {
+        if (!active || e.touches.length !== 2) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const dist = spread(e.touches[0], e.touches[1]);
+        const mid = midpoint(e.touches[0], e.touches[1]);
+        const rect = upper.getBoundingClientRect();
+
+        // Pinch → zoom about the midpoint, same clamp as the wheel (0.1–5).
+        if (lastDist > 0) {
+            let zoom = canvas.getZoom() * (dist / lastDist);
+            zoom = Math.min(Math.max(0.1, zoom), 5);
+            canvas.zoomToPoint({ x: mid.x - rect.left, y: mid.y - rect.top }, zoom);
+        }
+
+        // Two-finger drag → pan the viewport (the midpoint's screen travel).
+        const dx = mid.x - lastMid.x;
+        const dy = mid.y - lastMid.y;
+        if (dx || dy) {
+            const vpt = canvas.viewportTransform;
+            vpt[4] += dx;
+            vpt[5] += dy;
+            panBackgroundImage(dx, dy);
+        }
+
+        lastDist = dist;
+        lastMid = mid;
+        canvas.requestRenderAll();
+        drawGridThrottled();
+    }
+
+    function onEnd(e) {
+        if (!active) return;
+        // Keep swallowing until both fingers are up so the lifting finger can't
+        // kick off a stray Fabric drag mid-gesture.
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.touches.length < 2) {
+            active = false;
+            lastDist = 0;
+            canvas.selection = true;
+            requestAnimationFrame(drawGrid);
+        }
+    }
+
+    const opts = { capture: true, passive: false };
+    wrapper.addEventListener('touchstart', onStart, opts);
+    wrapper.addEventListener('touchmove', onMove, opts);
+    wrapper.addEventListener('touchend', onEnd, opts);
+    wrapper.addEventListener('touchcancel', onEnd, opts);
+})();
+
 canvas.on('drop', function (options) {
     options.e.preventDefault();
     canvasModified = true;
@@ -280,7 +373,7 @@ canvas.on('object:modified', function (options) {
     canvasModified = true;
 
     if (initialRotationState !== null) {
-        undoHistory.push({
+        pushUndo({
             type: 'modify',
             actionType: 'rotation',
             state: initialRotationState
@@ -289,7 +382,7 @@ canvas.on('object:modified', function (options) {
     }
 
     if (initialScaleState !== null) {
-        undoHistory.push({
+        pushUndo({
             type: 'modify',
             actionType: 'scaling',
             state: initialScaleState
@@ -298,7 +391,7 @@ canvas.on('object:modified', function (options) {
     }
 
     if (initialMoveState !== null) {
-        undoHistory.push({
+        pushUndo({
             type: 'modify',
             actionType: 'moving',
             state: initialMoveState
@@ -308,99 +401,177 @@ canvas.on('object:modified', function (options) {
 });
 
 // =============================================================================
-// Undo
+// Undo / Redo
 // =============================================================================
+// Undo and redo are one self-inverting operation: revertAction(action) undoes
+// `action` on the canvas and RETURNS the inverse action. Undo pops undoHistory,
+// reverts, and parks the inverse on redoHistory; redo does the exact mirror.
+// Reverting the inverse re-applies the original, so the two stacks stay in sync
+// without any per-direction bookkeeping.
+
 function undoLastAction() {
     if (undoHistory.length === 0) return;
+    const inverse = revertAction(undoHistory.pop());
+    if (inverse) redoHistory.push(inverse);   // raw push: do NOT clear redo here
+    canvas.requestRenderAll();
+}
 
-    const lastAction = undoHistory.pop();
-    console.log('Undoing action:', lastAction);
+function redoLastAction() {
+    if (redoHistory.length === 0) return;
+    const inverse = revertAction(redoHistory.pop());
+    if (inverse) undoHistory.push(inverse);   // raw push: a replay is not a new action
+    canvas.requestRenderAll();
+}
 
-    switch (lastAction.type) {
+// Reverse one action and return the action that reverses *this* reversal.
+function revertAction(action) {
+    switch (action.type) {
+        case 'batch': {
+            // A compound step (e.g. a multi-select delete). Revert sub-actions in
+            // reverse order; the collected inverses form the batch that re-applies
+            // them — reverting it walks reverse again, restoring the original order.
+            const inverses = [];
+            for (let i = action.actions.length - 1; i >= 0; i--) {
+                const inv = revertAction(action.actions[i]);
+                if (inv) inverses.push(inv);
+            }
+            return { type: 'batch', actions: inverses };
+        }
+
         case 'add':
-            const objectToRemove = canvas.getObjects().find(obj => obj.id === lastAction.id);
-            if (objectToRemove) {
-                canvas.remove(objectToRemove);
-                const nameSpan = document.getElementById(`name-${lastAction.id}`);
-                if (nameSpan) {
-                    nameSpan.remove();
-                }
-            }
-            break;
-
-        case 'modify':
-            if (['rotation', 'scaling', 'moving'].includes(lastAction.actionType)) {
-                if (lastAction.state.type === 'group') {
-                    const objectsToGroup = [];
-
-                    // First pass: Reset all objects to their individual states
-                    lastAction.state.objects.forEach(obj => {
-                        const fabricObj = canvas.getObjects().find(o => o.id === obj.id);
-                        if (fabricObj) {
-                            fabricObj.set({
-                                left: obj.state.left,
-                                top: obj.state.top,
-                                scaleX: obj.state.scaleX,
-                                scaleY: obj.state.scaleY,
-                                angle: obj.state.angle,
-                                flipX: obj.state.flipX,
-                                flipY: obj.state.flipY
-                            });
-                            fabricObj.setCoords();
-                            objectsToGroup.push(fabricObj);
-                        }
-                    });
-
-                    if (objectsToGroup.length > 0) {
-                        canvas.discardActiveObject();
-
-                        // Create new group with objects in their original states
-                        const group = new fabric.ActiveSelection(objectsToGroup, {
-                            canvas: canvas,
-                            ...lastAction.state.groupState  // Apply all group properties at once
-                        });
-
-                        canvas.setActiveObject(group);
-                        canvas.requestRenderAll();
-                    }
-                } else if (lastAction.state.type === 'single') {
-                    const objectToModify = canvas.getObjects().find(obj => obj.id === lastAction.state.id);
-                    if (objectToModify) {
-                        objectToModify.set(lastAction.state.state);
-                        objectToModify.setCoords();
-                    }
-                }
-            }
-            break;
+            removeObjectById(action.id);
+            // Re-adding it is exactly a 'delete' undo, so hand back a delete.
+            return { type: 'delete', id: action.id, object: action.object };
 
         case 'delete':
-            fabric.util.enlivenObjects([lastAction.object], (enlivened) => {
-                const restored = enlivened && enlivened[0];
-                if (!restored) return;
-                restored.id = lastAction.id;
-                if (lastAction.object.characterKey) {
-                    restored.characterKey = lastAction.object.characterKey;
-                }
-                canvas.add(restored);
+            restoreObject(action.object, action.id);
+            return { type: 'add', id: action.id, object: action.object };
 
-                const pastedNamesDiv = document.getElementById('pastedNames');
-                if (pastedNamesDiv && lastAction.object.characterKey) {
-                    const nameSpan = document.createElement('span');
-                    nameSpan.id = `name-${lastAction.id}`;
-                    nameSpan.textContent = lastAction.object.characterKey + ', ';
-                    pastedNamesDiv.appendChild(nameSpan);
-                }
-                canvas.requestRenderAll();
-            });
-            break;
+        case 'modify': {
+            if (!['rotation', 'scaling', 'moving'].includes(action.actionType)) return null;
+            // Capture where the objects are NOW (before we move them) so the
+            // inverse can bring them back, then apply the recorded target state.
+            const inverse = snapshotModify(action);
+            if (action.state.type === 'snapshot') applySnapshot(action.state.objects);
+            else applyLegacyModify(action.state);
+            return inverse;
+        }
 
         default:
-            console.warn('Unknown action type:', lastAction.type);
-            undoHistory.push(lastAction);
-            return;
+            console.warn('Unknown action type:', action.type);
+            return null;
     }
+}
 
-    canvas.requestRenderAll();
+// --- shared canvas ops -------------------------------------------------------
+
+function removeObjectById(id) {
+    const obj = canvas.getObjects().find(o => o.id === id);
+    if (obj) canvas.remove(obj);
+    const nameSpan = document.getElementById(`name-${id}`);
+    if (nameSpan) nameSpan.remove();
+}
+
+function restoreObject(serialized, id) {
+    fabric.util.enlivenObjects([serialized], (enlivened) => {
+        const restored = enlivened && enlivened[0];
+        if (!restored) return;
+        restored.id = id;
+        if (serialized.characterKey) restored.characterKey = serialized.characterKey;
+        canvas.add(restored);
+
+        const pastedNamesDiv = document.getElementById('pastedNames');
+        if (pastedNamesDiv && serialized.characterKey) {
+            const nameSpan = document.createElement('span');
+            nameSpan.id = `name-${id}`;
+            nameSpan.textContent = serialized.characterKey + ', ';
+            pastedNamesDiv.appendChild(nameSpan);
+        }
+        canvas.requestRenderAll();
+    });
+}
+
+// --- modify: normalize every shape to a flat per-object snapshot -------------
+// Recorded modify entries come in three shapes (single / group / move-group),
+// so rather than re-derive each one we read the live transform straight off the
+// canvas. Discard any active selection first so coordinates are canvas-absolute,
+// not group-relative.
+
+function modifyActionIds(action) {
+    const s = action.state;
+    if (s.type === 'single') return [s.id];
+    return (s.objects || []).map(o => o.id);
+}
+
+function snapshotModify(action) {
+    canvas.discardActiveObject();
+    const objects = [];
+    modifyActionIds(action).forEach(id => {
+        const o = canvas.getObjects().find(obj => obj.id === id);
+        if (o) objects.push({
+            id, left: o.left, top: o.top, scaleX: o.scaleX, scaleY: o.scaleY,
+            angle: o.angle, flipX: o.flipX, flipY: o.flipY
+        });
+    });
+    return { type: 'modify', actionType: action.actionType,
+             state: { type: 'snapshot', objects } };
+}
+
+function applySnapshot(objects) {
+    objects.forEach(s => {
+        const obj = canvas.getObjects().find(o => o.id === s.id);
+        if (!obj) return;
+        obj.set({ left: s.left, top: s.top, scaleX: s.scaleX, scaleY: s.scaleY,
+                  angle: s.angle, flipX: s.flipX, flipY: s.flipY });
+        obj.setCoords();
+    });
+}
+
+// The original group/single restore, used only on the first undo of a recorded
+// action (every subsequent step on either stack is a snapshot).
+function applyLegacyModify(state) {
+    if (state.type === 'group') {
+        const objectsToGroup = [];
+        state.objects.forEach(obj => {
+            const fabricObj = canvas.getObjects().find(o => o.id === obj.id);
+            if (fabricObj) {
+                // Two recorded shapes exist: mirror/align nest props under
+                // `.state`, group-move stores them flat. Both hold the child's
+                // group-relative left/top, which the ActiveSelection-at-groupState
+                // reconstruction below converts back to absolute — so tolerating
+                // both shapes here is all group-move undo needed (it used to throw
+                // on `obj.state.left`). Verified round-trip: see BUG-2 in BUGS.md.
+                const s = obj.state || obj;
+                fabricObj.set({
+                    left: s.left,
+                    top: s.top,
+                    scaleX: s.scaleX,
+                    scaleY: s.scaleY,
+                    angle: s.angle,
+                    flipX: s.flipX,
+                    flipY: s.flipY
+                });
+                fabricObj.setCoords();
+                objectsToGroup.push(fabricObj);
+            }
+        });
+
+        if (objectsToGroup.length > 0) {
+            canvas.discardActiveObject();
+            const group = new fabric.ActiveSelection(objectsToGroup, {
+                canvas: canvas,
+                ...state.groupState
+            });
+            canvas.setActiveObject(group);
+            canvas.requestRenderAll();
+        }
+    } else if (state.type === 'single') {
+        const objectToModify = canvas.getObjects().find(obj => obj.id === state.id);
+        if (objectToModify) {
+            objectToModify.set(state.state);
+            objectToModify.setCoords();
+        }
+    }
 }
 
 function deleteSelectedObjects() {
@@ -411,7 +582,7 @@ function deleteSelectedObjects() {
             const objectState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
             objectState.characterKey = obj.characterKey; // Preserve the character key if it exists
 
-            undoHistory.push({
+            pushUndo({
                 type: 'delete',
                 id: obj.id,
                 object: objectState
@@ -452,17 +623,28 @@ function removeCharacterFromCanvas(object) {
         nameSpan.remove();
     }
 }
-function storeAndRemoveCharacter(obj) {
+// Record a list of sub-actions as ONE undo step (a lone action stays flat, so a
+// single delete is a single 'delete' entry — not a one-item batch).
+function recordBatch(actions) {
+    if (actions.length === 0) return;
+    pushUndo(actions.length === 1 ? actions[0] : { type: 'batch', actions });
+}
+
+// Remove an object (sweeping any three-line block siblings) and append the
+// resulting 'delete' sub-actions to `actions`. Does NOT touch the undo stack —
+// the caller coalesces everything into one step via recordBatch, so a
+// multi-select delete (or a swept block) undoes in a single Ctrl+Z.
+function collectDeletion(obj, actions) {
     if (!obj || obj._pageGuide) return;   // never delete the page guide
     // Three-line block: deleting any row deletes its siblings too. Guard against
     // re-entry so the sweep doesn't loop forever when called per-sibling.
-    if (obj && obj.blockId && !obj._blockSweeping) {
+    if (obj.blockId && !obj._blockSweeping) {
         const siblings = getBlockSiblings(obj);
         if (siblings.length) {
             obj._blockSweeping = true;
             siblings.forEach(s => {
                 s._blockSweeping = true;
-                storeAndRemoveCharacter(s);
+                collectDeletion(s, actions);
             });
         }
     }
@@ -471,15 +653,15 @@ function storeAndRemoveCharacter(obj) {
     const objectState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
     objectState.characterKey = obj.characterKey; // Preserve the character key
 
-    // Add to undo history
-    undoHistory.push({
-        type: 'delete',
-        id: obj.id,
-        object: objectState
-    });
-
-    // Call the existing remove function
+    actions.push({ type: 'delete', id: obj.id, object: objectState });
     removeCharacterFromCanvas(obj);
+}
+
+// Remove one object as a single undo step (keeps existing single-object callers).
+function storeAndRemoveCharacter(obj) {
+    const actions = [];
+    collectDeletion(obj, actions);
+    recordBatch(actions);
 }
 // =============================================================================
 // Mirror + alignment
@@ -537,7 +719,7 @@ function mirrorTextObject() {
                 });
             }
 
-            undoHistory.push({
+            pushUndo({
                 type: 'modify',
                 actionType: 'moving',
                 state: {
@@ -552,7 +734,7 @@ function mirrorTextObject() {
             obj.set('flipX', !obj.flipX);
             obj.setCoords();
 
-            undoHistory.push({
+            pushUndo({
                 type: 'modify',
                 actionType: 'moving',
                 state: {
@@ -645,7 +827,7 @@ function alignObjects(direction = 'horizontal') {
     });
 
     if (activeObjects.length > 1 || capturedGroupState) {
-        undoHistory.push({
+        pushUndo({
             type: 'modify',
             actionType: 'moving',
             state: {
@@ -655,7 +837,7 @@ function alignObjects(direction = 'horizontal') {
             }
         });
     } else {
-        undoHistory.push({
+        pushUndo({
             type: 'modify',
             actionType: 'moving',
             state: {

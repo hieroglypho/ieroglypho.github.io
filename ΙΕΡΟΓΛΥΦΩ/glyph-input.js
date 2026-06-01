@@ -42,7 +42,7 @@ function addKeyboardText() {
             activeTextObject.text = text;
             activeTextObject.fontSize = fontSize;
             canvas.renderAll();
-            undoHistory.push({
+            pushUndo({
                 type: 'modify',
                 actionType: 'moving',
                 state: {
@@ -66,7 +66,7 @@ function addKeyboardText() {
             canvas.add(textBox);
             canvas.setActiveObject(textBox);
 
-            undoHistory.push({
+            pushUndo({
                 type: 'add',
                 object: textBox.toJSON(),
                 id: textBox.id
@@ -367,7 +367,7 @@ function addGlyphTextRun(text, x, y, fontSize) {
     canvas.add(textRun);
     canvas.setActiveObject(textRun);
 
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: textRun.toJSON(['id', 'isGlyphTextRun']),
         id: textRun.id
@@ -1112,7 +1112,7 @@ function buildLacunaBox(x, y, w, h) {
 function addMdCAuxObject(obj) {
     obj.id = generateUniqueId();
     canvas.add(obj);
-    undoHistory.push({ type: 'add', object: obj.toJSON(['id']), id: obj.id });
+    pushUndo({ type: 'add', object: obj.toJSON(['id']), id: obj.id });
     return obj;
 }
 

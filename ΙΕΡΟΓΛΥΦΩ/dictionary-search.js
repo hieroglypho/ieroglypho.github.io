@@ -141,6 +141,27 @@ async function handleFileUpload(event) {
 function initializeSearchListeners() {
     const searchInput = document.getElementById('dictionarySearchInput');
     searchInput.addEventListener('keydown', handleSearchKeydown);
+    initializeResultClickInsert();
+}
+
+// Click a glyph run in the results to drop those signs onto the canvas, reusing
+// the same MdC layout pipeline as a drag-drop from the results. One delegated
+// listener on the (persistent) results container covers every re-render. The
+// `handleMdCInput` guard keeps this inert if the file is ever loaded without the
+// editor present.
+function initializeResultClickInsert() {
+    const resultDisplay = document.getElementById('resultDisplay');
+    if (!resultDisplay) return;
+    resultDisplay.addEventListener('click', (e) => {
+        const run = e.target.closest('.large-text');
+        if (!run) return;
+        const glyphs = run.textContent.trim();
+        if (glyphs && typeof handleMdCInput === 'function') {
+            handleMdCInput(glyphs);
+            run.classList.add('inserted-flash');
+            setTimeout(() => run.classList.remove('inserted-flash'), 350);
+        }
+    });
 }
 
 // Get or create regex patterns
@@ -176,7 +197,7 @@ function processLineSegments(line) {
             if (segment.startsWith('<time>') || segment.startsWith('<i>')) {
                 return segment;
             }
-            return segment.replace(/([^\x00-\x7F]+)/g, '<span class="large-text">$1</span>');
+            return segment.replace(/([^\x00-\x7F]+)/g, '<span class="large-text" title="Click to add these signs to the canvas">$1</span>');
         })
         .join('');
 }

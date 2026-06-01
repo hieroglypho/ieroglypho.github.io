@@ -64,7 +64,7 @@ function setupTextSubmission(x, y) {
     textBox.enterEditing();
     textBox.selectAll();
 
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: textBox.toJSON(),
         id: textBox.id
@@ -117,7 +117,7 @@ function addCartouche() {
     canvas.add(cartouche);
 
     // Push to undoHistory instead of history
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: cartouche.toJSON(['id']),
         id: cartouche.id
@@ -141,7 +141,7 @@ function addCircle() {
     canvas.add(circle);
 
     // Push to history with the generated ID
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: circle.toJSON(['id']), // Changed from rect to line
         id: circle.id
@@ -172,7 +172,7 @@ function addLine() {
     canvas.add(line);
 
     // Push to history with the generated ID
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: line.toJSON(['id']), // Changed from rect to line
         id: line.id
@@ -218,7 +218,7 @@ function addArrow() {
     canvas.add(group);
 
     // Push to history with the generated ID
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: group.toJSON(['id']),
         id: group.id
@@ -258,7 +258,7 @@ function addSquareBracket() {
     pair.forEach(group => {
         group.id = generateUniqueId();
         canvas.add(group);
-        undoHistory.push({ type: 'add', object: group.toJSON(['id']), id: group.id });
+        pushUndo({ type: 'add', object: group.toJSON(['id']), id: group.id });
     });
 
     canvas.requestRenderAll();
@@ -304,7 +304,7 @@ function addCustomRect(options = {}) {
     canvas.add(rect);
 
     // Push to history with the generated ID
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: rect.toJSON(['id']), // Include the id in the JSON
         id: rect.id
@@ -332,7 +332,7 @@ function addPencilLine() {
         const path = e.path;
         path.id = generateUniqueId();
 
-        undoHistory.push({
+        pushUndo({
             type: 'add',
             object: path.toJSON(['id']),
             id: path.id
@@ -380,7 +380,7 @@ function addSpeechBubble() {
     canvas.add(bubble);
 
     // Update history
-    undoHistory.push({
+    pushUndo({
         type: 'add',
         object: bubble.toJSON(['id']),
         id: bubble.id

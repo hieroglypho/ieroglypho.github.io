@@ -146,7 +146,7 @@ function initBackgroundImage() {
         }
 
         // Add to undo history
-        undoHistory.push({
+        pushUndo({
             type: 'add',
             object: img.toJSON(['id']),
             id: img.id
@@ -214,7 +214,7 @@ bgImageInput.setAttribute('capture', 'environment');
         const activeObject = canvas.getActiveObject();
         if (activeObject && activeObject.type === 'image') {
             // Store the removal in undo history
-            undoHistory.push({
+            pushUndo({
                 type: 'delete',
                 object: activeObject.toJSON(['id']),
                 id: activeObject.id
@@ -672,15 +672,21 @@ window.addEventListener('keydown', function (e) {
         return;
     }
 
-    // Delete objects (Delete/Backspace)
+    // Delete objects (Delete/Backspace) — coalesce the whole selection (and any
+    // swept block siblings) into ONE undo step so a single Ctrl+Z brings it back.
     if (!isInTextField && (e.key === 'Delete' || e.key === 'Backspace')) {
         e.preventDefault();
+        const actions = [];
         if (activeGroup.length) {
-            activeGroup.forEach(storeAndRemoveCharacter);
+            // Discard the selection FIRST: inside an ActiveSelection each child's
+            // left/top is group-relative, so Fabric must restore absolute coords
+            // before we snapshot them — otherwise undo drops them at the top-left.
+            canvas.discardActiveObject();
+            activeGroup.forEach(o => collectDeletion(o, actions));
         } else if (activeObject) {
-            storeAndRemoveCharacter(activeObject);
+            collectDeletion(activeObject, actions);
         }
-        canvas.discardActiveObject();
+        recordBatch(actions);
         canvas.requestRenderAll();
         return;
     }
@@ -728,9 +734,14 @@ window.addEventListener('keydown', function (e) {
     }
     
     
-        // Undo (Ctrl + Z)
-        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+        // Undo (Ctrl + Z) / Redo (Ctrl + Shift + Z, or Ctrl + Y)
+        const undoKey = e.key.toLowerCase();
+        if (e.ctrlKey && undoKey === 'z' && !e.shiftKey) {
             undoLastAction();
+            return;
+        }
+        if (e.ctrlKey && (undoKey === 'y' || (undoKey === 'z' && e.shiftKey))) {
+            redoLastAction();
             return;
         }
     });

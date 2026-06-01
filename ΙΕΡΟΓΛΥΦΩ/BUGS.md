@@ -14,30 +14,6 @@ _(none)_
 
 ## TODO
 
-### TODO-3 — redo (complete the undo pair)
-**Area:** `canvas-interactions.js` (`undoLastAction`, `undoHistory`), keybinding
-in `editor-init.js` (~L686, the Ctrl+Z handler). **Priority:** medium.
-
-Undo exists (action-based stack, Ctrl+Z) but there is **no redo**. Add a redo
-stack: push undone actions onto it, replay on Ctrl+Y / Ctrl+Shift+Z, and clear it
-on any new action.
-
-### TODO-4 — dictionary results: click-to-insert
-**Area:** `dictionary-search.js` (`renderResults`/`resultDisplay`), glyph-insert
-path in `glyph-input.js`. **Priority:** medium.
-
-Dictionary results are read-only — users search, then must re-type the signs in
-the keyboard. Make a result (or its Gardiner codes) **clickable to drop those
-signs straight onto the canvas**, reusing the existing glyph-insert pipeline.
-
-### TODO-5 — touch gestures ("Track 2", BIG BET / later)
-**Area:** `canvas-interactions.js` viewport transform; tablet drawer (already
-shipped, see [[responsive-track1]] in memory). **Priority:** later.
-
-Continuation of the responsive work: pinch-to-zoom, two-finger pan onto the
-existing `viewportTransform`, and larger touch targets for selection handles.
-Needs real-device iteration; not started.
-
 ### TODO-6 — MdC round-trip (BIG BET / later)
 **Area:** MdC engine (Tiers 1–5 parse MdC → layout; see `MDC-TIERS.md`).
 **Priority:** later.
@@ -49,6 +25,89 @@ who work in MdC notation.
 ---
 
 ## Fixed
+
+### TODO-5 — touch gestures (pinch-zoom + two-finger pan)
+**Fixed:** 2026-06-01. **Area:** `canvas-interactions.js` (`initTouchGestures`,
+extracted `panBackgroundImage`). **Needs:** real-device confirmation (no touch
+hardware in the dev env). Continuation of [[responsive-track1]] (tablet drawer
+already shipped).
+
+Fabric 5's optional gesture module isn't in the CDN build, so the viewport is
+driven straight off native touch events, reusing the existing maths: **pinch →
+`zoomToPoint`** about the pinch midpoint (same 0.1–5 clamp as the wheel),
+**two-finger drag → viewport pan** (same as Alt-drag, via the new shared
+`panBackgroundImage` helper that also nudges the bg layer). We act **only** on
+two-finger touches — a single finger is left to Fabric so tap-select and
+one-finger drag are untouched. The fight between our handlers and Fabric's own
+touch handlers is avoided cleanly: listeners sit on `canvas.wrapperEl` in the
+**capture phase** and `stopPropagation` on a two-finger event, so Fabric's
+handlers (bound to the child upper-canvas) never see it — no
+`stopImmediatePropagation`, no listener-order assumptions. Selection handles get
+a larger touch hit area (`touchCornerSize` 24→40) without changing desktop
+visuals. Gated behind a touch-capability check so desktops pay nothing.
+
+### BUG-2 — group-move undo restored wrong coords / threw
+**Fixed:** 2026-06-01. **Area:** `canvas-interactions.js` `applyLegacyModify`
+(group branch). **Verified:** Playwright round-trip (move multi-select → undo →
+redo) restores exact positions.
+
+A multi-select **drag** records each child flat (`{id, left, top, …}`) while the
+mirror/align path nests them under `.state`; the restore only read `obj.state.left`,
+so a group-move undo threw on `undefined`. Both shapes actually hold the child's
+*group-relative* left/top, and the restore already rebuilds an ActiveSelection at
+the saved `groupState` — which converts group-relative back to absolute. So the
+whole fix is reading `obj.state || obj`: no coordinate math, undo lands every sign
+back in place (confirmed 200,200 / 360,240 round-trip to ±2px, redo re-applies).
+
+### BUG-3 — multi-select delete undid one object at a time
+**Fixed:** 2026-06-01. **Area:** `canvas-interactions.js` (`collectDeletion` +
+`recordBatch`, new `batch` case in `revertAction`), `editor-init.js` (Delete key).
+
+Deleting a multi-selection pushed one `delete` undo entry **per object**, so each
+Ctrl+Z restored only one. Introduced a compound `batch` action: the Delete
+handler now collects every sub-deletion (across the selection *and* any swept
+three-line block siblings) and records them as a single `batch` via
+`recordBatch`. `revertAction` reverts a batch's sub-actions in reverse order and
+returns the inverse batch, so undo/redo of a group delete is one symmetric step.
+A lone delete still records a flat `delete` (no one-item batch). The dead
+`deleteSelectedObjects` (no callers) was left as-is.
+
+Follow-on: restored signs were landing at the top-left because inside an
+ActiveSelection each child's `left`/`top` is group-relative; the Delete handler
+now calls `canvas.discardActiveObject()` **before** collecting, so Fabric writes
+absolute coords back and the snapshot (hence undo) keeps each sign in place.
+
+### TODO-4 — dictionary results: click-to-insert
+**Fixed:** 2026-06-01. **Area:** `dictionary-search.js`
+(`initializeResultClickInsert`, `processLineSegments`), `main.css` (`.large-text`).
+
+Each glyph run in the results (the `.large-text` spans) is now **clickable to
+drop those signs onto the canvas**, routed through the same `handleMdCInput`
+pipeline the drag-from-results path already used. Implemented as a single
+delegated `click` listener on the persistent `#resultDisplay` container, so it
+covers every re-render with no per-span wiring; guarded by a `typeof
+handleMdCInput` check so the file stays inert if loaded without the editor.
+Discoverability: spans get a pointer cursor + hover tint + a `title` tooltip, and
+a brief green flash confirms the insert. Granular by design — clicking one run
+inserts just that run, not the whole line.
+
+### TODO-3 — redo (complete the undo pair)
+**Fixed:** 2026-06-01. **Area:** `canvas-interactions.js` (undo/redo engine),
+`editor-core.js` (`redoHistory` + `pushUndo`), `editor-init.js` (keybinding),
+`help-content.html`.
+
+Undo and redo are now **one self-inverting operation**: `revertAction(action)`
+reverses `action` on the canvas and *returns the inverse* action. `undo` pops
+`undoHistory`, reverts, parks the inverse on `redoHistory`; `redo` is the exact
+mirror — so the stacks stay in sync with no per-direction bookkeeping. Recording
+any new action clears the redo stack through a single choke point, `pushUndo()`
+(all ~26 `undoHistory.push({…})` call sites were routed through it; internal stack
+juggling still pushes raw). `add`↔`delete` are natural inverses; `modify` is
+normalized to a flat per-object **snapshot** read live off the canvas
+(`discardActiveObject` first for absolute coords), which sidesteps the three
+inconsistent recorded shapes (single / group / move-group) and is more robust
+than the old group restore. Keys: **Ctrl+Z** undo, **Ctrl+Y** / **Ctrl+Shift+Z**
+redo. Surfaced a pre-existing group-move undo bug in the process — see BUG-2.
 
 ### TODO-2 — workspace autosave + save reminder
 **Fixed:** 2026-05-31. **Area:** `workspace.js` (autosave layer + extracted

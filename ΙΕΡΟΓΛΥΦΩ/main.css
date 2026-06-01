@@ -1229,6 +1229,16 @@ time {
 .large-text {
     font-size: 2em;
     font-weight: normal;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+.large-text:hover {
+    background-color: rgba(80, 140, 220, 0.18);
+}
+/* brief green confirmation that a click dropped the signs onto the canvas */
+.large-text.inserted-flash {
+    background-color: rgba(80, 200, 120, 0.45);
 }
 
 /* (Duplicate .file-upload-row / .upload-button / .file-status removed — see canonical defs near line 181.) */

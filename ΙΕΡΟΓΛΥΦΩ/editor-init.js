@@ -54,11 +54,15 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 function initCharDragstart() {
     const container = document.getElementById('charListContainer');
     container.addEventListener('dragstart', (event) => {
-        // Check if className exists and is a string
-        if (event.target.className && typeof event.target.className === 'string' &&
-            event.target.className.includes('char-container')) {
-            event.dataTransfer.setData('text/plain', event.target.querySelector('.char').textContent);
-        }
+        // Resolve the cell whether the grab landed on it or its inner .char/.name.
+        const cell = event.target.closest && event.target.closest('.char-container');
+        if (!cell || !container.contains(cell)) return;
+        // Defend against a stray page text selection hijacking the drag: without
+        // this, a selection (e.g. from Ctrl+A) becomes the drag payload + ghost.
+        const sel = window.getSelection && window.getSelection();
+        if (sel && sel.rangeCount) sel.removeAllRanges();
+        event.dataTransfer.setData('text/plain', cell.querySelector('.char').textContent);
+        event.dataTransfer.effectAllowed = 'copy';
     }, false);
 
     // Click-to-select: highlight the clicked palette cell, clearing any prior
@@ -554,6 +558,15 @@ window.addEventListener('keydown', function (e) {
         document.body.appendChild(indicator);
         setTimeout(() => indicator.remove(), 2000);
     };
+
+    // Select-all (Ctrl/Cmd+A): the browser default selects all page text, which
+    // the next palette drag then hijacks as its payload + ghost image (dragging
+    // "the whole palette" and dropping random glyphs). Outside a text field we
+    // suppress it so the drag always carries just the glyph under the cursor.
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !isInTextField) {
+        e.preventDefault();
+        return;
+    }
 
     // Cycle through objects (Ctrl + Arrow Keys)
     if (e.ctrlKey && ['ArrowRight', 'ArrowLeft'].includes(e.key)) {

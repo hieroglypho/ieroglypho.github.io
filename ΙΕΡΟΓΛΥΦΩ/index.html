@@ -134,11 +134,6 @@
 
             <!-- Modified search section -->
             <div id="secondarySearch">
-                <div class="file-upload-row">
-                    <input type="file" id="dictionaryFileInput" accept=".txt" class="hidden-input">
-                    <button onclick="triggerFileInput()" class="upload-button">Upload Dictionary</button>
-                    <span id="fileStatus" class="file-status"></span>
-                </div>
                 <div class="search-row">
                     <input type="text" id="dictionarySearchInput" placeholder="Search terms (e.g., A1 Z2 or rHty)"
                         class="search-input">
@@ -238,6 +233,8 @@
 
     <!-- Right-click context menu for the canvas. Hidden until shown via JS. -->
     <div id="canvasCtxMenu" class="canvas-ctx-menu hidden">
+        <button data-action="identify">𓂀 What does this say?</button>
+        <hr class="ctx-divider">
         <button data-action="copy">📋 Copy image</button>
         <button data-action="png">💾 Save as PNG</button>
         <button data-action="svg">💾 Save as SVG</button>
@@ -455,5 +452,6 @@
         <script defer src="glyph-input.js"></script>
         <script defer src="editor-init.js"></script>
         <script defer src="dictionary-search.js"></script>
+        <script defer src="word-finder.js"></script>
 
 </body>

@@ -268,8 +268,13 @@ function initCanvasContextMenu() {
     };
     const close = () => menu.classList.add('hidden');
 
+    // The glyph under the cursor when the menu opened, so "What does this say?"
+    // can read the right-clicked sign even when nothing is selected.
+    let ctxTarget = null;
+
     workspace.addEventListener('contextmenu', (e) => {
         e.preventDefault();
+        try { ctxTarget = canvas.findTarget(e); } catch (_) { ctxTarget = null; }
         open(e.clientX, e.clientY);
     });
 
@@ -279,6 +284,14 @@ function initCanvasContextMenu() {
         e.stopPropagation();
         close();
         switch (btn.dataset.action) {
+            case 'identify': {
+                // Prefer an active selection; else the glyph that was clicked;
+                // else fall back to the whole canvas (identifySelection's default).
+                const active = canvas.getActiveObjects ? canvas.getActiveObjects() : [];
+                const objs = active.length ? active : (ctxTarget ? [ctxTarget] : null);
+                if (typeof identifySelection === 'function') identifySelection(objs);
+                break;
+            }
             case 'copy': copyCanvasImage(); break;
             case 'png':  saveToPNG();       break;
             case 'svg':  saveToSVG();       break;

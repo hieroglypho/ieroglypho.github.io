@@ -2,77 +2,54 @@
 let processedDictionary = null;
 let cachedRegex = { input: '', exact: null, loose: null };
 
-// IndexedDB persistence for the uploaded dictionary so the user doesn't
-// need to re-upload on every session.
-const DICT_DB = 'hieroDict';
-const DICT_STORE = 'files';
-const DICT_KEY = 'lastDictionary';
-
-function openDictDB() {
-    return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DICT_DB, 1);
-        req.onupgradeneeded = () => req.result.createObjectStore(DICT_STORE);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-    });
-}
-
-async function saveDictToDB(name, content) {
-    try {
-        const db = await openDictDB();
-        await new Promise((resolve, reject) => {
-            const tx = db.transaction(DICT_STORE, 'readwrite');
-            tx.objectStore(DICT_STORE).put({ name, content, savedAt: Date.now() }, DICT_KEY);
-            tx.oncomplete = resolve;
-            tx.onerror = () => reject(tx.error);
-        });
-        db.close();
-    } catch (e) {
-        console.warn('Could not cache dictionary:', e);
-    }
-}
-
-async function loadDictFromDB() {
-    try {
-        const db = await openDictDB();
-        const record = await new Promise((resolve, reject) => {
-            const tx = db.transaction(DICT_STORE, 'readonly');
-            const req = tx.objectStore(DICT_STORE).get(DICT_KEY);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-        });
-        db.close();
-        return record || null;
-    } catch (e) {
-        console.warn('Could not read cached dictionary:', e);
-        return null;
-    }
-}
-
-// Trigger file input
-function triggerFileInput() {
-    document.getElementById('dictionaryFileInput').click();
-}
+// The dictionary is bundled with the app and loaded automatically — there is no
+// user upload. It lives at the site root; the editor sits one level down in
+// ΙΕΡΟΓΛΥΦΩ/, hence the '../'.
+const DICT_URL = '../dictionary.txt';
 
 // Initialize the application
 function initializeApp() {
-    initializeFileUpload();
     initializeSearchListeners();
     initializeResultsResizer();
-    restoreCachedDictionary();
+    loadBundledDictionary();
 }
 
-async function restoreCachedDictionary() {
-    const record = await loadDictFromDB();
-    if (!record || !record.content) return;
-    processedDictionary = record.content.split('\n');
-    const fileStatus = document.getElementById('fileStatus');
+// Fetch the bundled dictionary once on startup and enable search when it's ready.
+// The file is static, so the browser's HTTP cache keeps repeat visits cheap.
+async function loadBundledDictionary() {
     const searchButton = document.querySelector('.search-button');
-    if (fileStatus) {
-        fileStatus.textContent =
-            `Loaded (cached): ${record.name} (${processedDictionary.length.toLocaleString()} lines)`;
+    const resultDisplay = document.getElementById('resultDisplay');
+    if (searchButton) searchButton.disabled = true;
+
+    try {
+        const res = await fetch(DICT_URL);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        processedDictionary = text.split('\n');
+        if (searchButton) searchButton.disabled = false;
+        // Show the entry count as a quiet placeholder in the results panel; it
+        // fades the first time the user focuses the search box.
+        if (resultDisplay) {
+            const entries = processedDictionary.filter(l => l && l[0] !== '#').length;
+            resultDisplay.innerHTML =
+                `<div class="dict-ready-note">𓂀 ${entries.toLocaleString()} dictionary entries ready</div>`;
+        }
+    } catch (e) {
+        console.error('Could not load dictionary:', e);
+        if (resultDisplay) {
+            resultDisplay.innerHTML =
+                '<div class="dict-ready-note">Could not load the dictionary — please reload the page.</div>';
+        }
+        processedDictionary = null;
     }
-    if (searchButton) searchButton.disabled = false;
+}
+
+// Fade the entry-count placeholder out the first time the user engages search.
+function fadeDictReadyNote() {
+    const note = document.querySelector('#resultDisplay .dict-ready-note');
+    if (!note || note.classList.contains('fade-out')) return;
+    note.classList.add('fade-out');
+    note.addEventListener('transitionend', () => note.remove(), { once: true });
 }
 
 // Drag handle: pulling up shrinks the character list, growing the results panel below it.
@@ -104,43 +81,11 @@ function initializeResultsResizer() {
     });
 }
 
-// File upload initialization
-function initializeFileUpload() {
-    const fileInput = document.getElementById('dictionaryFileInput');
-    const fileStatus = document.getElementById('fileStatus');
-    const searchButton = document.querySelector('.search-button');
-    
-    fileInput.addEventListener('change', handleFileUpload);
-    searchButton.disabled = true;
-}
-
-// Handle file upload
-async function handleFileUpload(event) {
-    const file = event.target.files[0];
-    const fileStatus = document.getElementById('fileStatus');
-    const searchButton = document.querySelector('.search-button');
-    
-    if (!file) return;
-    
-    try {
-        fileStatus.textContent = 'Loading dictionary...';
-        const content = await file.text();
-        processedDictionary = content.split('\n');
-        fileStatus.textContent = `Loaded: ${file.name} (${processedDictionary.length.toLocaleString()} lines)`;
-        searchButton.disabled = false;
-        saveDictToDB(file.name, content);
-    } catch (error) {
-        console.error('Error loading file:', error);
-        fileStatus.textContent = 'Error loading dictionary file';
-        searchButton.disabled = true;
-        processedDictionary = null;
-    }
-}
-
 // Initialize search listeners
 function initializeSearchListeners() {
     const searchInput = document.getElementById('dictionarySearchInput');
     searchInput.addEventListener('keydown', handleSearchKeydown);
+    searchInput.addEventListener('focus', fadeDictReadyNote);
     initializeResultClickInsert();
 }
 
@@ -169,24 +114,24 @@ function getSearchRegex(searchInput) {
     if (searchInput === cachedRegex.input) {
         return cachedRegex;
     }
-    
+
     const terms = searchInput.split(/\s+/);
-    const escapedTerms = terms.map(term => 
+    const escapedTerms = terms.map(term =>
         term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     );
-    
+
     const exactPattern = escapedTerms.join('[\s-]*');
     const loosePattern = escapedTerms
         .map(term => `(?=.*${term})`)
         .join('');
-    
+
     cachedRegex = {
         input: searchInput,
         exact: new RegExp(exactPattern, 'iu'),
         loose: new RegExp(loosePattern, 'iu'),
         highlight: new RegExp(`(${escapedTerms.join('|')})`, 'giu')
     };
-    
+
     return cachedRegex;
 }
 
@@ -224,26 +169,26 @@ function clearDictionarySearch() {
 async function searchDictionary() {
     const searchInput = document.getElementById('dictionarySearchInput').value.trim();
     const resultDisplay = document.getElementById('resultDisplay');
-    
+
     resultDisplay.innerHTML = '';
-    
+
     if (!searchInput || !processedDictionary) {
-        resultDisplay.innerText = !searchInput ? 
-            'Please enter search terms' : 
-            'Please upload a dictionary file first';
+        resultDisplay.innerText = !searchInput ?
+            'Please enter search terms' :
+            'Dictionary is still loading — try again in a moment.';
         return;
     }
-    
+
     try {
         const regex = getSearchRegex(searchInput);
         const matches = [];
-        
+
         // Use requestAnimationFrame for non-blocking search
         await new Promise(resolve => {
             requestAnimationFrame(() => {
                 for (const line of processedDictionary) {
                     if (regex.exact.test(line) || regex.loose.test(line)) {
-                        let highlightedLine = line.replace(regex.highlight, 
+                        let highlightedLine = line.replace(regex.highlight,
                             '<span class="highlight">$1</span>'
                         );
                         matches.push(processLineSegments(highlightedLine));
@@ -252,12 +197,12 @@ async function searchDictionary() {
                 resolve();
             });
         });
-        
-        resultDisplay.innerHTML = matches.length ? 
+
+        resultDisplay.innerHTML = matches.length ?
             `<div class="result-header">Found ${matches.length} matches:</div>
              <div class="result-matches">${matches.join('<hr class="result-separator">')}</div>` :
             'No matching lines found.';
-            
+
     } catch (error) {
         console.error('Error during search:', error);
         resultDisplay.innerText = 'Error searching dictionary';

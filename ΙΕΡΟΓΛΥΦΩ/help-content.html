@@ -507,11 +507,19 @@
 
             <h3>Dictionary search</h3>
             <ul>
-                <li>Click <strong>Upload Dictionary</strong> and choose your <code>mazzon-dictionary.txt</code> file.</li>
+                <li>The dictionary is built in and loads automatically — no upload needed.</li>
                 <li>Search by Gardiner codes separated by spaces (e.g. <code>A1 Z2</code>) or by transliteration (e.g. <code>rHty</code>).</li>
                 <li>Matches are highlighted; non-ASCII text is enlarged for readability.</li>
                 <li><strong>Resize results:</strong> drag the small horizontal handle just below the character list to grow or shrink the results panel.</li>
                 <li><strong>Drag to canvas:</strong> highlight glyphs in a result (e.g. <code>𓀀𓁐𓏥</code>) and drag the selection onto the canvas — they're placed as a bottom-aligned row.</li>
+            </ul>
+
+            <h3>“What does this say?” — read glyphs back</h3>
+            <ul>
+                <li><strong>Right-click</strong> a sign on the canvas and choose <strong>𓂀 What does this say?</strong> to look it up. Right-click a <em>selection</em> of signs to read them together, or right-click empty space to read the whole canvas.</li>
+                <li>Signs are read in <strong>reading order</strong> — rows top-to-bottom, left-to-right within a row, top-to-bottom within a stacked cadrat — not as an unordered jumble.</li>
+                <li>Results are ranked by closeness: <strong>Exact</strong> (the signs <em>are</em> a word), then <strong>words containing them</strong> (your signs are part of a longer word), then <strong>words found inside</strong> a longer run, then single-sign readings (collapsed).</li>
+                <li>Click any glyph run in the results to drop those signs back onto the canvas.</li>
             </ul>
         </div>
     </details>

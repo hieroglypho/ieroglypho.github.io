@@ -360,34 +360,85 @@ canvas {
     padding: 5px;
 }
 
-/* =========load dict========= */
-.file-upload-row {
-    margin-bottom: .25rem;
+/* =========dictionary (auto-loaded, bundled with the app)========= */
+/* Entry-count placeholder, centred in the results panel until the user searches.
+   flex:1 fills the panel's height so it sits dead-centre; text-shadows give it an
+   embossed/raised look against the dark panel. */
+.dict-ready-note {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #5fb8a6;
+    padding: 0.5em;
+    text-shadow:
+        0 1px 1px rgba(0, 0, 0, 0.7),
+        0 2px 3px rgba(0, 0, 0, 0.5),
+        0 -1px 1px rgba(255, 255, 255, 0.12);
+    transition: opacity 0.6s ease;
 }
 
-.upload-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.dict-ready-note.fade-out {
+    opacity: 0;
+}
+
+/* "What does this say?" results (the action now lives in the right-click menu) */
+.wf-run {
+    font-size: 1.7em;
+    line-height: 1.2;
+}
+
+.wf-section-title {
+    color: #7fd9c6;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin: 10px 0 4px;
+}
+
+.wf-entry {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 4px 0;
+    border-bottom: 1px solid #333;
+}
+
+.wf-entry .large-text {
+    font-size: 1.7em;
+    line-height: 1;
+    flex: 0 0 auto;
+}
+
+.wf-gloss {
+    color: #e0d8c8;
+    font-size: 13px;
+}
+
+.wf-gard {
+    color: #9aa7b0;
+    font-size: 11px;
+}
+
+.wf-more {
+    color: #9aa7b0;
     font-size: 12px;
-    height: 20px;
-    white-space: nowrap;
-    line-height: 0;
-    display: inline-block;
+    padding: 4px 0;
 }
 
-.upload-button:hover {
-    background-color: #45a049;
+.wf-single {
+    margin-top: 8px;
 }
 
-.file-status {
-    font-size: 0.9em;
-    color: #833838;
+.wf-single summary {
+    cursor: pointer;
+    color: #7fd9c6;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
 }
 
 .search-button:disabled {
@@ -1112,7 +1163,7 @@ canvas {
 
 .search-input {
     flex: 1;
-    padding: 2px;
+    padding: 6px 6px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #1a1a1a;
@@ -1240,8 +1291,6 @@ time {
 .large-text.inserted-flash {
     background-color: rgba(80, 200, 120, 0.45);
 }
-
-/* (Duplicate .file-upload-row / .upload-button / .file-status removed — see canonical defs near line 181.) */
 
 .search-button:disabled {
     background-color: #cccccc;
@@ -1398,6 +1447,7 @@ time {
     font-family: inherit;
 }
 .canvas-ctx-menu button:hover { background: #2f2f2f; color: #fff; }
+.canvas-ctx-menu .ctx-divider { border: 0; border-top: 1px solid #444; margin: 4px 0; }
 
 /* Brief confirmation toast for clipboard copy etc. */
 #canvasToast {

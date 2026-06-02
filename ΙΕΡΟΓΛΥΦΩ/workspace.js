@@ -347,9 +347,40 @@ async function unpackString(packed) {
     return new TextDecoder().decode(bytes);
 }
 
+// Fabric re-applies these defaults when it loads objects, so any property still
+// at its default is pure boilerplate — stripping it shrinks the link several-fold
+// without changing a single pixel of what renders. (Share-link only; the Save-as-
+// JSON file stays fully verbose.)
+const SHARE_DEFAULTS = {
+    strokeWidth: 1, stroke: null, strokeDashArray: null, strokeLineCap: 'butt',
+    strokeDashOffset: 0, strokeLineJoin: 'miter', strokeUniform: false, strokeMiterLimit: 4,
+    scaleX: 1, scaleY: 1, angle: 0, flipX: false, flipY: false, opacity: 1, shadow: null,
+    visible: true, backgroundColor: '', fillRule: 'nonzero', paintFirst: 'fill',
+    globalCompositeOperation: 'source-over', skewX: 0, skewY: 0,
+    fontWeight: 'normal', underline: false, overline: false, linethrough: false,
+    textAlign: 'left', fontStyle: 'normal', lineHeight: 1.16, textBackgroundColor: '',
+    charSpacing: 0, direction: 'ltr', path: null, pathStartOffset: 0,
+    pathSide: 'left', pathAlign: 'baseline'
+};
+function minifyForShare(snap) {
+    const objs = snap.canvas && snap.canvas.objects;
+    if (!Array.isArray(objs)) return snap;
+    for (const o of objs) {
+        delete o.version;   // redundant — the top-level canvas already carries it
+        for (const k in SHARE_DEFAULTS) {
+            if (k in o && JSON.stringify(o[k]) === JSON.stringify(SHARE_DEFAULTS[k])) delete o[k];
+        }
+        // Empty per-character style maps add up fast across many glyphs.
+        if (o.styles && (Array.isArray(o.styles) ? o.styles.length === 0
+            : Object.keys(o.styles).length === 0)) delete o.styles;
+    }
+    return snap;
+}
+
 async function buildShareLink() {
     const snap = serializeWorkspace();
     delete snap.backgroundImage;        // tracing aid, not the artwork — keep links small
+    minifyForShare(snap);               // drop Fabric defaults (re-applied on load)
     const packed = await packString(JSON.stringify(snap));
     return location.origin + location.pathname + '#c=' + packed;
 }

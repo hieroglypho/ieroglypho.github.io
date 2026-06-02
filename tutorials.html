@@ -412,6 +412,44 @@
             margin: 6px 0 0;
             font-style: italic;
         }
+        /* Click/tap-to-play: clips stay still (poster) until the user starts them. */
+        .demo-frame {
+            position: relative;
+            display: block;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 0;
+        }
+        .demo-frame .demo-vid { max-width: 100%; margin: 0; }
+        .demo-play {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            border: 0;
+            padding: 0;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.30);
+            cursor: pointer;
+            transition: background .15s ease, opacity .2s ease;
+        }
+        .demo-play:hover { background: rgba(0,0,0,0.44); }
+        .demo-frame.playing .demo-play { opacity: 0; pointer-events: none; }
+        .demo-play-ico {
+            display: grid;
+            place-items: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(20,20,20,0.74);
+            border: 2px solid rgba(255,255,255,0.88);
+            color: #fff;
+            font-size: 22px;
+            padding-left: 4px; /* optically centre the ▶ */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+        }
+        .demo-play:hover .demo-play-ico { border-color: var(--button-bg, #f0d781); }
         .demo-soon {
             display: grid;
             place-items: center;
@@ -513,7 +551,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/cartouche.mp4"
                            poster="assets/tut/cartouche.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">Type a royal name, then frame it with the Cartouche tool.</p>
                 </div>
             </article>
@@ -542,7 +580,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/serekh.mp4"
                            poster="assets/tut/serekh.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">The Horus name of Djet — falcon, façade frame, and the cobra ḏ inside.</p>
                 </div>
             </article>
@@ -571,7 +609,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/sign-entry.mp4"
                            poster="assets/tut/sign-entry.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">Individual signs — typing Manuel de Codage, no mouse.</p>
                 </div>
             </article>
@@ -600,7 +638,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/dictionary.mp4"
                            poster="assets/tut/dictionary.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">Type a meaning or transliteration — matches appear live.</p>
                 </div>
             </article>
@@ -631,7 +669,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/mdc-layout.mp4"
                            poster="assets/tut/mdc-layout.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">The offering formula <em>ḥtp-dỉ-nsw</em> — stacked and separated into cadrats automatically.</p>
                 </div>
             </article>
@@ -658,7 +696,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/extended-set.mp4"
                            poster="assets/tut/extended-set.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">A single run drawn from across the Gardiner families.</p>
                 </div>
             </article>
@@ -689,7 +727,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/trace-photo.mp4"
                            poster="assets/tut/trace-photo.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">A faint reference dimmed to a ghost, with fresh signs traced on top.</p>
                 </div>
             </article>
@@ -718,7 +756,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/print-publish.mp4"
                            poster="assets/tut/print-publish.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">Page guide to landscape, then export straight to PDF.</p>
                 </div>
             </article>
@@ -747,7 +785,7 @@
                 <div class="demo">
                     <video class="demo-vid" src="assets/tut/save-autosave.mp4"
                            poster="assets/tut/save-autosave.jpg"
-                           muted autoplay loop playsinline preload="metadata"></video>
+                           muted loop playsinline preload="metadata"></video>
                     <p class="demo-cap">Save to JSON, reload mid-work, and Restore brings it all back.</p>
                 </div>
             </article>
@@ -849,14 +887,36 @@
                 btn.replaceWith(frame);
             });
 
-            // Respect reduced-motion: don't autoplay looping demos.
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelectorAll('video.demo-vid').forEach(v => {
-                    v.removeAttribute('autoplay');
-                    v.pause();
-                    v.setAttribute('controls', '');
-                });
-            }
+            // Click/tap to play: clips stay on their poster until started, so the
+            // page isn't a wall of looping animation. Each demo gets a ▶ badge that
+            // toggles play/pause; only one clip plays at a time.
+            const vids = Array.from(document.querySelectorAll('video.demo-vid'));
+            vids.forEach(v => {
+                v.removeAttribute('autoplay');
+                v.loop = true; v.muted = true; v.playsInline = true; v.preload = 'metadata';
+
+                const frame = document.createElement('div');
+                frame.className = 'demo-frame';
+                v.parentNode.insertBefore(frame, v);
+                frame.appendChild(v);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'demo-play';
+                btn.setAttribute('aria-label', 'Play demo clip');
+                btn.innerHTML = '<span class="demo-play-ico" aria-hidden="true">▶</span>';
+                frame.appendChild(btn);
+
+                const play = () => {
+                    // Pause any other clip first — one at a time.
+                    vids.forEach(o => { if (o !== v && !o.paused) o.pause(); });
+                    v.play().catch(() => {});
+                };
+                btn.addEventListener('click', play);
+                v.addEventListener('click', () => { v.paused ? play() : v.pause(); });
+                v.addEventListener('play',  () => frame.classList.add('playing'));
+                v.addEventListener('pause', () => frame.classList.remove('playing'));
+            });
         })();
     </script>
 </body>

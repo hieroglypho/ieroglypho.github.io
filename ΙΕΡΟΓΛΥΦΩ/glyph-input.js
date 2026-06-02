@@ -456,6 +456,8 @@ function initMainMenu() {
     saveAsSvgBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToSVG(); close(); });
     saveAsPdfBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPDF(); close(); });
     openBtn.addEventListener('click', (e) => { e.stopPropagation(); loadWorkspace(); close(); });
+    const shareBtn = document.getElementById('shareLinkBtn');
+    if (shareBtn) shareBtn.addEventListener('click', (e) => { e.stopPropagation(); shareWorkspace(); close(); });
     if (aboutBtn) aboutBtn.addEventListener('click', (e) => { e.stopPropagation(); openAbout(); close(); });
     wikiBtn.addEventListener('click', (e) => {
         e.stopPropagation();

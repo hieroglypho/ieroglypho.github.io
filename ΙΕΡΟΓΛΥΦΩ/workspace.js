@@ -306,6 +306,111 @@ function clearAutosave() {
     try { localStorage.removeItem(AUTOSAVE_KEY); } catch (_) { }
 }
 
+// =============================================================================
+// Shareable links — encode the whole composition into the URL hash so a single
+// link reopens it live and editable (the thing a desktop tool can't do). The
+// background image (a tracing aid, often a large data URL) is dropped to keep
+// links short.
+// =============================================================================
+function bytesToB64url(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlToBytes(s) {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+}
+// Pack a string → base64url, deflated when the browser supports CompressionStream
+// (a 1-char tag records which path was taken so unpack can mirror it).
+async function packString(str) {
+    const bytes = new TextEncoder().encode(str);
+    if (typeof CompressionStream === 'function') {
+        const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+        const packed = new Uint8Array(await new Response(stream).arrayBuffer());
+        return 'd' + bytesToB64url(packed);
+    }
+    return 'r' + bytesToB64url(bytes);
+}
+async function unpackString(packed) {
+    const tag = packed[0];
+    const bytes = b64urlToBytes(packed.slice(1));
+    if (tag === 'd' && typeof DecompressionStream === 'function') {
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        const buf = new Uint8Array(await new Response(stream).arrayBuffer());
+        return new TextDecoder().decode(buf);
+    }
+    return new TextDecoder().decode(bytes);
+}
+
+async function buildShareLink() {
+    const snap = serializeWorkspace();
+    delete snap.backgroundImage;        // tracing aid, not the artwork — keep links small
+    const packed = await packString(JSON.stringify(snap));
+    return location.origin + location.pathname + '#c=' + packed;
+}
+
+// A small dark toast (matches the existing "Saved!" indicator styling).
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText =
+        'position:fixed;bottom:20px;right:20px;background:rgba(0,0,0,0.85);color:#fff;'
+        + 'padding:9px 16px;border-radius:6px;z-index:3000;font-size:14px;'
+        + 'box-shadow:0 2px 10px rgba(0,0,0,0.4);max-width:80vw';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+}
+
+// The Share action: native share sheet on touch devices, clipboard copy on
+// desktop. Never invokes a mail client.
+async function shareWorkspace() {
+    try {
+        const objs = canvas.getObjects().filter(o => !o.isGridGroup && !o.grid && !o._pageGuide);
+        if (!objs.length) { showToast('Nothing to share yet — add some signs first.'); return; }
+
+        const url = await buildShareLink();
+
+        const touch = navigator.share && /Mobi|Android|iP(hone|ad|od)/i.test(navigator.userAgent);
+        if (touch) {
+            try { await navigator.share({ title: 'ΙΕΡΟΓΛΥΦΩ composition', url }); return; }
+            catch (e) { if (e && e.name === 'AbortError') return; }   // user dismissed the sheet
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url);
+            showToast('Share link copied — paste it anywhere.');
+        } else {
+            // Last-resort fallback: drop it in the address bar to copy manually.
+            history.replaceState(null, '', url);
+            showToast('Share link is in the address bar — copy it.');
+        }
+    } catch (err) {
+        console.error('Share failed', err);
+        showToast('Could not create a share link.');
+    }
+}
+
+// On load: if the URL carries a #c=… composition, open it (and strip the hash so
+// a later reload falls back to normal autosave behaviour). Returns true if it
+// handled a link, so the caller can skip the autosave-restore banner.
+function loadFromShareLink() {
+    const m = (location.hash || '').match(/[#&]c=([^&]+)/);
+    if (!m) return false;
+    unpackString(decodeURIComponent(m[1]))
+        .then(json => {
+            applyWorkspace(JSON.parse(json));
+            canvasModified = false;     // a freshly opened share is clean until edited
+            history.replaceState(null, '', location.pathname);
+            showToast('Opened a shared composition — edit away.');
+        })
+        .catch(err => { console.error('Bad share link', err); showToast('That share link could not be opened.'); });
+    return true;
+}
+
 // On load: if a recoverable snapshot exists, offer it via a small, dismissible
 // banner. Non-destructive — restore only happens if the user clicks Restore, so
 // a deliberate fresh start is never silently overwritten.
@@ -314,6 +419,8 @@ function initAutosaveRestore() {
     canvas.on('object:added', scheduleAutosave);
     canvas.on('object:modified', scheduleAutosave);
     canvas.on('object:removed', scheduleAutosave);
+
+    if (loadFromShareLink()) return;    // opened a shared link → don't also nag with restore
 
     const snapshot = readAutosave();
     if (!snapshot) return;

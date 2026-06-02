@@ -545,6 +545,147 @@ window.addEventListener('beforeunload', function (e) {
 });
 // document.addEventListener('contextmenu', event => event.preventDefault());
 
+// =============================================================================
+// Canvas copy / cut / paste / duplicate (Ctrl/Cmd + C / X / V / J)
+// =============================================================================
+// Clone the current selection into an in-memory buffer and stamp copies back
+// onto the canvas with a cascading offset. We deliberately do NOT carry over
+// `id` (every copy is minted a fresh one), `blockId`/`enclosureId` (copies are
+// independent — they don't delete in lockstep with the original three-line
+// block / cartouche), or the lock state. `characterKey` IS preserved so the
+// copy keeps its label in the pastedNames ledger and round-trips through
+// save/export.
+let canvasClipboard = null;
+let pasteOffset = 0;
+const PASTE_STEP = 20;   // px each successive paste cascades down-right
+
+// Extra props clone()/toObject() must copy beyond Fabric's defaults. (id and
+// blockId are intentionally absent — they're minted fresh on paste.)
+const CLIPBOARD_PROPS = ['characterKey', 'fontFamily'];
+
+// Copy the selection into the buffer. Returns the sign count (0 = nothing
+// copyable) so callers can show their own toast / decide whether to proceed.
+function copyCanvasSelection() {
+    const active = canvas.getActiveObject();
+    if (!active || active._pageGuide) return 0;
+    const n = canvas.getActiveObjects().length || 1;
+    active.clone((cloned) => {
+        canvasClipboard = cloned;
+        pasteOffset = PASTE_STEP;   // first paste lands offset from the original
+    }, CLIPBOARD_PROPS);
+    return n;
+}
+
+// Mirror addCharacterToCanvas: a glyph copy needs its label in the pastedNames
+// ledger so the workspace JSON + image exports stay in sync.
+function addPastedNameSpan(obj) {
+    if (!obj.characterKey) return;
+    const ledger = document.getElementById('pastedNames');
+    if (!ledger) return;
+    const span = document.createElement('span');
+    span.id = `name-${obj.id}`;
+    span.textContent = `${obj.characterKey} - `;
+    ledger.appendChild(span);
+}
+
+// Stamp one freshly-cloned object (a single sign, or an activeSelection wrapping
+// several) onto the canvas at `+off` px, wiring up fresh ids, ledger spans, and
+// a single coalesced undo step, then selecting the result. Shared by paste and
+// duplicate.
+function stampClone(clone, off) {
+    canvas.discardActiveObject();
+    clone.set({ left: clone.left + off, top: clone.top + off, evented: true });
+
+    const added = [];
+    if (clone.type === 'activeSelection') {
+        // A multi-sign clone: the children carry group-relative coords, so
+        // adding them through the cloned selection (with its canvas set) lets
+        // Fabric resolve them to absolute positions.
+        clone.canvas = canvas;
+        clone.forEachObject((o) => {
+            o.id = generateUniqueId();
+            canvas.add(o);
+            added.push(o);
+        });
+        clone.setCoords();
+    } else {
+        clone.id = generateUniqueId();
+        canvas.add(clone);
+        added.push(clone);
+    }
+
+    // Ledger spans + one coalesced undo step: a single Ctrl+Z removes the whole
+    // stamp, and redo restores the names via restoreObject.
+    const actions = [];
+    added.forEach((o) => {
+        addPastedNameSpan(o);
+        const state = o.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
+        state.characterKey = o.characterKey;
+        actions.push({ type: 'add', id: o.id, object: state, nameSpanId: `name-${o.id}` });
+    });
+    recordBatch(actions);
+
+    canvas.setActiveObject(clone);
+    canvas.requestRenderAll();
+    canvasModified = true;
+    return added.length;
+}
+
+function pasteCanvasClipboard() {
+    if (!canvasClipboard) return false;
+    canvasClipboard.clone((clone) => {
+        stampClone(clone, pasteOffset);
+        pasteOffset += PASTE_STEP;   // cascade repeated pastes off the original
+    }, CLIPBOARD_PROPS);
+    return true;
+}
+
+// Cut = copy into the buffer, then delete the selection as ONE undo step
+// (mirrors the Delete/Backspace handler so a cut block sweeps its siblings and
+// a single Ctrl+Z brings it back).
+function cutCanvasSelection() {
+    const n = copyCanvasSelection();
+    if (!n) return false;
+    const activeGroup = canvas.getActiveObjects();
+    const activeObject = canvas.getActiveObject();
+    const actions = [];
+    if (activeGroup.length) {
+        canvas.discardActiveObject();
+        activeGroup.forEach(o => collectDeletion(o, actions));
+    } else if (activeObject) {
+        collectDeletion(activeObject, actions);
+    }
+    recordBatch(actions);
+    canvas.requestRenderAll();
+    showCanvasToast(`Cut ${n} sign${n > 1 ? 's' : ''}`);
+    return true;
+}
+
+// Duplicate in place: clone the live selection directly (without disturbing the
+// copy/paste buffer) and stamp it one step down-right.
+function duplicateCanvasSelection() {
+    const active = canvas.getActiveObject();
+    if (!active || active._pageGuide) return false;
+    active.clone((clone) => { stampClone(clone, PASTE_STEP); }, CLIPBOARD_PROPS);
+    return true;
+}
+
+// Select every content object on the canvas (skipping the locked page guide and
+// any locked signs, which aren't selectable). One object → plain selection;
+// several → an ActiveSelection the user can move/align as a unit.
+function selectAllOnCanvas() {
+    const objects = canvas.getObjects().filter(o => !o._pageGuide && o.selectable !== false);
+    canvas.discardActiveObject();
+    if (!objects.length) return false;
+    if (objects.length === 1) {
+        canvas.setActiveObject(objects[0]);
+    } else {
+        canvas.setActiveObject(new fabric.ActiveSelection(objects, { canvas }));
+    }
+    canvas.requestRenderAll();
+    return true;
+}
+
 window.addEventListener('keydown', function (e) {
     const activeObject = canvas.getActiveObject();
     const activeGroup = canvas.getActiveObjects();
@@ -575,9 +716,55 @@ window.addEventListener('keydown', function (e) {
     // Select-all (Ctrl/Cmd+A): the browser default selects all page text, which
     // the next palette drag then hijacks as its payload + ghost image (dragging
     // "the whole palette" and dropping random glyphs). Outside a text field we
-    // suppress it so the drag always carries just the glyph under the cursor.
+    // suppress that default and instead select every object on the canvas.
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !isInTextField) {
         e.preventDefault();
+        const sel = window.getSelection && window.getSelection();
+        if (sel && sel.rangeCount) sel.removeAllRanges();   // belt-and-braces vs. drag ghost
+        selectAllOnCanvas();
+        return;
+    }
+
+    // Copy / cut / paste / duplicate canvas objects (Ctrl/Cmd + C / X / V / J).
+    // Outside text fields only. Copy & cut bow out when nothing is selected or
+    // the user has a real page-text selection (so the browser's own copy still
+    // works); paste bows out when our buffer is empty — leaving the native
+    // clipboard untouched in every case.
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && !isInTextField) {
+        const hasTextSelection = window.getSelection && String(window.getSelection()).length > 0;
+        if (!activeObject || hasTextSelection) return;
+        e.preventDefault();
+        const n = copyCanvasSelection();
+        if (n) showCanvasToast(`Copied ${n} sign${n > 1 ? 's' : ''}`);
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x' && !isInTextField) {
+        const hasTextSelection = window.getSelection && String(window.getSelection()).length > 0;
+        if (!activeObject || hasTextSelection) return;
+        e.preventDefault();
+        cutCanvasSelection();
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && !isInTextField) {
+        if (!canvasClipboard) return;
+        e.preventDefault();
+        pasteCanvasClipboard();
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j' && !isInTextField) {
+        if (!activeObject) return;
+        e.preventDefault();
+        duplicateCanvasSelection();
+        return;
+    }
+
+    // Deselect (Escape) — drop the active selection. Overlays close via their
+    // own Escape listeners; we don't preventDefault so those still fire.
+    if (e.key === 'Escape' && !isInTextField) {
+        if (activeObject) {
+            canvas.discardActiveObject();
+            canvas.requestRenderAll();
+        }
         return;
     }
 

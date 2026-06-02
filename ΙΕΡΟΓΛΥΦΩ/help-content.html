@@ -118,79 +118,65 @@
             text-align: center;
         }
 
-        /* Table of contents */
-        .toc {
+        /* Tab strip — sticky so the categories stay reachable while reading */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding: 6px 0 10px;
+            margin: 0 0 16px;
+            border-bottom: 1px solid var(--border);
+            z-index: 5;
+        }
+        .tab {
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 0 0 22px;
-        }
-        .toc .toc-title {
-            color: var(--muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin: 0 0 8px;
-        }
-        .toc ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 4px 18px;
-        }
-        .toc li { margin: 0; }
-        .toc a {
-            border-bottom: none;
+            border-radius: 7px;
             color: var(--text);
+            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 7px 13px;
             display: inline-flex;
             align-items: baseline;
-            gap: 9px;
+            gap: 8px;
+            white-space: nowrap;
         }
-        .toc a:hover { color: var(--accent); }
-        .toc a .n {
+        .tab .n {
             color: var(--accent);
             font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
             min-width: 14px;
         }
+        .tab:hover { border-color: var(--accent-strong); color: #fff; }
+        .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .tab.active {
+            background: var(--accent-strong);
+            border-color: var(--accent-strong);
+            color: #fff;
+        }
 
-        /* Collapsible sections */
-        details.section {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin: 0 0 12px;
-            overflow: hidden;
-            scroll-margin-top: 12px;
+        /* Panels — one shown at a time; the "All" tab reveals every panel */
+        .panel { display: none; scroll-margin-top: 60px; }
+        .panel.active { display: block; }
+        body.show-all .panel { display: block; }
+        body.show-all .panel + .panel {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
         }
-        details.section > summary {
-            cursor: pointer;
-            list-style: none;
-            padding: 12px 16px;
-            font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', Arial, sans-serif;
-            color: var(--accent);
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            user-select: none;
-        }
-        details.section > summary::-webkit-details-marker { display: none; }
-        details.section > summary::before {
-            content: '▸';
-            color: var(--muted);
-            font-size: 12px;
-            transition: transform 0.15s ease;
-        }
-        details.section[open] > summary::before { transform: rotate(90deg); }
-        details.section[open] > summary { border-bottom: 1px solid var(--border); }
-        details.section:target > summary { color: #fff; }
-        details.section:target { border-color: var(--accent-strong); }
-        .section-body { padding: 6px 16px 14px; }
+        .panel-title { font-size: 18px; margin: 2px 0 12px; }
+        /* The tab already names the visible section, so hide the redundant
+           in-panel title in single-tab view; show it only in All mode where it
+           separates the stacked sections. */
+        body:not(.show-all) .panel.active > .panel-title { display: none; }
+        .section-body { padding: 0; }
 
         /* Shortcut + cheat-sheet tables */
         table.shortcuts,
@@ -295,25 +281,21 @@
 <body>
     <h1><span class="glyph">𓏞</span>ΙΕΡΟΓΛΥΦΩ — Help Guide</h1>
 
-    <p>A compact reference for building, editing, and exporting hieroglyphic
-    compositions. The toolbar sits at the bottom; the character/dictionary
-    panel is on the right; the canvas fills everything else. Tap a heading to
-    expand it.</p>
+    <!-- No-JS fallback: show every panel and hide the (inert) tab strip. -->
+    <noscript><style>.panel { display: block !important; } .tabs { display: none; }</style></noscript>
 
-    <nav class="toc">
-        <p class="toc-title">Contents</p>
-        <ul>
-            <li><a href="#getting-started"><span class="n">𓏤</span>Getting started</a></li>
-            <li><a href="#mdc"><span class="n">𓏥</span>MdC spatial layout</a></li>
-            <li><a href="#toolbar"><span class="n">𓏦</span>Toolbar</a></li>
-            <li><a href="#editing"><span class="n">𓏧</span>Editing &amp; shortcuts</a></li>
-            <li><a href="#export"><span class="n">𓏨</span>Saving &amp; exporting</a></li>
-        </ul>
+    <nav class="tabs" role="tablist" aria-label="Help sections">
+        <button class="tab active" role="tab" id="tab-getting-started" data-target="getting-started" aria-controls="panel-getting-started" aria-selected="true"><span class="n">𓏤</span>Getting started</button>
+        <button class="tab" role="tab" id="tab-mdc" data-target="mdc" aria-controls="panel-mdc" aria-selected="false" tabindex="-1"><span class="n">𓏥</span>MdC layout</button>
+        <button class="tab" role="tab" id="tab-toolbar" data-target="toolbar" aria-controls="panel-toolbar" aria-selected="false" tabindex="-1"><span class="n">𓏦</span>Toolbar</button>
+        <button class="tab" role="tab" id="tab-editing" data-target="editing" aria-controls="panel-editing" aria-selected="false" tabindex="-1"><span class="n">𓏧</span>Editing &amp; shortcuts</button>
+        <button class="tab" role="tab" id="tab-export" data-target="export" aria-controls="panel-export" aria-selected="false" tabindex="-1"><span class="n">𓏨</span>Saving &amp; exporting</button>
+        <button class="tab" role="tab" id="tab-all" data-target="all" aria-controls="" aria-selected="false" tabindex="-1"><span class="n">𓏩</span>All</button>
     </nav>
 
     <!-- ===================================================================== -->
-    <details class="section" id="getting-started" open>
-        <summary>Getting started</summary>
+    <section class="panel active" id="panel-getting-started" role="tabpanel" aria-labelledby="tab-getting-started">
+        <h2 class="panel-title">Getting started</h2>
         <div class="section-body">
             <h3>Placing glyphs on the canvas</h3>
             <ul>
@@ -342,11 +324,11 @@
                 <li>See <a href="#mdc">MdC spatial layout</a> for the full operator and markup reference.</li>
             </ul>
         </div>
-    </details>
+    </section>
 
     <!-- ===================================================================== -->
-    <details class="section" id="mdc">
-        <summary>MdC spatial layout — operators &amp; markup</summary>
+    <section class="panel" id="panel-mdc" role="tabpanel" aria-labelledby="tab-mdc">
+        <h2 class="panel-title">MdC spatial layout — operators &amp; markup</h2>
         <div class="section-body">
             <p>Manuel de Codage notation typed into the <strong>Individual signs</strong>
             input. Operators below run <strong>tightest&nbsp;→&nbsp;loosest</strong>;
@@ -432,11 +414,11 @@
                 baseline.
             </div>
         </div>
-    </details>
+    </section>
 
     <!-- ===================================================================== -->
-    <details class="section" id="toolbar">
-        <summary>Toolbar</summary>
+    <section class="panel" id="panel-toolbar" role="tabpanel" aria-labelledby="tab-toolbar">
+        <h2 class="panel-title">Toolbar</h2>
         <div class="section-body">
             <p>The toolbar runs along the bottom of the screen.</p>
             <div class="tool-grid">
@@ -456,16 +438,18 @@
                 <div><span class="icon">🎨</span>Set the canvas color</div>
             </div>
         </div>
-    </details>
+    </section>
 
     <!-- ===================================================================== -->
-    <details class="section" id="editing">
-        <summary>Editing &amp; shortcuts</summary>
+    <section class="panel" id="panel-editing" role="tabpanel" aria-labelledby="tab-editing">
+        <h2 class="panel-title">Editing &amp; shortcuts</h2>
         <div class="section-body">
             <h3>Selecting and moving objects</h3>
             <ul>
                 <li><strong>Select:</strong> click a glyph or shape. Drag to move; drag a corner to scale; drag the top handle to rotate.</li>
-                <li><strong>Multi-select:</strong> <kbd>Shift</kbd> + click, or marquee-drag an empty area.</li>
+                <li><strong>Click the ink, not the box:</strong> selection hit-tests against the sign's actual pixels, so when two glyphs sit close together you grab the one your cursor is <em>on</em> — no more fighting their oversized bounding boxes.</li>
+                <li><strong>Multi-select:</strong> <kbd>Shift</kbd> + click, or marquee-drag an empty area. <kbd>Ctrl</kbd> + <kbd>A</kbd> selects everything on the canvas; <kbd>Esc</kbd> deselects.</li>
+                <li><strong>Copy / paste:</strong> <kbd>Ctrl</kbd> + <kbd>C</kbd> then <kbd>Ctrl</kbd> + <kbd>V</kbd> stamps a copy with a small offset (repeat to cascade); <kbd>Ctrl</kbd> + <kbd>J</kbd> duplicates in place; <kbd>Ctrl</kbd> + <kbd>X</kbd> cuts.</li>
                 <li><strong>Fine move:</strong> select, then use arrow keys (hold <kbd>Shift</kbd> for 1px steps).</li>
                 <li><strong>Edit text:</strong> double-click a text object.</li>
                 <li><strong>Pan canvas:</strong> hold <kbd>Alt</kbd> and drag.</li>
@@ -480,7 +464,13 @@
                 <tbody>
                     <tr><td class="keys"><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td><td>Move selection by 5&nbsp;px</td></tr>
                     <tr><td class="keys"><kbd>Shift</kbd> + arrow</td><td>Fine move by 1&nbsp;px</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>A</kbd></td><td>Select all objects on the canvas</td></tr>
+                    <tr><td class="keys"><kbd>Esc</kbd></td><td>Deselect</td></tr>
                     <tr><td class="keys"><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selection</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>Copy selected sign(s)</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>X</kbd></td><td>Cut selected sign(s)</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>V</kbd></td><td>Paste with a cascading offset</td></tr>
+                    <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>J</kbd></td><td>Duplicate selection in place</td></tr>
                     <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo last action</td></tr>
                     <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>Y</kbd> &nbsp;or&nbsp; <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td><td>Redo</td></tr>
                     <tr><td class="keys"><kbd>Ctrl</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>Cycle through objects on the canvas</td></tr>
@@ -522,11 +512,11 @@
                 <li>Click any glyph run in the results to drop those signs back onto the canvas.</li>
             </ul>
         </div>
-    </details>
+    </section>
 
     <!-- ===================================================================== -->
-    <details class="section" id="export">
-        <summary>Saving &amp; exporting</summary>
+    <section class="panel" id="panel-export" role="tabpanel" aria-labelledby="tab-export">
+        <h2 class="panel-title">Saving &amp; exporting</h2>
         <div class="section-body">
             <h3>File menu (≡) — save, load, export, wiki</h3>
             <p>The <strong>≡</strong> button on the right side of the toolbar opens a single menu:</p>
@@ -566,12 +556,61 @@
                 <a href="https://en.wikipedia.org/wiki/List_of_Egyptian_hieroglyphs#Letter_classification_by_Gardiner" target="_blank" rel="noopener">Gardiner sign list on Wikipedia</a> —
                 a useful reference for codes, categories, and meanings.</p>
         </div>
-    </details>
+    </section>
 
     <div class="outro">
         <span class="big">𓂀 𓏏 𓊵 𓄿</span>
         Have fun building.
     </div>
+
+    <script>
+        // Tabbed help: show one panel at a time, plus an "All" tab that reveals
+        // every panel (so the browser's Ctrl+F and print see the whole doc).
+        // The hash is kept in sync so existing #section links and the in-doc
+        // cross-links ("see MdC spatial layout") still land on the right tab.
+        (function initHelpTabs() {
+            const strip = document.querySelector('.tabs');
+            if (!strip) return;
+            const tabs = Array.from(strip.querySelectorAll('.tab'));
+            const panels = Array.from(document.querySelectorAll('.panel'));
+            const names = tabs.map(t => t.dataset.target);
+
+            function activate(target, updateHash) {
+                if (!names.includes(target)) target = 'getting-started';
+                const isAll = target === 'all';
+                document.body.classList.toggle('show-all', isAll);
+                tabs.forEach(t => {
+                    const on = t.dataset.target === target;
+                    t.classList.toggle('active', on);
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                    t.tabIndex = on ? 0 : -1;
+                });
+                panels.forEach(p => p.classList.toggle('active', p.id === 'panel-' + target));
+                if (!isAll) window.scrollTo(0, 0);
+                if (updateHash) {
+                    try { history.replaceState(null, '', '#' + target); }
+                    catch (e) { location.hash = target; }
+                }
+            }
+
+            tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.target, true)));
+
+            // Left/Right arrows move between tabs (roving tabindex).
+            strip.addEventListener('keydown', (e) => {
+                if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+                e.preventDefault();
+                const cur = tabs.findIndex(t => t.classList.contains('active'));
+                const next = (cur + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+                tabs[next].focus();
+                activate(tabs[next].dataset.target, true);
+            });
+
+            // Inbound hash (deep links + in-doc cross-links).
+            const fromHash = () => activate((location.hash || '').replace(/^#/, ''), false);
+            window.addEventListener('hashchange', fromHash);
+            if (location.hash) fromHash(); else activate('getting-started', false);
+        })();
+    </script>
 </body>
 
 </html>

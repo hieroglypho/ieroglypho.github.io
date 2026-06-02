@@ -148,7 +148,15 @@ var canvas = new fabric.Canvas('c', {
     preserveObjectStacking: true,  // Use colon, not equals
     width: initialDimensions.width,
     height: initialDimensions.height,
-    subTargetCheck: true  // Include this in the initial options
+    subTargetCheck: true,  // Include this in the initial options
+    // A glyph's text box is much taller/wider than its visible ink (the font's
+    // ascent/descent padding), so neighbouring boxes overlap even when the signs
+    // don't — which is why picking "the right one" was so fiddly. Hit-test
+    // against the actual rendered pixels instead of the bounding box: a click
+    // selects/grabs the sign whose ink is under the cursor, not whichever box
+    // happens to sit on top. The tolerance gives thin signs a few px of slack.
+    perPixelTargetFind: true,
+    targetFindTolerance: 4
 });
 
 function drawGrid() {

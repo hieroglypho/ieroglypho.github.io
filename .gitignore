@@ -26,3 +26,9 @@ Hieroglyphica-paper.odt
 
 # YouTube tutorial scripts / plan — local authoring docs, not part of the site
 tutorial/
+
+# Dictionary-source evaluation ledger — local research notes, not part of the site
+DICTIONARY-SOURCES.local.md
+
+# Wikidata/TLA dictionary-expansion scaffolding — regenerable working files
+prototype-wikidata/

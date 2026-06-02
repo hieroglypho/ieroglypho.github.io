@@ -397,23 +397,47 @@ function showToast(msg) {
     setTimeout(() => t.remove(), 2600);
 }
 
+// Ask the share-shortener Worker (configured via window.SHARE_API) to turn the
+// long #c= link into a short, permanent one. Returns null on any failure so the
+// caller falls back to the full in-URL link — the feature is inert until a
+// SHARE_API endpoint is set (see share-worker/README.md).
+async function shortenLink(longUrl) {
+    const api = ((typeof window !== 'undefined' && window.SHARE_API) || '').replace(/\/+$/, '');
+    if (!api) return null;
+    try {
+        const res = await fetch(api + '/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: longUrl })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return (data && data.url) || null;
+    } catch (_) {
+        return null;
+    }
+}
+
 // The Share action: native share sheet on touch devices, clipboard copy on
-// desktop. Never invokes a mail client.
+// desktop. Uses the short link when the shortener is reachable, otherwise the
+// full self-contained link. Never invokes a mail client.
 async function shareWorkspace() {
     try {
         const objs = canvas.getObjects().filter(o => !o.isGridGroup && !o.grid && !o._pageGuide);
         if (!objs.length) { showToast('Nothing to share yet — add some signs first.'); return; }
 
-        const url = await buildShareLink();
+        const longUrl = await buildShareLink();
+        const url = (await shortenLink(longUrl)) || longUrl;
+        const isShort = url !== longUrl;
 
         const touch = navigator.share && /Mobi|Android|iP(hone|ad|od)/i.test(navigator.userAgent);
         if (touch) {
             try { await navigator.share({ title: 'ΙΕΡΟΓΛΥΦΩ composition', url }); return; }
-            catch (e) { if (e && e.name === 'AbortError') return; }   // user dismissed the sheet
+            catch (e) { if (e && e.name === 'AbortError') return; }   // user dismissed → fall through to copy
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(url);
-            showToast('Share link copied — paste it anywhere.');
+            showToast((isShort ? 'Short link' : 'Share link') + ' copied — paste it anywhere.');
         } else {
             // Last-resort fallback: drop it in the address bar to copy manually.
             history.replaceState(null, '', url);

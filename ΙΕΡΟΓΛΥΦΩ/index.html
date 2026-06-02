@@ -442,6 +442,10 @@
         </div>
 
         <script defer src="chars.js"></script>
+        <!-- Optional share-link shortener (Cloudflare Worker). Set to your Worker
+             URL to get short /s/<id> links; leave empty for self-contained #c=
+             links. See share-worker/README.md. -->
+        <script>window.SHARE_API = '';</script>
         <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
         <script defer src="editor-core.js"></script>
         <script defer src="canvas-interactions.js"></script>

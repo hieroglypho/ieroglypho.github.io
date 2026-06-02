@@ -1,0 +1,10 @@
+name = "hieroglyphica-share"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# KV namespace that stores  id → long composition URL.
+# Create it once with:  wrangler kv namespace create LINKS
+# then paste the printed id below.
+[[kv_namespaces]]
+binding = "LINKS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

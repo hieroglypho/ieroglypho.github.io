@@ -43,11 +43,16 @@ function wfParseDictionary(lines) {
         const rest = line.slice(tab + 1);
         const tab2 = rest.indexOf('\t');
         const gloss = (tab2 === -1 ? rest : rest.slice(0, tab2)).trim();
-        const gardiner = tab2 === -1 ? '' : rest.slice(tab2 + 1).trim();
+        // Codes run only to the NEXT tab. An optional 4th column carries a
+        // credit/source, so we must not slurp it into the Gardiner field.
+        const afterGloss = tab2 === -1 ? '' : rest.slice(tab2 + 1);
+        const tab3 = afterGloss.indexOf('\t');
+        const gardiner = (tab3 === -1 ? afterGloss : afterGloss.slice(0, tab3)).trim();
+        const credit = tab3 === -1 ? '' : afterGloss.slice(tab3 + 1).trim();
 
         // Length in codepoints (hieroglyphs are astral, so .length would
         // double-count surrogate pairs and break length-based ranking).
-        entries.push({ glyphs, gloss, gardiner, len: Array.from(glyphs).length });
+        entries.push({ glyphs, gloss, gardiner, credit, len: Array.from(glyphs).length });
     }
 
     _wfParsedEntries = entries;
@@ -204,6 +209,7 @@ function _wfEntryRows(list) {
         `<div class="wf-entry"><span class="large-text" title="Click to add these signs to the canvas">${m.glyphs}</span>` +
         `<span class="wf-gloss">${_wfGloss(m.gloss)}` +
         (m.gardiner ? ` <span class="wf-gard">${_wfEsc(m.gardiner)}</span>` : '') +
+        (m.credit ? ` <span class="wf-credit">— ${_wfEsc(m.credit)}</span>` : '') +
         `</span></div>`).join('');
     const more = list.length > WF_CAP ? `<div class="wf-more">+${list.length - WF_CAP} more…</div>` : '';
     return rows + more;

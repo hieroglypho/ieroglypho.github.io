@@ -1,0 +1,10 @@
+# ============================================================================
+# dict-additions.txt — hand-authored entries added via the localhost-only
+# "Save to dictionary" tool. This file is loaded by the search and the decoder
+# ALONGSIDE dictionary.txt, so anything here is immediately searchable while the
+# 50k-line master stays pristine. Merge these into dictionary.txt periodically,
+# then clear this file back down to this header.
+#
+# Format (tab-separated):  glyphs ⇥ translit gloss <i> pos </i> ⇥ codes [⇥ credit]
+# The 4th "credit" column is OPTIONAL — source / original author of the phrase.
+# ============================================================================

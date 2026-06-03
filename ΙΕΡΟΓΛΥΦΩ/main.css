@@ -427,6 +427,12 @@ canvas {
     font-size: 11px;
 }
 
+.wf-credit {
+    color: #b388e6;
+    font-size: 11px;
+    font-style: italic;
+}
+
 .wf-more {
     color: #9aa7b0;
     font-size: 12px;

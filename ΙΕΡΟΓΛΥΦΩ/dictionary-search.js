@@ -6,6 +6,10 @@ let cachedRegex = { input: '', exact: null, loose: null };
 // user upload. It lives at the site root; the editor sits one level down in
 // ΙΕΡΟΓΛΥΦΩ/, hence the '../'.
 const DICT_URL = '../dictionary.txt';
+// Hand-authored entries live in a separate file so the 50k-line master stays
+// pristine; we load both so additions are instantly searchable. The file is
+// optional — a missing or empty one is never fatal.
+const ADDITIONS_URL = '../dict-additions.txt';
 
 // Initialize the application
 function initializeApp() {
@@ -26,6 +30,17 @@ async function loadBundledDictionary() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const text = await res.text();
         processedDictionary = text.split('\n');
+
+        // Fold in the additions file if present (optional, never fatal). No-store
+        // so freshly-saved entries appear on the next reload without a cache hit.
+        try {
+            const addRes = await fetch(ADDITIONS_URL, { cache: 'no-store' });
+            if (addRes.ok) {
+                const addText = await addRes.text();
+                if (addText) processedDictionary = processedDictionary.concat(addText.split('\n'));
+            }
+        } catch (_) { /* additions are optional */ }
+
         if (searchButton) searchButton.disabled = false;
         // Show the entry count as a quiet placeholder in the results panel; it
         // fades the first time the user focuses the search box.

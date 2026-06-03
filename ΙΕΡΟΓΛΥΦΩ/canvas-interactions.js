@@ -835,3 +835,73 @@ function alignObjects(direction = 'horizontal') {
     canvas.requestRenderAll();
 }
 
+// Center the selection on a common vertical axis (the selection's own overall
+// horizontal midpoint). Objects are first clustered into ROWS by vertical
+// overlap, so a multi-glyph row slides over as a unit with its internal spacing
+// intact — instead of every glyph piling up on the centerline. The four single
+// text lines and the five-glyph row in a typical word card each become one row.
+function centerObjectsHorizontally() {
+    const selection = canvas.getActiveObjects();
+    if (selection.length < 2) return;
+
+    // Flush absolute coords: inside an ActiveSelection each child's left/top is
+    // group-relative. Dropping the selection (as mirrorTextObject does) lets
+    // Fabric write canvas coords back, so a plain `left += delta` translates
+    // correctly regardless of the object's originX ('center' vs 'left').
+    canvas.discardActiveObject();
+
+    // Per-object absolute pre-move snapshot — one undo batch, like mirroring.
+    const undoActions = selection.map(o => ({
+        type: 'modify', actionType: 'moving',
+        state: {
+            type: 'single', id: o.id,
+            state: o.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
+        }
+    }));
+
+    // Measure each object's absolute, zoom-independent box once.
+    const items = selection.map(o => {
+        const b = o.getBoundingRect(true, true);
+        return {
+            obj: o,
+            left: b.left, right: b.left + b.width,
+            top: b.top, bottom: b.top + b.height,
+            cy: b.top + b.height / 2
+        };
+    });
+
+    // Axis = horizontal center of the whole selection's bounding box.
+    const axis = (Math.min(...items.map(i => i.left)) +
+                  Math.max(...items.map(i => i.right))) / 2;
+
+    // Cluster into rows: walk top-to-bottom; an object joins the current row
+    // when its vertical center still falls inside the row's running band, and
+    // starts a new row otherwise. Glyphs in a row overlap heavily; separate
+    // lines sit in clearly distinct bands.
+    const rows = [];
+    let cur = null;
+    [...items].sort((a, b) => a.top - b.top).forEach(it => {
+        if (cur && it.cy < cur.bottom) {
+            cur.items.push(it);
+            cur.bottom = Math.max(cur.bottom, it.bottom);
+        } else {
+            cur = { items: [it], bottom: it.bottom };
+            rows.push(cur);
+        }
+    });
+
+    // Slide each row so its bounding-box center lands on the axis.
+    rows.forEach(r => {
+        const rowCenter = (Math.min(...r.items.map(i => i.left)) +
+                           Math.max(...r.items.map(i => i.right))) / 2;
+        const delta = axis - rowCenter;
+        if (!delta) return;
+        r.items.forEach(i => { i.obj.set('left', i.obj.left + delta); i.obj.setCoords(); });
+    });
+
+    recordBatch(undoActions);
+
+    canvas.setActiveObject(new fabric.ActiveSelection(selection, { canvas }));
+    canvas.requestRenderAll();
+}
+

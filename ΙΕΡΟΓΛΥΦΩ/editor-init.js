@@ -292,6 +292,14 @@ function initCanvasContextMenu() {
                 if (typeof identifySelection === 'function') identifySelection(objs);
                 break;
             }
+            case 'dict-add': {
+                // Localhost-only authoring: same selection logic as identify —
+                // the active selection, else the right-clicked glyph.
+                const active = canvas.getActiveObjects ? canvas.getActiveObjects() : [];
+                const objs = active.length ? active : (ctxTarget ? [ctxTarget] : null);
+                if (typeof dictAuthorStart === 'function') dictAuthorStart(objs);
+                break;
+            }
             case 'copy': copyCanvasImage(); break;
             case 'png':  saveToPNG();       break;
             case 'svg':  saveToSVG();       break;
@@ -904,8 +912,10 @@ window.addEventListener('keydown', function (e) {
         return;
     }
 
-    // Alignment shortcuts
-    if (!e.ctrlKey) {
+    // Single-letter shortcuts (align / mirror / center / →MdC).
+    // Shielded from text fields: otherwise typing a gloss, transliteration, etc.
+    // in a dialog would silently re-align or mirror the canvas selection.
+    if (!e.ctrlKey && !isInTextField) {
         const alignMap = {
             h: 'horizontal',
             t: 'top',
@@ -920,8 +930,13 @@ window.addEventListener('keydown', function (e) {
             mirrorTextObject(activeObject);
             return;
         }
-        // Copy the selection as MdC code (guard against firing while typing).
-        if (!isInTextField && e.key.toLowerCase() === 'm') {
+        // Center selection on a common vertical axis (rows auto-detected).
+        if (e.key.toLowerCase() === 'c') {
+            centerObjectsHorizontally();
+            return;
+        }
+        // Copy the selection as MdC code.
+        if (e.key.toLowerCase() === 'm') {
             exportSelectionToMdC();
             return;
         }

@@ -255,6 +255,29 @@ function stampExportWatermark(ctx, w, h) {
     ctx.restore();
 }
 
+// The brand wordmark as a transparent PNG, tight-cropped to the glyphs. Used by
+// the PDF, which paints it into the page header *margin* (like the URL footer)
+// rather than baking it into the artwork. jsPDF's built-in fonts are Latin-1, so
+// the Greek "ΙΕΡΟΓΛΥΦΩ" can't be written with pdf.text — we rasterise it with a
+// system font instead. Rendered at hi-res for a crisp result when placed small.
+function watermarkRasterDataUrl() {
+    const text = 'ΙΕΡΟΓΛΥΦΩ';
+    const fontPx = 13 * EXPORT_SUPERSAMPLE;   // supersampled for sharpness
+    const c = document.createElement('canvas');
+    let ctx = c.getContext('2d');
+    ctx.font = `bold ${fontPx}px Arial, sans-serif`;
+    const tw = Math.ceil(ctx.measureText(text).width);
+    const th = Math.ceil(fontPx * 1.3);
+    c.width = tw; c.height = th;             // resizing resets the context
+    ctx = c.getContext('2d');
+    ctx.font = `bold ${fontPx}px Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.30)';
+    ctx.fillText(text, 0, 0);
+    return { dataUrl: c.toDataURL('image/png'), aspect: tw / th };
+}
+
 async function saveToPNG() {
     try {
         const composite = await compositeCanvasWithBg();
@@ -436,13 +459,18 @@ async function compositeCropForPDF(bounds) {
 
         // Fabric objects, re-rendered as vectors at SS× over the crop region —
         // not a blit of the screen-resolution backing store — so glyph edges
-        // stay crisp at print DPI. The caller is at an identity viewport, so the
-        // crop coords map 1:1. Regions past the canvas edge (a page-guide rect on
-        // a small window) simply keep the white fill. fab is w·SS×h·SS; draw 1:1.
+        // stay crisp at print DPI. Re-rendering (vs. the old getElement() blit) is
+        // also what lets page-guide margins export at all: a portrait guide is
+        // taller than the window, so it hangs off-canvas, and a backing-store blit
+        // could only ever capture the visible viewport. toCanvasElement recomputes
+        // the viewport boundaries to the full crop, so off-canvas content renders.
+        // The caller is at an identity viewport, so crop coords map 1:1. fab is
+        // w·SS×h·SS; draw 1:1.
         const fab = canvas.toCanvasElement(SS, { left, top, width: w, height: h });
         ctx.drawImage(fab, 0, 0, w, h);
 
-        stampExportWatermark(ctx, w, h);
+        // No watermark baked here: the PDF paints the wordmark into the page
+        // header margin (see saveToPDF) so it never lands on the artwork.
         return out;
     });
 }
@@ -572,6 +600,20 @@ async function saveToPDF() {
                 pdf.setTextColor(0);   // restore default for any later writes
             } catch (e) {
                 console.warn('PDF footer skipped:', e);
+            }
+
+            // Header wordmark: the brand in the top-right margin, mirroring the
+            // footer. Painted as a small raster (Greek isn't in jsPDF's base
+            // fonts) onto the page itself, so it sits in the margin rather than on
+            // the artwork. Centred vertically in the 0.5" top margin band.
+            try {
+                const wm = watermarkRasterDataUrl();
+                const hPt = 9;                       // wordmark height in points
+                const wPt = hPt * wm.aspect;
+                pdf.addImage(wm.dataUrl, 'PNG', pageW - MARGIN - wPt,
+                             MARGIN / 2 - hPt / 2, wPt, hPt);
+            } catch (e) {
+                console.warn('PDF header wordmark skipped:', e);
             }
 
             const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`;

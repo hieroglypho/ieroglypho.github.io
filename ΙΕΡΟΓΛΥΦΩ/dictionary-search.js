@@ -157,7 +157,12 @@ function processLineSegments(line) {
             if (segment.startsWith('<time>') || segment.startsWith('<i>')) {
                 return segment;
             }
-            return segment.replace(/([^\x00-\x7F]+)/g, '<span class="large-text" title="Click to add these signs to the canvas">$1</span>');
+            // Enlarge only Egyptian Hieroglyph code points (U+13000–U+143FF:
+            // base block, format controls, Extended-A) — NOT all non-ASCII.
+            // Egyptological transliteration letters (ḥ ḫ ꜣ ꜥ ı͗ ḏ ṯ …) are non-ASCII
+            // too but live in the BMP, so the old [^\x00-\x7F] match blew them up to
+            // glyph size in the hieroglyph font.
+            return segment.replace(/([\u{13000}-\u{143FF}]+)/gu, '<span class="large-text" title="Click to add these signs to the canvas">$1</span>');
         })
         .join('');
 }

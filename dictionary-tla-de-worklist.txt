@@ -1,0 +1,758 @@
+# ============================================================================
+#  dictionary-tla-de-worklist.txt — TLA lemmata with ONLY a German gloss
+# ============================================================================
+#  Source : Thesaurus Linguae Aegyptiae (TLA), hieroglyphic/hieratic lemma list,
+#           Wikidata-linked export 2024. Berlin-Brandenburgische Akademie der
+#           Wissenschaften & Saxon Academy of Sciences and Humanities.
+#           https://thesaurus-linguae-aegyptiae.de  (edoc.bbaw.de, docId 5402)
+#
+#  LICENSE: CC BY-SA 4.0 International — https://creativecommons.org/licenses/by-sa/4.0/
+#           This file (and any redistribution of it) MUST stay under CC BY-SA 4.0
+#           and keep this attribution. It is deliberately SEPARATE from the
+#           proprietary core dictionary.txt; the ShareAlike obligation applies to
+#           THIS file only, not to the Hieroglyphica core.
+#
+#  Transliteration follows the Leiden Unified Transliteration (as published by
+#  TLA), which differs from the MdC-style transliteration in the core file.
+#  Per-line credit column carries the stable TLA lemma ID for citation.
+# ============================================================================
+	Ꜣw.t-ꞽb-Rꜥw [Thronname Hors]; Aut-ib-Re <i> proper noun (royal name) </i>		TLA 862843 CC BY-SA 4.0
+	Ꜣwtwkrtr-Kysrs Autokrator Caesar <i> proper noun (royal name) </i>		TLA 875240 CC BY-SA 4.0
+	Ꜣwtwkrtr-Kysrs-Tmtyns-mr-Ꜣs.t [Eigenname Domitians] <i> proper noun (royal name) </i>		TLA 875432 CC BY-SA 4.0
+	ꜣbd Monatspriester <i> noun (masc.) </i>		TLA 884318 CC BY-SA 4.0
+𓄿𓃭𓇾𓆼𓆷𓊃𓆷	Ꜣrtḫšsš Artaxerxes <i> proper noun (royal name) </i>	G1-E23-N16-M12-M8-O34-M8	TLA 712164 CC BY-SA 4.0
+	Ꜣlksntrs Alexander der Große; Alexander IV. <i> proper noun (royal name) </i>		TLA 860196 CC BY-SA 4.0
+	Ꜣḫ-n-Ꞽtn Echnaton <i> proper noun (royal name) </i>		TLA 856863 CC BY-SA 4.0
+	Ꞽ-kꜣ.w-Ḥr.w Menkauhor <i> proper noun (royal name) </i>		TLA 883508 CC BY-SA 4.0
+	Ꞽꜣ.t-ḏ.t Iat-dji (Dendera) <i> proper noun (toponym) </i>		TLA 853062 CC BY-SA 4.0
+	ꞽꜣb.tï Osten <i> noun (masc.) </i>		TLA 888068 CC BY-SA 4.0
+	ꞽy.t [Heiligtum] <i> noun (fem.) </i>		TLA 882434 CC BY-SA 4.0
+	Ꞽy-m-ḥtp Imhotep <i> proper noun (deity name) </i>		TLA 860333 CC BY-SA 4.0
+	Ꞽꜥḥ-ms.w Ahmose <i> proper noun (royal name) </i>		TLA 878882 CC BY-SA 4.0
+	Ꞽꜥḥ-ms-zꜣ-Nꞽ.t [Eigenname Amasis'] <i> proper noun (royal name) </i>		TLA 875213 CC BY-SA 4.0
+	Ꞽꜥḥ-Ḏḥw.tï Iah-Thot <i> proper noun (deity name) </i>		TLA 862813 CC BY-SA 4.0
+	ꞽw.t Einkunft <i> noun (fem.) </i>		TLA 882638 CC BY-SA 4.0
+	ꞽwꞽ [Brot] <i> noun (masc.) </i>		TLA 885362 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-pꜣ-nṯr-nt.ï-nḥm-stp-n-Ptḥ-ꞽr-mꜣꜥ.t-Rꜥw-sḫm-ꜥnḫ-n-Ꞽmn.w [Thronname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 853046 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-nṯr.wï-pr.wï-ḫpr-Ptḥ-stp-n-Ꞽmn.w-ꞽr-Mꜣꜥ.t-Rꜥw [Thronname Ptolemaios' VI.] <i> proper noun (royal name) </i>		TLA 853956 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-nṯr.wï-pr.wï-stp-n-Ptḥ-ꞽr-Mꜣꜥ.t-Rꜥw-sḫm-ꜥnḫ-n-Ꞽmn.w [Thronname Ptolemaios' VIII.] <i> proper noun (royal name) </i>		TLA 853965 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-nṯr.wï-pr.wï-stp-n-Ptḥ-Ḫpr.ꞽ-ꞽr-Mꜣꜥ.t-Ꞽmn.w-Rꜥw [Thronname Ptolemaios' VI.] <i> proper noun (royal name) </i>		TLA 858826 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-nṯr.wï-mr.wï-ꞽtꞽ-stp-n-Ptḥ-wsr-kꜣ-Rꜥw-sḫm-ꜥnḫ-n-Ꞽmn.w [Thronname Ptolemaios' V.] <i> proper noun (royal name) </i>		TLA 858825 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-nṯr.wï-sn.wï-stp-n-Rꜥw-sḫm-ꜥnḫ-n-Ꞽmn.w [Thronname Ptolemaios' III.] <i> proper noun (royal name) </i>		TLA 853058 CC BY-SA 4.0
+	Ꞽwꜥ.w-n-nṯr-mnḫ-nṯr.t-mnḫ.t-zꜣ.t-Rꜥw-stp-n-Ptḥ-ꞽr-Mꜣꜥ.t-Rꜥw-znn-ꜥnḫ-n-Ꞽmn.w [Thronname Ptolemaios' X.] <i> proper noun (royal name) </i>		TLA 858827 CC BY-SA 4.0
+	Ꞽwꜥ.w-nṯr.wï-mnḫ.wï-stp-n-Ptḥ-wsr-kꜣ-Rꜥw-sḫm-ꜥnḫ-Ꞽmn.w [Thronname Ptolemaios' IV.] <i> proper noun (royal name) </i>		TLA 853059 CC BY-SA 4.0
+	ꞽwꜥ.wtï der zum Erbe Gehörige <i> noun (masc.) </i>		TLA 888206 CC BY-SA 4.0
+	ꞽwn-mw.t=f Stütze seiner Mutter <i> noun (masc.) </i>		TLA 884339 CC BY-SA 4.0
+	Ꞽbꞽ Ibi <i> proper noun (royal name) </i>		TLA 859964 CC BY-SA 4.0
+	ꞽbb.w Durst <i> noun (masc.) </i>		TLA 887153 CC BY-SA 4.0
+	Ꞽp.t-wr.t Ipet, die Große <i> proper noun (deity name) </i>		TLA 852853 CC BY-SA 4.0
+	ꞽpꜣ [Dem.Pron. pl.m.] <i> pronoun (demonstrative pronoun) </i>		TLA 887141 CC BY-SA 4.0
+	Ꞽpwt Iput II. <i> proper noun (royal name) </i>		TLA 861214 CC BY-SA 4.0
+	ꞽf [Verb] <i> verb </i>		TLA 883808 CC BY-SA 4.0
+	ꞽm.ï-ꜣ.t=f [Schlange] <i> noun (masc.) </i>		TLA 886079 CC BY-SA 4.0
+	ꞽm.ï-ꜥ=f [Schlange] <i> noun (masc.) </i>		TLA 885539 CC BY-SA 4.0
+	ꞽm.ï-rʾ-ḥs.ww Vorsteher der Sänger <i> noun (masc.) </i>		TLA 887279 CC BY-SA 4.0
+	ꞽm.ï-ḥꜣ.t früherer Zustand <i> noun (masc.) </i>		TLA 886730 CC BY-SA 4.0
+	ꞽm.ït-ꞽb Liebling <i> noun (fem.) </i>		TLA 888560 CC BY-SA 4.0
+	Ꞽmn.y [Eigenname Amenemhets I.]; [Eigenname Amenemhets II.] <i> proper noun (royal name) </i>		TLA 855606 CC BY-SA 4.0
+	ꞽmn.w Zahn <i> noun (masc.) </i>		TLA 887150 CC BY-SA 4.0
+	Ꞽmn.w-m-Ꞽp.t Amenemope <i> proper noun (royal name) </i>		TLA 887258 CC BY-SA 4.0
+	Ꞽmn.w-m-Ꞽp.t-mr.y-Ꞽmn.w Amenemope-mery-Amun <i> proper noun (royal name) </i>		TLA 887270 CC BY-SA 4.0
+	Ꞽmn.w-Npyt Amun von Napata <i> proper noun (deity name) </i>		TLA 862766 CC BY-SA 4.0
+	Ꞽmn.w-rn=f Imen-renef <i> proper noun (deity name) </i>		TLA 888911 CC BY-SA 4.0
+	Ꞽmn.w-H̱nm.t-nḥḥ Amun von Medinet Habu <i> proper noun (deity name) </i>		TLA 853501 CC BY-SA 4.0
+	Ꞽmn.w-ḥtp.w-nṯr-ḥqꜣ-Wꜣs.t Amenophis-netjer-heqa-Waset <i> proper noun (royal name) </i>		TLA 856866 CC BY-SA 4.0
+	Ꞽmn.w-ḥtp.w-nṯr-ḥqꜣ-Wꜣs.t-ꜥꜣ-m-ꜥḥꜥ.w=f [Eigenname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 856874 CC BY-SA 4.0
+	Ꞽmn.w-ḥtp.w-ḥqꜣ-Wꜣs.t-ꞽwꜥ.w-Rꜥw Amenophis-heqa-Waset-iwau-Re <i> proper noun (royal name) </i>		TLA 880529 CC BY-SA 4.0
+	Ꞽmn.w-ṯḥn-nfr Amun des schönen Begegnens <i> proper noun (deity name) </i>		TLA 853144 CC BY-SA 4.0
+	Ꞽn.y Iny <i> proper noun (royal name) </i>		TLA 859168 CC BY-SA 4.0
+	Ꞽn-ꜥ=f Der seinen Arm bringt <i> proper noun (deity name) </i>		TLA 851754 CC BY-SA 4.0
+	Ꞽn-ḥtp [Goldname Dedumoses] <i> proper noun (royal name) </i>		TLA 860712 CC BY-SA 4.0
+	Ꞽni̯-ꞽtꞽ=f-ꜥꜣ Intef-aa <i> proper noun (royal name) </i>		TLA 860312 CC BY-SA 4.0
+	ꞽnr-ḥḏ-nfr-n-ꜥn.w Kalkstein <i> noun (masc.) </i>		TLA 885317 CC BY-SA 4.0
+	Ꞽnl-Ꞽmn.w Anlamani <i> proper noun (royal name) </i>		TLA 882488 CC BY-SA 4.0
+	ꞽnš [Schlange] <i> noun (masc.) </i>		TLA 886082 CC BY-SA 4.0
+	ꞽr.ï-ꜥnt.w Salbenbereiter <i> noun (masc.) </i>		TLA 886238 CC BY-SA 4.0
+	Ꞽr.ï-nb.tï [Nebtiname Semerchets] <i> proper noun (royal name) </i>		TLA 882503 CC BY-SA 4.0
+	ꞽr.ï-nṯr.w Gottesdiener <i> noun (masc.) </i>		TLA 884945 CC BY-SA 4.0
+	Ꞽr.ï-Ḥr.w Iri-Hor <i> proper noun (royal name) </i>		TLA 882524 CC BY-SA 4.0
+𓇋𓂋𓅱𓀹𓏪𓋴𓇋𓊪𓅱𓏛𓏥𓀭𓏪	Ꞽr.ïw-sꞽp.w Die Prüfenden (Totenrichter) <i> proper noun (deity name) </i>	M17-D21-G43-A48-Z3-S29-M17-Q3-G43-Y1-Z2-A40-Z3	TLA 851560 CC BY-SA 4.0
+	Ꞽr.ït-pꜥ.t-wr.t-ḥzw.t-Brnyg [Eigenname Berenikes III.] <i> proper noun (royal name) </i>		TLA 861485 CC BY-SA 4.0
+	ꞽr.wt [Bäume] <i> noun (fem.) </i>		TLA 883766 CC BY-SA 4.0
+	Ꞽr-mr.t-nṯr.w [Goldname Nektanebis'] <i> proper noun (royal name) </i>		TLA 882458 CC BY-SA 4.0
+	Ꞽry-mr-Ꞽmn.w Aryamani <i> proper noun (royal name) </i>		TLA 863066 CC BY-SA 4.0
+	ꞽrp-wꜣ [Weinsorte] <i> noun (masc.) </i>		TLA 886049 CC BY-SA 4.0
+	Ꞽrq Philae <i> proper noun (toponym) </i>		TLA 854026 CC BY-SA 4.0
+	Ꞽrq-Ꞽmn.w-ꜥnḫ-ḏ.t-mr-Ꜣs.t Arqamani (Ergamenes II.) <i> proper noun (royal name) </i>		TLA 853963 CC BY-SA 4.0
+	ꞽq [Schlange] <i> noun (masc.) </i>		TLA 887600 CC BY-SA 4.0
+	Ꞽkrꞽt Ugarit <i> proper noun (toponym) </i>		TLA 853277 CC BY-SA 4.0
+	Ꞽty Der Herrscher <i> proper noun (deity name) </i>		TLA 852609 CC BY-SA 4.0
+	Ꞽtm.w-Rꜥw Atum-Re <i> proper noun (deity name) </i>		TLA 859594 CC BY-SA 4.0
+	Ꞽtm.w-Ḫprꞽ Atum-Chepri <i> proper noun (deity name) </i>		TLA 852400 CC BY-SA 4.0
+	Ꞽṯ-m-sḫm=f-m-tꜣ.w-nb.w [Goldname Amenophis' II.] <i> proper noun (royal name) </i>		TLA 880145 CC BY-SA 4.0
+	Ꞽṯ-tꜣ.w-nb.w [Nebtiname Thutmosis' I.] <i> proper noun (royal name) </i>		TLA 887996 CC BY-SA 4.0
+	ꞽd.t-wr.t [Kuh] <i> noun (fem.) </i>		TLA 886253 CC BY-SA 4.0
+	Ymnꜣ Iamneia <i> proper noun (royal name) </i>		TLA 885080 CC BY-SA 4.0
+	ꜥꜣ [Schiff] <i> noun (masc.) </i>		TLA 882851 CC BY-SA 4.0
+	ꜥꜣ.wï-n-p.t [Türen zum Sanktuarraum] <i> noun (masc.) </i>		TLA 884210 CC BY-SA 4.0
+	ꜥꜣ-ꞽb-ꞽtꞽ-nb-qn-nḫt-mꞽ-sꜣ-Ꜣs.t [Goldname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 853042 CC BY-SA 4.0
+	Ꜥꜣ-pḥ.tï [Nebtiname Thutmosis' I.]; [Goldname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 852488 CC BY-SA 4.0
+	Ꜥꜣ-pḥ.tï-wr-pḥ.tï [Nebtiname Merenptahs] <i> proper noun (royal name) </i>		TLA 880634 CC BY-SA 4.0
+	Ꜥꜣ-nr.w [Nebtiname Amenophis' I.] <i> proper noun (royal name) </i>		TLA 878984 CC BY-SA 4.0
+	Ꜥꜣ-ḫpr.w [Horusname Ahmoses] <i> proper noun (royal name) </i>		TLA 878891 CC BY-SA 4.0
+	Ꜥꜣ-ḫpr.w-Rꜥw-stp-n-Ꞽmn.w [Thronname Psusennes' I.] <i> proper noun (royal name) </i>		TLA 886445 CC BY-SA 4.0
+	Ꜥꜣ-ḫpr-n-Rꜥw [Thronname Thutmosis’ II.] <i> proper noun (royal name) </i>		TLA 878987 CC BY-SA 4.0
+	Ꜥꜣ-ḫpš-ḥw-sṯ.tïw [Goldname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 880526 CC BY-SA 4.0
+	ꜥwn-ꞽb [Schlange] <i> noun (masc.) </i>		TLA 884681 CC BY-SA 4.0
+	ꜥm-rʾ.w [Tier] <i> noun (masc.) </i>		TLA 889004 CC BY-SA 4.0
+	ꜥmš vergewaltigen <i> verb </i>		TLA 883958 CC BY-SA 4.0
+	ꜥnḫ (sich) aufbäumen <i> verb </i>		TLA 883328 CC BY-SA 4.0
+	Ꜥnḫ-kꜣ-Rꜥw [Thronname Psammetichs III.]; [Thronname Anlamanis] <i> proper noun (royal name) </i>		TLA 882491 CC BY-SA 4.0
+	ꜥnt.w-šw Trockenmyrrhe <i> noun (masc.) </i>		TLA 885572 CC BY-SA 4.0
+	Ꜥntnyns Antoninus <i> proper noun (royal name) </i>		TLA 862840 CC BY-SA 4.0
+	ꜥrp [Verb] <i> verb </i>		TLA 882812 CC BY-SA 4.0
+	ꜥršn.t [Hautkrankheit (Lentigo?)] <i> noun (fem.) </i>		TLA 883370 CC BY-SA 4.0
+	Ꜥḥꜣ Aha <i> proper noun (royal name) </i>		TLA 882296 CC BY-SA 4.0
+	ꜥḫm Salbe <i> noun (masc.) </i>		TLA 883472 CC BY-SA 4.0
+	Ꜥḏ-ꞽb Adjib <i> proper noun (royal name) </i>		TLA 882278 CC BY-SA 4.0
+	ꜥḏ-nꞽꜣ.w Steinbockfett <i> noun (masc.) </i>		TLA 883556 CC BY-SA 4.0
+	wꜣb eingewurzelt sein <i> verb </i>		TLA 883505 CC BY-SA 4.0
+	wꜣḥ.t [Brot] <i> noun (fem.) </i>		TLA 885353 CC BY-SA 4.0
+	Wꜣḥ-ꞽb [Horusname Apries'] <i> proper noun (royal name) </i>		TLA 862966 CC BY-SA 4.0
+	Wꜣḥ-rnp.wt [Goldname Amenophis' I.] <i> proper noun (royal name) </i>		TLA 862844 CC BY-SA 4.0
+	Wꜣs.t Waset (Theben) <i> proper noun (deity name) </i>		TLA 859657 CC BY-SA 4.0
+	wꜣs.t [Zepter] <i> noun (fem.) </i>		TLA 883769 CC BY-SA 4.0
+	Wꜣḏ [Goldname Unas'] <i> proper noun (royal name) </i>		TLA 881378 CC BY-SA 4.0
+	Wꜣḏ.w Wadj <i> proper noun (royal name) </i>		TLA 882893 CC BY-SA 4.0
+	wꜣḏ.t [Amulett] <i> noun (fem.) </i>		TLA 882926 CC BY-SA 4.0
+	Wꜣḏ-ns [Eigenname des Wenegnebti (Tlas)] <i> proper noun (royal name) </i>		TLA 863765 CC BY-SA 4.0
+	Wꜣḏ-ḫꜥ.w [Horusname Dedumoses]; [Nebtiname Sobekhoteps IV.] <i> proper noun (royal name) </i>		TLA 860710 CC BY-SA 4.0
+	wꜥb Wab-Priester <i> noun (title) </i>		TLA 855694 CC BY-SA 4.0
+	wꜥb.tï Balsamierter <i> noun (masc.) </i>		TLA 888059 CC BY-SA 4.0
+	wbwbs innehaben (?) <i> verb </i>		TLA 883004 CC BY-SA 4.0
+	Wp-wꜣ.wt-Šmꜥ.w Wepwaut von Oberägypten <i> proper noun (deity name) </i>		TLA 853641 CC BY-SA 4.0
+	Wp-mꜣꜥ.t [Nebtiname Neferhoteps I.] <i> proper noun (royal name) </i>		TLA 860891 CC BY-SA 4.0
+	Wnw.t Unut <i> proper noun (deity name) </i>		TLA 869168 CC BY-SA 4.0
+	wnp Haarlocke <i> noun (masc.) </i>		TLA 884132 CC BY-SA 4.0
+	Wnn-nfr-mꜣꜥ-ḫrw Wenennefer, der Triumphierende (Osiris) <i> noun (epithet) </i>		TLA 851633 CC BY-SA 4.0
+	Wng Weneg <i> proper noun (royal name) </i>		TLA 882260 CC BY-SA 4.0
+	Wr.t [Horusname Nitokris' I. (Gottesgemahlin)] <i> proper noun (royal name) </i>		TLA 550313 CC BY-SA 4.0
+	Wr-pḥ.tï [Nebtiname Domitians]; [Nebtiname Ptolemaios' XII.]; [Goldname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 875396 CC BY-SA 4.0
+	Wr-pḥ.tï-ꞽr-ꜣḫ.t-nb-ḥꜣb.w-sd-Ptḥ-Tꜣ-ṯnn-ꞽty-mꞽ-Rꜥw [Goldname Domitians] <i> proper noun (royal name) </i>		TLA 875399 CC BY-SA 4.0
+	Wr-pḥ.tï-ꞽr-ꜣḫ.t-nb-ḥꜣb.w-sd-mꞽ-Ptḥ-Tꜣ-ṯnn-ꞽty-mꞽ-Rꜥw [Goldname Ptolemaios' III.] <i> proper noun (royal name) </i>		TLA 883283 CC BY-SA 4.0
+	Wr-pḥ.tï-mnḫ-ꞽb-ḫr-nṯr.w-nb.w-nḏ.tï-n-ḥnmm.t [Goldname Ptolemaios' IV.] <i> proper noun (royal name) </i>		TLA 853953 CC BY-SA 4.0
+	Wr-pḥ.tï-nb-ḥꜣb.w-sd-mꞽ-Ptḥ-Ṯnn-ꞽty-mꞽ-Rꜥw [Goldname Ptolemaios' VIII.] <i> proper noun (royal name) </i>		TLA 853052 CC BY-SA 4.0
+	Wr-pḥ.tï-nb-ḥꜣb-sd-mꞽ-ꞽtꞽ=f-Ptḥ-Tꜣ-ṯnn-ꞽtꞽ-nṯr.w-ꞽty-mꞽ-Rꜥw [Goldname Ptolemaios' VI]; [Goldname Ptolemaios' VIII.] <i> proper noun (royal name) </i>		TLA 853948 CC BY-SA 4.0
+	Wr-pḥ.tï-ḥw-Mnṯ.w [Goldname Osorkons II.] <i> proper noun (royal name) </i>		TLA 881216 CC BY-SA 4.0
+	Wr-pḥ.tï-ḫnt.ï-š-nḥḥ-smn-hp.w-mꞽ-Ḏḥw.tï-ꜥꜣ-ꜥꜣ [Nebtiname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 865433 CC BY-SA 4.0
+	Wr-pḥ.tï-sꜥnḫ-tꜣ.wï-ꞽty-hr-ḥr-Mꜣꜥ.t-sḥtp-Tꜣ.wï [Goldname Ramses' XI] <i> proper noun (royal name) </i>		TLA 853404 CC BY-SA 4.0
+	wr-n-mw.t=f [Personenbezeichnung] <i> noun (masc.) </i>		TLA 886547 CC BY-SA 4.0
+	Wr-nzw.yt-m-Ꜣḫ.t-Ꞽtn [Nebtiname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 859290 CC BY-SA 4.0
+	Wr-ḥꜣb.w-sd-ꜥꜣ-nḫt.w [Nebtiname Ramses' IV.] <i> proper noun (royal name) </i>		TLA 859118 CC BY-SA 4.0
+	Wr-ḫpš-hd-ḥfn.w [Nebtiname Ramses' XI.] <i> proper noun (royal name) </i>		TLA 853403 CC BY-SA 4.0
+	wḥm [Kohle als Brennmaterial] <i> noun (masc.) </i>		TLA 885809 CC BY-SA 4.0
+	wḥm.w [Qualitätsbezeichnung für Öle (wiederholte Pressung)] <i> noun (masc.) </i>		TLA 883094 CC BY-SA 4.0
+	Wḥm-ꞽb-Rꜥw [Thronname Nechos II.] <i> proper noun (royal name) </i>		TLA 861335 CC BY-SA 4.0
+	wḫyḫ Blüte <i> noun (masc.) </i>		TLA 883517 CC BY-SA 4.0
+	ws.t [Körperteil] <i> noun (fem.) </i>		TLA 882818 CC BY-SA 4.0
+	ws.t-n.t-ꜥš Sägemehl aus Koniferenholz <i> noun (fem.) </i>		TLA 884129 CC BY-SA 4.0
+	Wsꞽr-Mr-wr Osiris-Mnevis <i> proper noun (deity name) </i>		TLA 883445 CC BY-SA 4.0
+	Wspsns Vespasian <i> proper noun (royal name) </i>		TLA 862847 CC BY-SA 4.0
+	Wspsns-pꜣ-nṯr Vespasian divus <i> proper noun (royal name) </i>		TLA 875390 CC BY-SA 4.0
+	Wsr-ꞽb [Horusname von Chephren] <i> proper noun (royal name) </i>		TLA 852525 CC BY-SA 4.0
+	Wsr-bꜣ.w [Goldname Sobekhoteps IV.] <i> proper noun (royal name) </i>		TLA 860919 CC BY-SA 4.0
+	Wsr-pḏ.wt-m-tꜣ.w-nb.w [Goldname Sethos' I.] <i> proper noun (royal name) </i>		TLA 854867 CC BY-SA 4.0
+	Wsr-fꜣ.w-sḫꜥ-m-Wꜣs.t [Nebtiname Amenophis' II.] <i> proper noun (royal name) </i>		TLA 880151 CC BY-SA 4.0
+	Wsr-m-nb.tï [Nebtiname Chephrens] <i> proper noun (royal name) </i>		TLA 852920 CC BY-SA 4.0
+	Wsr-mꜣꜥ.t-Rꜥw-stp-n-Ꞽmn.w [Thronname Ramses' IV.]; [Thronname Amenemopes]; [Thronname Osorkons II.]; [Thronname Petubastis' I.]; [Thronname Scheschonks III.] <i> proper noun (royal name) </i>		TLA 859120 CC BY-SA 4.0
+	Wsr-mꜣꜥ.t-Rꜥw-stp-n-Rꜥw-mr-Ꞽmn.w [Thronname Ramses' VII.] <i> proper noun (royal name) </i>		TLA 859330 CC BY-SA 4.0
+	Wsr-nsyt-m-Ꞽp.t-s.wt [Nebtiname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 852055 CC BY-SA 4.0
+	Wsr-rnp.wt [Nebtiname Rahoteps] <i> proper noun (royal name) </i>		TLA 860907 CC BY-SA 4.0
+	Wsr-rnp.wt-m-tꜣ.w-nb.w [Goldname Ramses' IV.] <i> proper noun (royal name) </i>		TLA 859119 CC BY-SA 4.0
+	Wsr-rnp.wt-mꞽ-Ꜥnḏ.tï-wr-nsyt-dr-pd.t-9 [Goldname Ramses' IX.] <i> proper noun (royal name) </i>		TLA 853265 CC BY-SA 4.0
+	Wsr-ḫpr.w-Rꜥw-stp-n-Rꜥw-mr.y-Ꞽmn.w [Thronname Sethos' II.] <i> proper noun (royal name) </i>		TLA 886067 CC BY-SA 4.0
+	Wsr-ḫpš-sꜥnḫ-Tꜣ.wï [Nebtiname Ramses' IX.] <i> proper noun (royal name) </i>		TLA 853264 CC BY-SA 4.0
+	Wsr-ḫpš-dr-Pḏ.wt-9 [Goldname Thutmosis' IV.] <i> proper noun (royal name) </i>		TLA 860017 CC BY-SA 4.0
+	Wsr-kꜣ=f Userkaf <i> proper noun (royal name) </i>		TLA 881375 CC BY-SA 4.0
+	Wsr-kꜣ-Rꜥw-mr-Ꞽmn.w [Thronname Ptolemaios' II.] <i> proper noun (royal name) </i>		TLA 860364 CC BY-SA 4.0
+	Wsrkn Osorkon I.; Osorkon II.; Osorkon III.; Osorkon IV.; Osorkon <i> proper noun (royal name) </i>		TLA 861216 CC BY-SA 4.0
+	Wsrkn-mr-Ꞽmn.w Osorkon-mer-Imen <i> proper noun (royal name) </i>		TLA 881213 CC BY-SA 4.0
+	Wsrkn-zꜣ-Ꜣs.t-mr-Ꞽmn.w Osorkon-za-Aset-mer-Imen <i> proper noun (royal name) </i>		TLA 884465 CC BY-SA 4.0
+	Wsrkn-zꜣ-Bꜣs.tït-mr-Ꞽmn.w Osorkon-za-Bastet-mer-Imen <i> proper noun (royal name) </i>		TLA 887567 CC BY-SA 4.0
+𓎺𓏏𓉐𓈖𓏏𓌳𓐙𓂝𓏏𓏭𓆄𓆄	wsḫ.t-n.ït-Mꜣꜥ.tï Halle der doppelten Maat (Ort des Jenseitsgerichtes) <i> proper noun (toponym) </i>	W10-X1-O1-N35-X1-U1-Aa11-D36-X1-Z4-H6-H6	TLA 851546 CC BY-SA 4.0
+	Wṯz-rn-n-Ꞽtn [Goldname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 859291 CC BY-SA 4.0
+	Wṯz-ḫꜥ.w-m-Ꞽwn.w-Šmꜥ.w [Goldname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 852056 CC BY-SA 4.0
+	Wṯz-ḫꜥ.w-sḥtp-nṯr.w [Goldname Tutanchamuns] <i> proper noun (royal name) </i>		TLA 859808 CC BY-SA 4.0
+	wdr.t Steilwand <i> noun (fem.) </i>		TLA 887366 CC BY-SA 4.0
+	wḏꜣ.t Vorratshaus; Magazin <i> noun (fem.) </i>		TLA 885329 CC BY-SA 4.0
+	wḏb [Brot] <i> noun (masc.) </i>		TLA 885359 CC BY-SA 4.0
+	Bꜣ Ba <i> proper noun (royal name) </i>		TLA 881243 CC BY-SA 4.0
+	Bꜣ.w-Ꞽꜣb.tït Die Bas des Ostens <i> proper noun (deity name) </i>		TLA 853826 CC BY-SA 4.0
+	Bꜣ.w-nṯr [Eigenname Hetepsechemuis] <i> proper noun (royal name) </i>		TLA 854843 CC BY-SA 4.0
+	Bꜣ-n-Rꜥw [Thronname Merenptahs] <i> proper noun (royal name) </i>		TLA 859420 CC BY-SA 4.0
+	Bꞽ.t Bit (uäg. Kronengöttin) <i> proper noun (deity name) </i>		TLA 852172 CC BY-SA 4.0
+	bꜥr Kampf <i> noun (masc.) </i>		TLA 885722 CC BY-SA 4.0
+	bhkz.ï Einwohner von Behkez <i> noun (masc.) </i>		TLA 888185 CC BY-SA 4.0
+	bš.ty [Schlange] <i> noun (masc.) </i>		TLA 887591 CC BY-SA 4.0
+	Bḏꜣw Bedjau <i> proper noun (royal name) </i>		TLA 862841 CC BY-SA 4.0
+	pꜣ-bnr.w außerhalb von <i> preposition </i>		TLA 884135 CC BY-SA 4.0
+	Pꜣ-nṯr-mr-ꞽtꞽ=f-mr-sn.t-Wsꞽr-ḥwn.w Theos Philopator Philadelphos Neos Dionysos <i> proper noun (royal name) </i>		TLA 880337 CC BY-SA 4.0
+	Pꜣ-nḏm-mr-Ꞽmn.w Pinodjem I. <i> proper noun (royal name) </i>		TLA 863219 CC BY-SA 4.0
+	Pꜣ-sbꜣ-ḫꜥ-n-nʾ.t Psusennes I. <i> proper noun (royal name) </i>		TLA 886442 CC BY-SA 4.0
+	Pꜣ-sbꜣ-ḫꜥ-n-nʾ.t-mr.y-Ꞽmn.w Psusennes-mery-Amun <i> proper noun (royal name) </i>		TLA 886448 CC BY-SA 4.0
+	Pꜣ-ḏ-Bꜣs.tït Petubastis <i> proper noun (royal name) </i>		TLA 885176 CC BY-SA 4.0
+	Pꜣ-ḏ-Bꜣs.tït-mr-Ꞽmn.w Petubastis-meri-Amun <i> proper noun (royal name) </i>		TLA 885179 CC BY-SA 4.0
+	Pꜣy=f-ṯꜣw-m-ꜥ.wï-Bꜣs.tït Peftjauemawibastet <i> proper noun (royal name) </i>		TLA 861215 CC BY-SA 4.0
+	pꜣꜥr [Pflanze] <i> noun (masc.) </i>		TLA 884291 CC BY-SA 4.0
+	pꜣḏ.tï [Schlange] <i> noun </i>		TLA 886088 CC BY-SA 4.0
+	Py Piye <i> proper noun (royal name) </i>		TLA 859167 CC BY-SA 4.0
+	Py-mr-Ꞽmn.w [Eigenname Piyes] <i> proper noun (royal name) </i>		TLA 861355 CC BY-SA 4.0
+	Pr-Ꞽtn Atontempel <i> proper noun </i>		TLA 856873 CC BY-SA 4.0
+	Pr-šps.t Haus der Vornehmen (Dendera) <i> proper noun (toponym) </i>		TLA 860511 CC BY-SA 4.0
+	Pri̯-ꞽb=sn Peribsen <i> proper noun (royal name) </i>		TLA 882308 CC BY-SA 4.0
+	prb [Möbelstück ?] <i> noun (masc.) </i>		TLA 889235 CC BY-SA 4.0
+	Phlpws Philipp <i> proper noun (royal name) </i>		TLA 862854 CC BY-SA 4.0
+	pḥ.wï [Qualitätsbezeichnung für Öle] <i> noun (masc.) </i>		TLA 883091 CC BY-SA 4.0
+	pḥ-n-nṯr Gottesorakel <i> noun (masc.) </i>		TLA 889295 CC BY-SA 4.0
+𓊽𓇶𓏏𓆇	Psḏ.t die Leuchtende <i> proper noun (deity name) </i>	R11-N8-X1-H8	TLA 62480 CC BY-SA 4.0
+	Psḏ.t-ꜥꜣ.t Die große Neunheit (Götterkollegium) <i> proper noun (deity name) </i>		TLA 500407 CC BY-SA 4.0
+	Psḏ.t-nḏs.t Die kleine Neunheit (Götterkollegium) <i> proper noun (deity name) </i>		TLA 500408 CC BY-SA 4.0
+	pgꜣ.t [offene und nässende (?) Wunde] <i> noun (fem.) </i>		TLA 884408 CC BY-SA 4.0
+	Ptwlmys Ptolemaios <i> proper noun (royal name) </i>		TLA 853957 CC BY-SA 4.0
+	Ptwlmys-ꜥnḫ-ḏ.t-mr-Ꜣs.t Ptolemaios, der ewig lebt, geliebt von Isis (Ptol. IV., XII.) <i> proper noun (royal name) </i>		TLA 853045 CC BY-SA 4.0
+	Ptwlmys-ꜥnḫ-ḏ.t-mr-Ptḥ Ptolemaios, der ewig lebt, geliebt von Ptah <i> proper noun (royal name) </i>		TLA 853057 CC BY-SA 4.0
+	Ptwlmys-ꜥnḫ-ḏ.t-mr-Ptḥ-Ꜣs.t Ptolemaios, der ewig lebt, geliebt von Ptah und Isis (Ptol. XII.) <i> proper noun (royal name) </i>		TLA 853937 CC BY-SA 4.0
+	Ptwlmys-pꜣ-nṯr-mr-ꞽtꞽ=f Ptolemaios Theos Philopator <i> proper noun (royal name) </i>		TLA 861515 CC BY-SA 4.0
+	Ptwlmys-mr-Ptḥ-mꜣꜥ-ḫrw Ptolemaios, geliebt von Ptah, gerechtfertigt <i> proper noun (royal name) </i>		TLA 861393 CC BY-SA 4.0
+	Ptwlmys-ḏd-n=f-ꜣlksntrs-ꜥnḫ-ḏ.t-mr-Ptḥ Ptolemaios, den man Alexander nennt, der ewig lebt, geliebt von Ptah <i> proper noun (royal name) </i>		TLA 858829 CC BY-SA 4.0
+	Ptḥ-ꜥꜣ Ptah, der Große <i> proper noun (deity name) </i>		TLA 860146 CC BY-SA 4.0
+	Ptḥ-Nw.w Ptah-Nun <i> proper noun (deity name) </i>		TLA 853775 CC BY-SA 4.0
+	Ptḥ-Tꜣ-ṯnn Ptah-Tatenen <i> proper noun (deity name) </i>		TLA 853038 CC BY-SA 4.0
+	Pḏ.wt-9 die Neun-Bogenvölker (neun feindliche Völker, Fremdvölker) <i> proper noun </i>		TLA 853581 CC BY-SA 4.0
+	fy.t [Schlange] <i> noun (fem.) </i>		TLA 883625 CC BY-SA 4.0
+	fnḫ-ꞽb Klugheit <i> noun (masc.) </i>		TLA 886544 CC BY-SA 4.0
+	ftt.t-n.t-bnw.t [offizinell Verwendetes] <i> noun (fem.) </i>		TLA 887528 CC BY-SA 4.0
+	m=ṯ siehe! (unveränderlich); [Partikel] <i> grammatical particle </i>		TLA 887255 CC BY-SA 4.0
+	m-ꜥqꜣ-n gegenüber von; auf jmdn. (schießen) <i> preposition </i>		TLA 885683 CC BY-SA 4.0
+	m-bꜣḥ-r vor <i> preposition </i>		TLA 885764 CC BY-SA 4.0
+	M-rn=f-m-Rꜥw-ꞽtꞽ-ꞽy-m-Ꞽtn In seinem Namen Re, der Vater, der als Aton gekommen ist (Aton) <i> proper noun (deity name) </i>		TLA 859391 CC BY-SA 4.0
+	M-rn=f-m-Šw-nt.ï-m-Ꞽtn In seinem Namen Sonnenlicht, das in der Sonnenscheibe ist (Aton) <i> proper noun (deity name) </i>		TLA 856317 CC BY-SA 4.0
+	m-ẖr.t-hrw-n.t-rꜥw-nb täglich <i> adverb </i>		TLA 886826 CC BY-SA 4.0
+	m-stwt-r gleich dem; wie <i> preposition </i>		TLA 885104 CC BY-SA 4.0
+	mꜣ.tï einer, der sieht <i> noun (masc.) </i>		TLA 883691 CC BY-SA 4.0
+	mꜣ.tït Flötenspielerin <i> noun (fem.) </i>		TLA 883868 CC BY-SA 4.0
+𓌳𓏤𓇉𓄿𓆑𓅆	Mꜣ-ḥꜣ=f Der hinter sich schaut (Fährmann am Himmel) <i> proper noun (deity name) </i>	U1-Z1-M16-G1-I9-G7	TLA 66250 CC BY-SA 4.0
+	mꜣꜥ.t Seil <i> noun (fem.) </i>		TLA 886013 CC BY-SA 4.0
+𓌴𓐙𓂝𓏏𓏭𓁦𓁦	Mꜣꜥ.tï Die beiden Wahrheiten <i> proper noun (deity name) </i>	U2-Aa11-D36-X1-Z4-C10-C10	TLA 66650 CC BY-SA 4.0
+	Mꜣꜥ-ḫrw [Goldname Amenemhets II.]; [Nebtiname Nechos II.] <i> proper noun (royal name) </i>		TLA 861005 CC BY-SA 4.0
+	Mꜣꜥ-ḫrw-m-nb-Tꜣ.wï [Goldname Amenemhets II.] <i> proper noun (royal name) </i>		TLA 859703 CC BY-SA 4.0
+	mꜣt [Pflanze (?)] <i> noun </i>		TLA 888401 CC BY-SA 4.0
+	mꜥr vervollkommnen; vollkommen machen <i> verb </i>		TLA 889388 CC BY-SA 4.0
+	mꜥḏ töten; schlachten <i> verb </i>		TLA 882821 CC BY-SA 4.0
+𓅓𓅱𓈗𓏏	Mw.t Mut (eine Göttin) <i> proper noun (deity name) </i>	G17-G43-N35A-X1	TLA 69020 CC BY-SA 4.0
+	mn.w Aufenthalt <i> noun (masc.) </i>		TLA 883433 CC BY-SA 4.0
+	Mn-pḥ.tï-Rꜥw-tꞽ.t-Rꜥw [Thronname Ramses' I.] <i> proper noun (royal name) </i>		TLA 854865 CC BY-SA 4.0
+	Mn-mꜣꜥ.t-Rꜥw-ꞽwꜥ-n-Rꜥw [Thronname Sethos' I.] <i> proper noun (royal name) </i>		TLA 854789 CC BY-SA 4.0
+	Mn-mꜣꜥ.t-Rꜥw-ꜥꜣ-nḫt.w Men-Maat-Re-aa-nechtu <i> proper noun (royal name) </i>		TLA 885959 CC BY-SA 4.0
+	Mn-mꜣꜥ.t-Rꜥw-ḥqꜣ-Ꞽwn.w [Thronname Sethos' I.] <i> proper noun (royal name) </i>		TLA 854899 CC BY-SA 4.0
+	Mn-mꜣꜥ.t-Rꜥw-ḥqꜣ-mꜣꜥ.t [Thronname Sethos' I.] <i> proper noun (royal name) </i>		TLA 854868 CC BY-SA 4.0
+	Mn-mꜣꜥ.t-Rꜥw-tꞽ.t-Rꜥw [Thronname Sethos' I.] <i> proper noun (royal name) </i>		TLA 854871 CC BY-SA 4.0
+	Mn-mꞽ-Rꜥw [Thronname Amenmesses] <i> proper noun (royal name) </i>		TLA 886061 CC BY-SA 4.0
+	Mn-mrw.t [Goldname Neferhoteps I.] <i> proper noun (royal name) </i>		TLA 860890 CC BY-SA 4.0
+	mn-ns.t=f [Kultgerät] <i> noun (masc.) </i>		TLA 884204 CC BY-SA 4.0
+	Mn-ḫꜥ.w-Rꜥw [Thronname Senaaibs] <i> proper noun (royal name) </i>		TLA 860751 CC BY-SA 4.0
+	Mn-ḫpr-Rꜥw-mri̯.n-Rꜥw [Thronname Thutmosis' III.] <i> proper noun (royal name) </i>		TLA 879086 CC BY-SA 4.0
+	Mn-ḫpr-Rꜥw-ḥqꜣ-Wꜣs.t [Thronname Thutmosis' III.] <i> proper noun (royal name) </i>		TLA 888002 CC BY-SA 4.0
+	Mn-ḫpr-Rꜥw-ḥqꜣ-Mꜣꜥ.t-tꞽ.t-Rꜥw [Thronname Thutmosis' III.] <i> proper noun (royal name) </i>		TLA 888005 CC BY-SA 4.0
+	Mnw-Ꞽmn.w Min-Amun <i> proper noun (deity name) </i>		TLA 854788 CC BY-SA 4.0
+	Mnw-Gbtw.ï Min von Koptos <i> proper noun (deity name) </i>		TLA 853785 CC BY-SA 4.0
+	mnk [Gefäß] <i> noun (masc.) </i>		TLA 885446 CC BY-SA 4.0
+	Mnṯ.w-m-Wꜣs.t Month in Theben <i> proper noun (deity name) </i>		TLA 855563 CC BY-SA 4.0
+	Mnṯ.w-Rꜥw Month-Re <i> proper noun (deity name) </i>		TLA 853973 CC BY-SA 4.0
+	Mr.y-Ꞽmn.w [Thronname Merenptahs] <i> proper noun (royal name) </i>		TLA 859421 CC BY-SA 4.0
+	Mr.y-nṯr.w [Goldname Nechos II.] <i> proper noun (royal name) </i>		TLA 861842 CC BY-SA 4.0
+	Mr.y-kꜣ-Rꜥw Merikare; [Thronname Aspeltas] <i> proper noun (royal name) </i>		TLA 852699 CC BY-SA 4.0
+	mr.t Weide <i> noun (fem.) </i>		TLA 883358 CC BY-SA 4.0
+	Mr-pꞽ-bꞽꜣ [Nebtiname Adjibs] <i> proper noun (royal name) </i>		TLA 882515 CC BY-SA 4.0
+	mr-n-hrw-1 [Fieber ("Ein-Tages-Krankheit")] <i> noun (masc.) </i>		TLA 888137 CC BY-SA 4.0
+	mr-n-hrw-2 [Fieber ("Zwei-Tage-Krankheit")] <i> noun (masc.) </i>		TLA 888140 CC BY-SA 4.0
+	mr-n-hrw-3 [Fieber ("Drei-Tage-Krankheit")] <i> noun (masc.) </i>		TLA 888143 CC BY-SA 4.0
+	mr-n-hrw-4 [Fieber ("Vier-Tage-Krankheit")] <i> noun (masc.) </i>		TLA 888146 CC BY-SA 4.0
+	mr-n-hrw-5 [Fieber ("Fünf-Tage-Krankheit")] <i> noun (masc.) </i>		TLA 888149 CC BY-SA 4.0
+	Mr-nṯr.w-rḏ-n=f-ꞽꜣw.t-n.ït-ꞽtꞽ=f [Nebtiname Alexanders IV.] <i> proper noun (royal name) </i>		TLA 882680 CC BY-SA 4.0
+	Mr-nṯr-mnḫ-nṯr.t-mnḫ.t-zꜣ.t-Rꜥw-stp-n-Ptḥ-ꞽr-Mꜣꜥ.t-Rꜥw-znn-ꜥnḫ-n-Ꞽmn.w [Thronname Ptolemaios' X.] <i> proper noun (royal name) </i>		TLA 858828 CC BY-SA 4.0
+	Mr-Tꜣ.wï-ḥqꜣ-ꞽdb.w [Horusname Domitians] <i> proper noun (royal name) </i>		TLA 875402 CC BY-SA 4.0
+𓌸𓂋𓊃𓎼𓂋𓀁𓆗	Mri̯=s-gr Meresger ("Sie liebt das Schweigen") (Göttin der thebanischen Nekropole) <i> proper noun (deity name) </i>	U6-D21-O34-W11-D21-A2-I12	TLA 72150 CC BY-SA 4.0
+	Mri̯-ḥtp-Rꜥw [Thronname des Ini] <i> proper noun (royal name) </i>		TLA 860906 CC BY-SA 4.0
+	mrr.tït Geliebte <i> noun (fem.) </i>		TLA 883706 CC BY-SA 4.0
+	mrrk [Fisch] <i> noun (masc.) </i>		TLA 883943 CC BY-SA 4.0
+	mhꜣb.w [Schlange] <i> noun (masc.) </i>		TLA 886091 CC BY-SA 4.0
+	mḥ Quadratelle <i> noun (masc.) </i>		TLA 889442 CC BY-SA 4.0
+	mḥ.w Wappenpflanze Unterägyptens <i> noun (masc.) </i>		TLA 885686 CC BY-SA 4.0
+𓅓𓎔𓎛𓃹𓈖𓌪𓀭	Mḥwn Mehwen <i> proper noun (deity name) </i>	G17-V22-V28-E34-N35-T30-A40	TLA 74020 CC BY-SA 4.0
+	mzḥ-ꞽgr.t Waran <i> noun </i>		TLA 887453 CC BY-SA 4.0
+	Ms-ḥmw.w [Nebtiname Inys] (?) <i> proper noun (royal name) </i>		TLA 859170 CC BY-SA 4.0
+	msẖ.t [Substantiv] <i> noun (fem.) </i>		TLA 887450 CC BY-SA 4.0
+	Msṯ.w-Rꜥw [Thronname Kambyses'] <i> proper noun (royal name) </i>		TLA 886643 CC BY-SA 4.0
+	msṯ.tï Lastenträger; Transportarbeiter <i> noun (masc.) </i>		TLA 883034 CC BY-SA 4.0
+	mšb [Titel] <i> noun (masc.) </i>		TLA 889238 CC BY-SA 4.0
+	mšṯ [Gewand] <i> noun (masc.) </i>		TLA 885371 CC BY-SA 4.0
+	mk.tï Schützer <i> noun (masc.) </i>		TLA 883712 CC BY-SA 4.0
+	Mk-Km.t-wꜥf-ḫꜣs.wt-Rꜥw-ms-nṯr.w-grg-Tꜣ.wï [Nebtiname (2) Ramses' II.] <i> proper noun (royal name) </i>		TLA 852674 CC BY-SA 4.0
+	mt [Leinen] <i> noun (masc.) </i>		TLA 883715 CC BY-SA 4.0
+	mtw.t-kꜣ Wahrheit <i> noun (fem.) </i>		TLA 888164 CC BY-SA 4.0
+	mtwꜣ [Öl] <i> noun (masc.) </i>		TLA 889016 CC BY-SA 4.0
+	mḏḥ.w Salbenkoch <i> noun (masc.) </i>		TLA 888701 CC BY-SA 4.0
+	mḏd Treffer <i> noun (masc.) </i>		TLA 889202 CC BY-SA 4.0
+	Mḏdw-rʾ-Nb.tï [Nebtiname von Cheops] <i> proper noun (royal name) </i>		TLA 884102 CC BY-SA 4.0
+	N.ï-mꜣꜥ.t-n.t-Rꜥw [Thronname Chendjers] <i> proper noun (royal name) </i>		TLA 859736 CC BY-SA 4.0
+	N.ï-mꜣꜥ-ḫrw-Rꜥw [Thronname Amenemhets IV.] <i> proper noun (royal name) </i>		TLA 867605 CC BY-SA 4.0
+	N.ï-nzw-ḥw Huni <i> proper noun (royal name) </i>		TLA 881249 CC BY-SA 4.0
+	N.ï-nṯr Ninetjer <i> proper noun (royal name) </i>		TLA 882266 CC BY-SA 4.0
+	N.ï-nṯr-nb.tï [Nebtiname Ninetjers] <i> proper noun (royal name) </i>		TLA 882494 CC BY-SA 4.0
+	n.ï-ḥzw.t lobenswert <i> adjective </i>		TLA 888179 CC BY-SA 4.0
+	n-mꜣw.t Neubau <i> noun </i>		TLA 888080 CC BY-SA 4.0
+	n-ḥr nach vorne; vorwärts <i> adverb </i>		TLA 883007 CC BY-SA 4.0
+	nꞽs.w Rufer <i> noun (masc.) </i>		TLA 882794 CC BY-SA 4.0
+	nꞽk zu Strafender; Böser <i> noun (masc.) </i>		TLA 888041 CC BY-SA 4.0
+𓈖𓂝𓅱𓆙	Nꜥw Sich windender (Personifikation der Schlange) <i> proper noun (deity name) </i>	N35-D36-G43-I14	TLA 80510 CC BY-SA 4.0
+	Nꜥr-mr Narmer <i> proper noun (royal name) </i>		TLA 882299 CC BY-SA 4.0
+	Nꜥr-mr-ṯꜣ.y Narmer-tjai <i> proper noun (royal name) </i>		TLA 882521 CC BY-SA 4.0
+	nw Nu-Sanktuar <i> noun (masc.) </i>		TLA 883610 CC BY-SA 4.0
+	nb [Arbeiter einer Wirtschaftsanlage] <i> noun (masc.) </i>		TLA 883121 CC BY-SA 4.0
+	Nb.w-ꞽḫ.wt Herren des Opfers <i> proper noun (deity name) </i>		TLA 851601 CC BY-SA 4.0
+	Nb.t-nfr.w-Mw.t [Thronname Nitokris' I.] <i> proper noun (royal name) </i>		TLA 550314 CC BY-SA 4.0
+	Nb.t-Ḥtp.t Herrin von Hetepet <i> proper noun (deity name) </i>		TLA 852403 CC BY-SA 4.0
+	Nb.tï-Pri̯-ꞽb=sn [Nebtiname Peribsens] <i> proper noun (royal name) </i>		TLA 885065 CC BY-SA 4.0
+	Nb-ꞽr.ï-r-ꜣw Nebirierau <i> proper noun (royal name) </i>		TLA 860899 CC BY-SA 4.0
+	nb-wnn.t=f Volljähriger ("Herr seines Besitzes") <i> noun (masc.) </i>		TLA 883973 CC BY-SA 4.0
+	Nb-mꜣꜥ.t-Rꜥw-ꞽwꜥ.w-Rꜥw [Thronname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 880532 CC BY-SA 4.0
+	Nb-mꜣꜥ.t-Rꜥw-tꞽ.t-Rꜥw [Thronname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 880535 CC BY-SA 4.0
+	Nb-ḥr.w Der Herr der Gesichter <i> proper noun (deity name) </i>		TLA 851771 CC BY-SA 4.0
+	Nb-ḫpr.w-Rꜥw-nb-ḫpš [Thronname Tutanchamuns] <i> proper noun (royal name) </i>		TLA 889013 CC BY-SA 4.0
+	Nb-ḫpš [Nebtiname Apries'] <i> proper noun (royal name) </i>		TLA 862967 CC BY-SA 4.0
+	Nb-snḏ-ꜥꜣ-sf.yt [Goldname Merenptahs] <i> proper noun (royal name) </i>		TLA 880643 CC BY-SA 4.0
+	Nb-kꜣ Neb-ka <i> proper noun (royal name) </i>		TLA 853626 CC BY-SA 4.0
+	Nb-kꜣ.w-Rꜥw Nebkaure Achtoi <i> proper noun (royal name) </i>		TLA 851869 CC BY-SA 4.0
+	Nbw [Goldname Djosers] <i> proper noun (royal name) </i>		TLA 881246 CC BY-SA 4.0
+	nbw-n-ḥzw.t Ehrengold <i> noun (masc.) </i>		TLA 886256 CC BY-SA 4.0
+	Nbw-nfr Nebu-nefer <i> proper noun (royal name) </i>		TLA 882827 CC BY-SA 4.0
+	Nbw-ḫpr-Rꜥw-zꜣ-Rꜥw-Ꞽni̯-ꞽtꞽ=f [Thron- und Eigenname Intefs V.] <i> proper noun (royal name) </i>		TLA 852011 CC BY-SA 4.0
+	npꜣ Wasserspende <i> noun (masc.) </i>		TLA 883436 CC BY-SA 4.0
+	Nfr-ꞽb-Rꜥw [Thronname Psammetichs II.] <i> proper noun (royal name) </i>		TLA 862853 CC BY-SA 4.0
+	Nfr-rnp.wt-sꜥnḫ-ꞽb.w [Goldname Thutmosis' I.] <i> proper noun (royal name) </i>		TLA 852489 CC BY-SA 4.0
+	Nfr-hp.w-sgrḥ-Tꜣ.wï [Nebtiname Tutanchamuns] <i> proper noun (royal name) </i>		TLA 859798 CC BY-SA 4.0
+	Nfr-ḫꜥ.w [Goldname Nebirieraus I.] <i> proper noun (royal name) </i>		TLA 860897 CC BY-SA 4.0
+	Nfr-ḫpr.w-Rꜥw [Thronname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 852057 CC BY-SA 4.0
+	Nfr-ḫpr.w-Rꜥw-wꜥ-n-Rꜥw [Thronname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 856314 CC BY-SA 4.0
+	Nfr-kꜣ-Rꜥw-stp-n-Rꜥw [Thronname Ramses' IX.] <i> proper noun (royal name) </i>		TLA 853266 CC BY-SA 4.0
+	Nmlt Nimlot <i> proper noun (royal name) </i>		TLA 861213 CC BY-SA 4.0
+	Nmt.ï-m-zꜣ=f Nemti-em-za-ef <i> proper noun (royal name) </i>		TLA 854416 CC BY-SA 4.0
+	Nn.t Gegenhimmel <i> proper noun (deity name) </i>		TLA 858207 CC BY-SA 4.0
+	nn.t [Geländebezeichnung] <i> noun (fem.) </i>		TLA 884126 CC BY-SA 4.0
+	nn-šm [Schlange] <i> noun (masc.) </i>		TLA 883010 CC BY-SA 4.0
+	Nrn Nero <i> proper noun (royal name) </i>		TLA 862855 CC BY-SA 4.0
+𓈖𓉔𓊃	Nhz Wiederwachender <i> proper noun (deity name) </i>	N35-O4-O34	TLA 85770 CC BY-SA 4.0
+𓈖𓅘𓎛𓃀𓅱𓂓𓂓𓂓𓂕	Nḥb.w-kꜣ.w Der mit den Ka-Kräften versehen ist <i> proper noun (deity name) </i>	N35-G21-V28-D58-G43-D28-D28-D28-D30	TLA 86270 CC BY-SA 4.0
+	nḥb.t [Boot] <i> noun (fem.) </i>		TLA 884717 CC BY-SA 4.0
+	Nḫt-nb=f Nektanebis <i> proper noun (royal name) </i>		TLA 859847 CC BY-SA 4.0
+	Nḫt-Ḥr.w-Ḥby.t Nektanebos <i> proper noun (royal name) </i>		TLA 883454 CC BY-SA 4.0
+	Nḫt-Ḥr.w-Ḥby.t-mr-Ꞽn-ḥr.t Nektanebos-mer-Onuris <i> proper noun (royal name) </i>		TLA 859848 CC BY-SA 4.0
+	Nḫt-Ḥr.w-Ḥby.t-mr-Ꞽn-ḥr.t-zꜣ-Ḥw.t-Ḥr.w Nektanebos-mer-Onuris-za-Hathor <i> proper noun (royal name) </i>		TLA 882443 CC BY-SA 4.0
+	Nsy [Krankheitsdämon] <i> proper noun (deity name) </i>		TLA 861522 CC BY-SA 4.0
+	Nsy.t [Krankheitsdämonin] <i> proper noun (deity name) </i>		TLA 861523 CC BY-SA 4.0
+	Nkꜣ.w Necho <i> proper noun (royal name) </i>		TLA 861336 CC BY-SA 4.0
+	ntn.t-wꜣḏ.t Grünhautschlange <i> noun (fem.) </i>		TLA 885536 CC BY-SA 4.0
+	Nṯr.ï-msw.t [Nebtiname Sesostris' III.] <i> proper noun (royal name) </i>		TLA 853576 CC BY-SA 4.0
+	Nṯr.ï-nzw.yt [Nebtiname Thutmosis’ II.] <i> proper noun (royal name) </i>		TLA 878990 CC BY-SA 4.0
+	Nṯr.ï-ḥḏ.t [Horusname von Mentuhoteps II.]; [Nebtiname Mentuhoteps II.] <i> proper noun (royal name) </i>		TLA 861028 CC BY-SA 4.0
+	Nṯr.ï-ẖ.t-Nb.tï [Nebtiname Djosers] <i> proper noun (royal name) </i>		TLA 885476 CC BY-SA 4.0
+	nṯr.ïw Sterne <i> noun (masc.) </i>		TLA 90590 CC BY-SA 4.0
+	Nṯr-nbw [Goldname Chabas] <i> proper noun (royal name) </i>		TLA 881252 CC BY-SA 4.0
+𓊹𓇼𓄿𓇋𓇋𓇼𓀭	nṯr-dwꜣ.wï Morgendlicher Gott (Morgenstern, Venus) <i> proper noun (deity name) </i>	R8-N14-G1-M17-M17-N14-A40	TLA 851596 CC BY-SA 4.0
+	nḏ-ḥr Begrüßung <i> noun (masc.) </i>		TLA 889133 CC BY-SA 4.0
+	nḏ-snꜥꜥ fein zerreiben <i> verb </i>		TLA 887447 CC BY-SA 4.0
+	r-ḏꜣḏꜣ gegen <i> preposition </i>		TLA 883385 CC BY-SA 4.0
+	rʾ-dmḏ.yt Gesamtheit <i> noun (masc.) </i>		TLA 887372 CC BY-SA 4.0
+	Rꜥw-Ꞽtm.w Re-Atum <i> proper noun (deity name) </i>		TLA 853653 CC BY-SA 4.0
+	Rꜥw-Bḥd.tï Re-Behdeti <i> proper noun (deity name) </i>		TLA 860358 CC BY-SA 4.0
+	Rꜥw-ms-sw-Ꞽmn.w-ḥr-ḫpš=f Ramses-Imen-her-chepeschef <i> proper noun (royal name) </i>		TLA 859586 CC BY-SA 4.0
+	Rꜥw-ms-sw-Ꞽmn.w-ḥr-ḫpš=f-mr-Ꞽmn.w Ramses-Imen-her-chepeschef-mer-Imen <i> proper noun (royal name) </i>		TLA 859585 CC BY-SA 4.0
+	Rꜥw-ms-sw-ꞽtꞽ-Ꞽmn.w-nṯr-ḥqꜣ-Ꞽwn.w Ramses-iti-Imen-netjer-heka-Iunu <i> proper noun (royal name) </i>		TLA 859331 CC BY-SA 4.0
+	Rꜥw-ms-sw-mꜣꜥ.tï Ramses-maati <i> proper noun (royal name) </i>		TLA 859579 CC BY-SA 4.0
+	Rꜥw-ms-sw-mr.y-Ꞽmn.w-mr.y-mꞽ-Ptḥ Ramses-mery-Amun-mery-mi-Ptah <i> proper noun (royal name) </i>		TLA 881354 CC BY-SA 4.0
+	Rꜥw-ms-sw-mr.y-Ꞽmn.w-mr.y-mꞽ-Rꜥw Ramses-mery-Amun-mery-mi-Re <i> proper noun (royal name) </i>		TLA 881351 CC BY-SA 4.0
+	Rꜥw-ms-sw-mr.y-Ꞽmn.w-qn-m-ꜥnḫ Ramses-mery-Amun-qen-em-anch <i> proper noun (royal name) </i>		TLA 885962 CC BY-SA 4.0
+	Rꜥw-ms-sw-ḥqꜣ-Mꜣꜥ.t Ramses-heka-Maat <i> proper noun (royal name) </i>		TLA 859578 CC BY-SA 4.0
+	Rꜥw-nb=ꞽ Raneb <i> proper noun (royal name) </i>		TLA 882263 CC BY-SA 4.0
+	Rꜥw-Ḥr.w-ꜣḫ.tï-Ꞽtm.w Re-Harachte-Atum <i> proper noun (deity name) </i>		TLA 851248 CC BY-SA 4.0
+	Rꜥw-Ḥr.w-ꜣḫ.tï-ḥꜥ-m-ꜣḫ.t Re-Harachte, der im Horizont jubelt (Aton) <i> proper noun (deity name) </i>		TLA 859387 CC BY-SA 4.0
+	Rꜥw-ḥqꜣ-ꜣḫ.tï-ḥꜥ-m-ꜣḫ.t Re-heqa-achti, der im Horizont jubelt (Aton) <i> proper noun (deity name) </i>		TLA 859389 CC BY-SA 4.0
+	Rꜥw-ḥtp Rahotep <i> proper noun (royal name) </i>		TLA 860909 CC BY-SA 4.0
+	Rw.tï Löwenpaar <i> proper noun (deity name) </i>		TLA 861786 CC BY-SA 4.0
+	Rwky Lucius <i> proper noun (royal name) </i>		TLA 862848 CC BY-SA 4.0
+	Rn-nbw [Goldname Ninetjers] <i> proper noun (royal name) </i>		TLA 882635 CC BY-SA 4.0
+𓂋𓂋𓏏𓄜	Rr.t Reret (Nilpferdgöttin, Schützerin des Kindes) <i> proper noun (deity name) </i>	D21-D21-X1-F28	TLA 95310 CC BY-SA 4.0
+	rḫ.n=sn Götterbilder <i> noun (masc.) </i>		TLA 888227 CC BY-SA 4.0
+	rḫ.t weise Frau <i> noun (fem.) </i>		TLA 888983 CC BY-SA 4.0
+	rḫ-spd-ḥr Geselle ("der die Geschicklichkeit kennengelernt hat") <i> noun (masc.) </i>		TLA 883976 CC BY-SA 4.0
+	rk Umwicklung <i> noun </i>		TLA 885119 CC BY-SA 4.0
+	Hbꞽ Der Ibis <i> proper noun (deity name) </i>		TLA 854102 CC BY-SA 4.0
+	hnn süß sein <i> verb </i>		TLA 883955 CC BY-SA 4.0
+	Hrmys Römer; Romaios <i> proper noun (royal name) </i>		TLA 880244 CC BY-SA 4.0
+	hhn [Personenbezeichnung] <i> noun (masc.) </i>		TLA 883013 CC BY-SA 4.0
+	H̱.ty Cheti <i> proper noun (royal name) </i>		TLA 852698 CC BY-SA 4.0
+	H̱nm.w-Rꜥw Chnum-Re <i> proper noun (deity name) </i>		TLA 853041 CC BY-SA 4.0
+	H̱nm-ꞽb-Rꜥw [Thronname Amasis'] <i> proper noun (royal name) </i>		TLA 875210 CC BY-SA 4.0
+	ḥꜣ.tï Bleicher <i> noun (masc.) </i>		TLA 883361 CC BY-SA 4.0
+	ḥꜣ-pr.t Troddel(gewand) <i> noun (masc.) </i>		TLA 886196 CC BY-SA 4.0
+	Ḥꜥ-m-Mꜣꜥ.t-ḥw-Pḏ.wt-9 [Horusname Merenptahs] <i> proper noun (royal name) </i>		TLA 880739 CC BY-SA 4.0
+	Ḥꜥꜥ-ꞽb-Rꜥw [Thronname Apries'] <i> proper noun (royal name) </i>		TLA 862968 CC BY-SA 4.0
+	Ḥꜥꜥ-ꞽb-Rꜥw-stp-n-Ꞽmn.w [Thronname Alexanders IV.] <i> proper noun (royal name) </i>		TLA 882686 CC BY-SA 4.0
+	Ḥw Die Nahrung <i> proper noun (deity name) </i>		TLA 854333 CC BY-SA 4.0
+	Ḥw.t-ꜥꜣ.t Großes Haus (Name des Tempels von Heliopolis) <i> proper noun </i>		TLA 856280 CC BY-SA 4.0
+	ḥw.t-ꜥnḫ Lebenshaus <i> noun (fem.) </i>		TLA 886781 CC BY-SA 4.0
+	Ḥw.t-wr.t Hut-weret <i> proper noun (toponym) </i>		TLA 855174 CC BY-SA 4.0
+	Ḥw.t-Nꞽ.t Haus der Neith <i> proper noun (toponym) </i>		TLA 860440 CC BY-SA 4.0
+	ḥw.tï zum Haus gehörig <i> adjective (nisba) </i>		TLA 883796 CC BY-SA 4.0
+	ḥw-tꜣ Landesverrat <i> noun (masc.) </i>		TLA 886559 CC BY-SA 4.0
+	Ḥwn.w-wsr-pḥ.tï [Horusname Alexanders IV.] <i> proper noun (royal name) </i>		TLA 882662 CC BY-SA 4.0
+	Ḥwn.w-n-sḫꜥi̯=s-sw-ꞽtꞽ=f [Horusname Ptolemaios' IV.] <i> proper noun (royal name) </i>		TLA 853055 CC BY-SA 4.0
+	ḥwn.w-nfr-bnꞽ-mrw.t-ṯ=s-nb.tït-rḫ.yt-ḥnꜥ-kꜣ=f-dwꜣ-n=f-H̱nm.w-šps.ï-r-šzp-n=f... [Horusname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 853044 CC BY-SA 4.0
+	Ḥwn.w-nḫt-ꞽṯ-m-sḫm [Horusnname Domitians] <i> proper noun (royal name) </i>		TLA 875234 CC BY-SA 4.0
+	Ḥwn.w-ḥkn.tw-m-ꜥnḫ=f-ḥr-ns.t-ꞽtꞽ=f-mꜥr-sp.w-ḏsr-msḫ=f-ḥnꜥ-Ḥp-ꜥnḫ [Horusname Ptolemaios' VIII.] <i> proper noun (royal name) </i>		TLA 853958 CC BY-SA 4.0
+	Ḥwn.w-qn [Horusname Domitians] <i> proper noun (royal name) </i>		TLA 875474 CC BY-SA 4.0
+	Ḥwn.w-qn-ꞽṯ-m-sḫm=f [Horusname Domitians] <i> proper noun (royal name) </i>		TLA 882431 CC BY-SA 4.0
+	Ḥwn.w-qn-sḫꜥi̯.n-sw-ꞽtꞽ=f [Horusname Ptolemaios' IV.] <i> proper noun (royal name) </i>		TLA 853954 CC BY-SA 4.0
+	Ḥwn.w-ḏsr-msḫꜥ=f-ḥnꜥ-Ḥp [Horusname Ptolemaios' VIII.] <i> proper noun (royal name) </i>		TLA 853054 CC BY-SA 4.0
+	Ḥwr.t Huret <i> proper noun (deity name) </i>		TLA 857047 CC BY-SA 4.0
+	Ḥbs-bꜣg Der den Müden bekleidet (Torwächter) <i> proper noun (deity name) </i>		TLA 851665 CC BY-SA 4.0
+	Ḥp-Wsꞽr Apis-Osiris <i> proper noun (deity name) </i>		TLA 878636 CC BY-SA 4.0
+	ḥpṯ.t [Brot] <i> noun (fem.) </i>		TLA 883298 CC BY-SA 4.0
+	ḥfꜣ.w demütige Haltung <i> noun (masc.) </i>		TLA 889097 CC BY-SA 4.0
+	ḥm.t Wäscherin <i> noun (fem.) </i>		TLA 883220 CC BY-SA 4.0
+	ḥm.t-wꜣḏ.t grüner Glasfluss <i> noun (fem.) </i>		TLA 883559 CC BY-SA 4.0
+	ḥm.t-nzw-wr.t große königliche Gemahlin <i> noun (title) </i>		TLA 854246 CC BY-SA 4.0
+	ḥm-nṯr Priester <i> noun (title) </i>		TLA 855724 CC BY-SA 4.0
+	ḥn Trankspende <i> noun (masc.) </i>		TLA 883439 CC BY-SA 4.0
+	ḥn.tï Dienst <i> noun (masc.) </i>		TLA 883367 CC BY-SA 4.0
+	ḥnbꜣbꜣ sich schlängeln <i> verb </i>		TLA 882920 CC BY-SA 4.0
+	ḥntꜣ vergehen (?) <i> verb </i>		TLA 851595 CC BY-SA 4.0
+𓁷𓏤𓆑𓇉𓄿𓆑	Ḥr=f-ḥꜣ=f Dessen Gesicht hinter ihm ist <i> proper noun (deity name) </i>	D2-Z1-I9-M16-G1-I9	TLA 851569 CC BY-SA 4.0
+	ḥr.ï-tp Oberhaupt; Zauberer <i> noun (title) </i>		TLA 855741 CC BY-SA 4.0
+	Ḥr.w-Ꞽm.ï-ḫnt-n-ꞽr.tï Horus-Mechenti-en-irti <i> proper noun (deity name) </i>		TLA 852420 CC BY-SA 4.0
+	Ḥr.w-ꜥꜣ Großer Horus <i> proper noun (deity name) </i>		TLA 856435 CC BY-SA 4.0
+	Ḥr.w-pꜣ-ẖrd Horus, das Kind; Harpokrates <i> proper noun (deity name) </i>		TLA 853040 CC BY-SA 4.0
+	Ḥr.w-m-ḥꜣb Haremhab <i> proper noun (royal name) </i>		TLA 886064 CC BY-SA 4.0
+	Ḥr.w-m-ḥꜣb-mr-n-Ꞽmn.w Haremhab-mer-en-Amun <i> proper noun (royal name) </i>		TLA 859809 CC BY-SA 4.0
+	Ḥr.w-mꜣnw Horus vom Westgebirge <i> proper noun (deity name) </i>		TLA 855854 CC BY-SA 4.0
+	Ḥr.w-mr.tï Horus der beiden Augen (Harmerti) (Erscheinungsform des Horus) <i> proper noun (deity name) </i>		TLA 852442 CC BY-SA 4.0
+	Ḥr.w-Mdnꞽ.t Horus von Medenit <i> proper noun (deity name) </i>		TLA 856480 CC BY-SA 4.0
+	Ḥr.w-nṯr.w Horus der Götter <i> proper noun (deity name) </i>		TLA 854335 CC BY-SA 4.0
+	Ḥr.w-Ḫnt.ï-ẖ.tꞽ Horus-Chentechtai <i> proper noun (deity name) </i>		TLA 860646 CC BY-SA 4.0
+	Ḥr.w-zꜣ-Ꜣs.t Horus, Sohn der Isis; Harsiese <i> proper noun (deity name) </i>		TLA 853039 CC BY-SA 4.0
+	Ḥr.w-zꜣ-Ꜣs.t Harsiese <i> proper noun (royal name) </i>		TLA 884798 CC BY-SA 4.0
+	Ḥr.w-zꜣ-Ꜣs.t-mr-Ꞽmn.w Harsiese-mer-Imen <i> proper noun (royal name) </i>		TLA 881222 CC BY-SA 4.0
+	Ḥr.w-zꜣ-Ꜣs.t-mr-nṯr.w-nb.w [Thronname Domitians] <i> proper noun (royal name) </i>		TLA 875237 CC BY-SA 4.0
+	Ḥr.w-zmꜣ-tꜣ.wï Harsomtus <i> proper noun (deity name) </i>		TLA 858652 CC BY-SA 4.0
+	Ḥr.w-sms.w Der ältere Horus <i> proper noun (deity name) </i>		TLA 851532 CC BY-SA 4.0
+	Ḥr.w-šzm.tï Horus von Schezemet <i> proper noun (deity name) </i>		TLA 854760 CC BY-SA 4.0
+	ḥr-ḥr im Angesicht von; vor <i> preposition </i>		TLA 885728 CC BY-SA 4.0
+	ḥr-ẖ.t auf <i> preposition </i>		TLA 889301 CC BY-SA 4.0
+𓎛𓏲𓃭𓏤𓈖𓄿𓀭	Ḥrn Hauron <i> proper noun (deity name) </i>	V28-Z7-E23-Z1-N35-G1-A40	TLA 109070 CC BY-SA 4.0
+	ḥs-mzḥ [offizinell Verwendetes] <i> noun (masc.) </i>		TLA 889136 CC BY-SA 4.0
+	ḥq [Brot] <i> noun (masc.) </i>		TLA 885395 CC BY-SA 4.0
+	Ḥqꜣ.t-ꞽr.tn-ḥqꜣ.t [Horusname Berenikes II.] <i> proper noun (royal name) </i>		TLA 878912 CC BY-SA 4.0
+	Ḥqꜣ-Ꞽwn.w Heqa-Iunu <i> proper noun (royal name) </i>		TLA 885896 CC BY-SA 4.0
+	Ḥqꜣ-m-tꜣ-r-ḏr=f [Goldname Alexanders IV.] <i> proper noun (royal name) </i>		TLA 882683 CC BY-SA 4.0
+	Ḥqꜣ-mꜣꜥ.t-Rꜥw [Thronname Ramses' IV.] <i> proper noun (royal name) </i>		TLA 859577 CC BY-SA 4.0
+	Ḥqꜣ-Mꜣꜥ.t-Rꜥw-mr-Ꞽmn.w [Thronname Ramses' IV.] <i> proper noun (royal name) </i>		TLA 884843 CC BY-SA 4.0
+𓋾𓆓𓏏𓇿	ḥqꜣ-ḏ.t Herrscher der Ewigkeit <i> noun (epithet) </i>	S38-I10-X1-N17	TLA 851552 CC BY-SA 4.0
+	Ḥkn-nṯr.w-rmṯ.w-ḥr=f [Horusname Domitians]; [Horusname Ptolemaios' III.] <i> proper noun (royal name) </i>		TLA 875405 CC BY-SA 4.0
+	Ḥkn-nṯr.w-rmṯ.w-ḥr=f-m-šzp=f-nzw.yt-m-ꜥ-ꞽtꞽ=f [Horusname Ptolemaios' III.] <i> proper noun (royal name) </i>		TLA 883277 CC BY-SA 4.0
+	ḥtꜣ.w schäbige Verfassung <i> noun (masc.) </i>		TLA 889304 CC BY-SA 4.0
+𓊵𓏏𓊪𓋴𓐍𓂤𓅱𓋴𓆗	Ḥtp=s-ḫwi̯=s Die zufrieden ist, wenn sie schützt <i> proper noun (deity name) </i>	R4-X1-Q3-S29-Aa1-D43-G43-S29-I12	TLA 851564 CC BY-SA 4.0
+	Ḥtp-nb.tï [Nebtiname Hetepsechemuis] <i> proper noun (royal name) </i>		TLA 882497 CC BY-SA 4.0
+	Ḥtp-sḫm.wï Hetep-sechemui <i> proper noun (royal name) </i>		TLA 882302 CC BY-SA 4.0
+	ḥtr Verpflichtung; Aufgabe <i> noun (masc.) </i>		TLA 886265 CC BY-SA 4.0
+	ḥts.t Weberin <i> noun (fem.) </i>		TLA 883031 CC BY-SA 4.0
+	ḥṯ [Schlange] <i> noun (masc.) </i>		TLA 887594 CC BY-SA 4.0
+	Ḥḏ-ḫpr-Rꜥw-stp-n-Ꞽmn.w [Thronname Scheschonks I.] <i> proper noun (royal name) </i>		TLA 884672 CC BY-SA 4.0
+	Ḥḏ-ḫpr-Rꜥw-stp-n-Rꜥw [Thronname Scheschonks I.] <i> proper noun (royal name) </i>		TLA 884636 CC BY-SA 4.0
+	Ḥḏ-kꜣ.w Der die Kas schädigt <i> proper noun (deity name) </i>		TLA 855836 CC BY-SA 4.0
+	ḫꜣ.yt [Maß] <i> noun (fem.) </i>		TLA 889280 CC BY-SA 4.0
+	Ḫꜣ.tï Krankheitsdämon <i> proper noun (deity name) </i>		TLA 855596 CC BY-SA 4.0
+	Ḫꜣs.tï [Goldname Dewens] <i> proper noun (royal name) </i>		TLA 866990 CC BY-SA 4.0
+	Ḫꜥ-bꜣ Chaba <i> proper noun (royal name) </i>		TLA 881255 CC BY-SA 4.0
+	Ḫꜥ-m-Nzr.t-ꜥꜣ-pḥ.tï [Nebtiname Thutmosis’ I.] <i> proper noun (royal name) </i>		TLA 879020 CC BY-SA 4.0
+	Ḫꜥ-m-ḥḏ.t-wṯz-dšr.t [Nebtiname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 886058 CC BY-SA 4.0
+	Ḫꜥi̯-nfr-Rꜥw-Sbk-ḥtp.w Chaineferre-Sobekhotep <i> proper noun (royal name) </i>		TLA 889454 CC BY-SA 4.0
+	Ḫꜥi̯-sḫm Chasechem <i> proper noun (royal name) </i>		TLA 882623 CC BY-SA 4.0
+	Ḫꜥi̯-sḫm.wï Chasechemui <i> proper noun (royal name) </i>		TLA 882311 CC BY-SA 4.0
+	Ḫꜥi̯-sḫm.wï-nb.tï-nbw-ẖ.t=sn [Nebtiname Chasechemuis] <i> proper noun (royal name) </i>		TLA 885062 CC BY-SA 4.0
+	Ḫꜥi̯-sḫm.wï-nb.tï-ḥtp-nṯr.wï-ꞽm=f [Nebtiname Chasechemuis] <i> proper noun (royal name) </i>		TLA 885059 CC BY-SA 4.0
+	Ḫꜥi̯-sḫm.wï-ḥtp-nṯr.wï-ꞽm=f [Horusname Chasechemuis] <i> proper noun (royal name) </i>		TLA 886112 CC BY-SA 4.0
+	Ḫw-Tꜣ.wï [Goldname Taharqas] <i> proper noun (royal name) </i>		TLA 863228 CC BY-SA 4.0
+	Ḫwi̯-Nfr-tm-Rꜥw [Thronname Taharqas] <i> proper noun (royal name) </i>		TLA 862991 CC BY-SA 4.0
+	Ḫbbš Chabbasch <i> proper noun (royal name) </i>		TLA 882665 CC BY-SA 4.0
+	ḫp Augenblick <i> noun (masc.) </i>		TLA 883952 CC BY-SA 4.0
+	Ḫpr [Goldname Sesostris' III.] <i> proper noun (royal name) </i>		TLA 853577 CC BY-SA 4.0
+	ḫpr=s-ꞽṯ.t geborene Eroberin <i> noun (fem.) </i>		TLA 887381 CC BY-SA 4.0
+	ḫn.tït Musikantin <i> noun (fem.) </i>		TLA 884414 CC BY-SA 4.0
+	Ḫns.w-pꜣ-ꞽr-sḫr.w Chons, der die Pläne macht <i> proper noun (deity name) </i>		TLA 860021 CC BY-SA 4.0
+	Ḫns.w-pꜣ-ꞽr-sḫr.w-m-Wꜣs.t Chons, der die Pläne in Theben macht <i> proper noun (deity name) </i>		TLA 860013 CC BY-SA 4.0
+	Ḫns.w-pꜣ-ẖrd Chons, das Kind <i> proper noun (deity name) </i>		TLA 859012 CC BY-SA 4.0
+	Ḫns.w-m-Wꜣs.t Chons in Theben <i> proper noun (deity name) </i>		TLA 860012 CC BY-SA 4.0
+	Ḫns.w-m-Wꜣs.t-nfr-ḥtp Chons in Theben, der vollkommen Gnädige <i> proper noun (deity name) </i>		TLA 860011 CC BY-SA 4.0
+	Ḫns.w-Ḏḥw.tï Chons-Thot <i> proper noun (deity name) </i>		TLA 867584 CC BY-SA 4.0
+	ḫnt.t Krugmagazin <i> noun (fem.) </i>		TLA 883109 CC BY-SA 4.0
+	Ḫnḏr Chendjer <i> proper noun (royal name) </i>		TLA 859737 CC BY-SA 4.0
+	Ḫr-Wnn-nfr Cherwennefer (= Anchwennefer) <i> proper noun (royal name) </i>		TLA 885716 CC BY-SA 4.0
+	Ḫrb Aleppo <i> proper noun (toponym) </i>		TLA 859068 CC BY-SA 4.0
+	ḫrp.t Leiterin <i> noun (fem.) </i>		TLA 884438 CC BY-SA 4.0
+	ḫrḫr Kupferfragmente (?) <i> noun (masc.) </i>		TLA 889229 CC BY-SA 4.0
+	ḫrḏ Zähneknirschen <i> noun (masc.) </i>		TLA 883259 CC BY-SA 4.0
+	ḫsbḏ.t [fliegendes Tier] <i> noun (fem.) </i>		TLA 883382 CC BY-SA 4.0
+𓆼𓆷𓇋𓇋𓄿𓃭𓆷𓄿	Ḫšyrš Xerxes <i> proper noun (royal name) </i>	M12-M8-M17-M17-G1-E23-M8-G1	TLA 713632 CC BY-SA 4.0
+	ẖꜣb.t [Pflanze] <i> noun (fem.) </i>		TLA 882809 CC BY-SA 4.0
+	ẖn-zꜣ [Gelehrter] <i> noun (masc.) </i>		TLA 887942 CC BY-SA 4.0
+	ẖr [Schiff] <i> noun (masc.) </i>		TLA 882857 CC BY-SA 4.0
+	ẖr-nṯr [krankhafter Zustand des Auges] <i> noun (masc.) </i>		TLA 884309 CC BY-SA 4.0
+	ẖtẖt Bedarf <i> noun (masc.) </i>		TLA 889223 CC BY-SA 4.0
+	Zꜣ Za <i> proper noun (royal name) </i>		TLA 885041 CC BY-SA 4.0
+	zꜣ-ꜥnḫ [Phyle] <i> noun (masc.) </i>		TLA 883196 CC BY-SA 4.0
+	zꜣ-wr ältester Sohn <i> noun (masc.) </i>		TLA 886679 CC BY-SA 4.0
+	zꜣ-Wsꞽr Sohn des Osiris <i> noun (epithet) </i>		TLA 853760 CC BY-SA 4.0
+	Zꜣ-Rꜥw-Ꞽni̯-ꞽtꞽ=f-ꜥꜣ Za-Re-Intef-aa <i> proper noun (royal name) </i>		TLA 859827 CC BY-SA 4.0
+	zꜣr.t Meißel <i> noun (fem.) </i>		TLA 885374 CC BY-SA 4.0
+	zꞽf Brot <i> noun (masc.) </i>		TLA 885800 CC BY-SA 4.0
+	zw.t [Brot] <i> noun (fem.) </i>		TLA 885392 CC BY-SA 4.0
+	zp Untat; Böses <i> noun (masc.) </i>		TLA 884606 CC BY-SA 4.0
+	Zmꜣ-psš.tï-mꞽ-zꜣ-Ꜣs.t-dmḏ.n=f-sḫm.tï-m-ḥtp [Nebtiname Osorkons II.] <i> proper noun (royal name) </i>		TLA 881219 CC BY-SA 4.0
+	Zmꜣ-Tꜣ.wï Der die Länder vereinigt (Somtus) <i> proper noun (deity name) </i>		TLA 852069 CC BY-SA 4.0
+	Zmꜣ-Tꜣ.wï [Horusname Inys] (?); [Horusname Mentuhoteps II.]; [Nebtiname Mentuhoteps II.] <i> proper noun (royal name) </i>		TLA 859169 CC BY-SA 4.0
+	Znn-Ptḥ-stp-n-Tꜣ-ṯnn Zenen-Ptah-setep-en-Tatenen <i> proper noun (royal name) </i>		TLA 882698 CC BY-SA 4.0
+	Zkr-Wsꞽr Sokar-Osiris <i> proper noun (deity name) </i>		TLA 852610 CC BY-SA 4.0
+	sꜣb [Stier] <i> noun (masc.) </i>		TLA 888863 CC BY-SA 4.0
+𓋷𓄿	Sꞽꜣ Sia ("Erkenntnis") <i> proper noun (deity name) </i>	S32-G1	TLA 500191 CC BY-SA 4.0
+	Sꞽꜣ-ꞽb [Horusname Nechos II.] <i> proper noun (royal name) </i>		TLA 861841 CC BY-SA 4.0
+	sꞽf Unreinlichkeit <i> noun (fem.) </i>		TLA 884630 CC BY-SA 4.0
+	sꞽmꜣḫ versorgen; ehren <i> verb (causative verb) </i>		TLA 885533 CC BY-SA 4.0
+	sꞽntï behindern <i> verb (causative verb) </i>		TLA 883961 CC BY-SA 4.0
+	Sꜥnḫ-ꞽb-Tꜣ.wï [Horusname Mentuhoteps II.] <i> proper noun (royal name) </i>		TLA 860313 CC BY-SA 4.0
+	Sꜥšꜣ-qn.w [Goldname Inys] (?) <i> proper noun (royal name) </i>		TLA 859171 CC BY-SA 4.0
+	swꜣš Lobpreis <i> noun (masc.) </i>		TLA 884321 CC BY-SA 4.0
+	Swꜣḏ.n-Rꜥw [Thronname Nebirieraus I.] <i> proper noun (royal name) </i>		TLA 860898 CC BY-SA 4.0
+	Swꜣḏ-Tꜣ.wï [Horusname Senaaibs]; [Horusname Nebirieraus I.]; [Goldname Apries'] <i> proper noun (royal name) </i>		TLA 860750 CC BY-SA 4.0
+	Swḏꜣ-bꜣq-sḥḏ-gs.w-pr.w-smn-hp.w-mꞽ-Ḏḥw.tï-ꜥꜣ-ꜥꜣ-nb-ḥꜣb.w-sd-mꞽ-Ptḥ-Tꜣ-ṯnn-ꞽty-mꞽ-Rꜥw [Goldname Ptolemaios' IV.] <i> proper noun (royal name) </i>		TLA 853951 CC BY-SA 4.0
+	sb.t [Schiff] <i> noun (fem.) </i>		TLA 882842 CC BY-SA 4.0
+	Sbꜣq-Tꜣ.wï [Horusname Schabakos] <i> proper noun (royal name) </i>		TLA 863597 CC BY-SA 4.0
+	sbꞽ.t Rebellin <i> noun (fem.) </i>		TLA 886556 CC BY-SA 4.0
+	sbꞽ-n-wḏꜣ.t Oryx <i> noun (masc.) </i>		TLA 889124 CC BY-SA 4.0
+	Sbsts Sebastos <i> proper noun (royal name) </i>		TLA 862906 CC BY-SA 4.0
+𓋴𓃀𓈎𓏏𓆇	Sbq.t Sobqet <i> proper noun (deity name) </i>	S29-D58-N29-X1-H8	TLA 132170 CC BY-SA 4.0
+	spḫ [Getränk] <i> noun (masc.) </i>		TLA 885380 CC BY-SA 4.0
+	spd [Schlange] <i> noun (masc.) </i>		TLA 887987 CC BY-SA 4.0
+	Spd.w-Ḥr.w Sopdu-Horus <i> proper noun (deity name) </i>		TLA 883085 CC BY-SA 4.0
+	Spd.t Sothis (Stern des Sirius als Göttin) <i> proper noun (deity name) </i>		TLA 851672 CC BY-SA 4.0
+𓋴𓆑𓎼𓇋𓁹𓃭𓅱	Sfg-ꞽr.w Der mit verborgener (?) Gestalt <i> proper noun (deity name) </i>	S29-I9-W11-M17-D4-E23-G43	TLA 500677 CC BY-SA 4.0
+	smꜣ [Schiff] <i> noun (masc.) </i>		TLA 882848 CC BY-SA 4.0
+	smn leiden <i> verb (causative verb) </i>		TLA 882884 CC BY-SA 4.0
+	Smn-hp.w-sgrḥ-Tꜣ.wï [Nebtiname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 880538 CC BY-SA 4.0
+	Smnḫ-Tꜣ.wï [Nebtiname Nektanebis'] <i> proper noun (royal name) </i>		TLA 882455 CC BY-SA 4.0
+	Smr-ẖ.t Semerchet <i> proper noun (royal name) </i>		TLA 882500 CC BY-SA 4.0
+	Sn-nb.tï [Nebtiname Qaas] <i> proper noun (royal name) </i>		TLA 882506 CC BY-SA 4.0
+	snꜣ [Verb] <i> verb </i>		TLA 888977 CC BY-SA 4.0
+	Snꜥꜥ-ꞽb Senaa-ib <i> proper noun (royal name) </i>		TLA 860752 CC BY-SA 4.0
+	snb [Amulett] <i> noun (masc.) </i>		TLA 882890 CC BY-SA 4.0
+	snb.tï Senebti <i> noun (masc.) </i>		TLA 884723 CC BY-SA 4.0
+	Snfr-kꜣ Seneferka <i> proper noun (royal name) </i>		TLA 882512 CC BY-SA 4.0
+	snfḫ lösen <i> verb (causative verb) </i>		TLA 887195 CC BY-SA 4.0
+	snḥm [letzter Tag des Mondmonats] <i> noun (masc.) </i>		TLA 883793 CC BY-SA 4.0
+	Snḏm-ꞽb-Rꜥw-stp-n-Ꞽn-ḥr.t [Thronname Nektanebos' II.] <i> proper noun (royal name) </i>		TLA 882440 CC BY-SA 4.0
+	srt [Schlange] <i> noun (masc.) </i>		TLA 886100 CC BY-SA 4.0
+	shꜣb Abgesandter (?) <i> noun (masc.) </i>		TLA 884678 CC BY-SA 4.0
+	Shr-Tꜣ.wï [Nebtiname Ptolemaios' VIII.] <i> proper noun (royal name) </i>		TLA 853053 CC BY-SA 4.0
+	Sḥꜣb-Rꜥw Sehab-Re <i> proper noun (royal name) </i>		TLA 862842 CC BY-SA 4.0
+	Sḥtp-nb.tï [Nebtiname Qaas] <i> proper noun (royal name) </i>		TLA 885239 CC BY-SA 4.0
+	sḥdb niederwerfen <i> verb (causative verb) </i>		TLA 883562 CC BY-SA 4.0
+	Sḫꜥi̯.n-sw-ꞽtꞽ=f [Goldname Domitians] <i> proper noun (royal name) </i>		TLA 882425 CC BY-SA 4.0
+	sḫbn verbrecherisch werden lassen <i> verb (causative verb) </i>		TLA 887696 CC BY-SA 4.0
+	Sḫm-ꞽb Sechemib <i> proper noun (royal name) </i>		TLA 882305 CC BY-SA 4.0
+	Sḫm-ꞽb-pr-n-Mꜣꜥ.t [Horusname Sechemibs] <i> proper noun (royal name) </i>		TLA 885068 CC BY-SA 4.0
+	Sḫm-ꞽb-nb.tï-pr-n-Mꜣꜥ.t [Horusname Sechemibs]; [Nebtiname Sechemibs] <i> proper noun (royal name) </i>		TLA 882518 CC BY-SA 4.0
+	Sḫm-pḥ.tï-dr-Pḏ.wt-9 [Nebtiname Sethos I.] <i> proper noun (royal name) </i>		TLA 854866 CC BY-SA 4.0
+	Sḫm-pḥ.tï-ḏsr-ḫꜥ.w [Goldname Thutmosis' III.] <i> proper noun (royal name) </i>		TLA 879428 CC BY-SA 4.0
+	Sḫm-Rꜥw-wꜣḥ-ḫꜥ.w [Thronname Rahoteps] <i> proper noun (royal name) </i>		TLA 860908 CC BY-SA 4.0
+	Sḫm-Rꜥw-ḫw-Tꜣ.wï [Thronname Sobekhoteps II.] <i> proper noun (royal name) </i>		TLA 860920 CC BY-SA 4.0
+	Sḫm-Rꜥw-swsr-Tꜣ.wï [Thronname Sobekhoteps VIII.] <i> proper noun (royal name) </i>		TLA 860896 CC BY-SA 4.0
+	Sḫm-Rꜥw-šd-Tꜣ.wï [Thronname Sobekemsafs II.] <i> proper noun (royal name) </i>		TLA 860754 CC BY-SA 4.0
+	Sḫm-ḫpr.w [Goldname Thutmosis’ II.] <i> proper noun (royal name) </i>		TLA 879023 CC BY-SA 4.0
+	Sḫm-ḫpr-Rꜥw [Thronname Osorkons I.] <i> proper noun (royal name) </i>		TLA 861220 CC BY-SA 4.0
+	Sḫm-ḫpr-Rꜥw-stp-n-Rꜥw [Thronname Osorkons I.] <i> proper noun (royal name) </i>		TLA 884186 CC BY-SA 4.0
+	sẖꜣ Seil; Tau <i> noun (masc.) </i>		TLA 886178 CC BY-SA 4.0
+	Ssꞽ-sw [Eigenname Ramses' II.] <i> proper noun (royal name) </i>		TLA 859056 CC BY-SA 4.0
+	Ssꞽ-sw-mr-Ꞽmn.w [Eigenname Ramses' II.] <i> proper noun (royal name) </i>		TLA 859057 CC BY-SA 4.0
+	ssny [Getreide] <i> noun (masc.) </i>		TLA 885677 CC BY-SA 4.0
+	ssšr beschenken (?) <i> verb (causative verb) </i>		TLA 888191 CC BY-SA 4.0
+	sšm.tï Schlächter <i> noun (masc.) </i>		TLA 884441 CC BY-SA 4.0
+	sšmm [Schlange] <i> noun (masc.) </i>		TLA 886103 CC BY-SA 4.0
+	Sqn.n-Rꜥw Seqenenre <i> proper noun (royal name) </i>		TLA 855366 CC BY-SA 4.0
+	sqr [Brot] <i> noun (masc.) </i>		TLA 885452 CC BY-SA 4.0
+	sqr Opferdiener <i> noun (masc.) </i>		TLA 885479 CC BY-SA 4.0
+	ski̯ provozieren (auch sexuell) <i> verb </i>		TLA 883718 CC BY-SA 4.0
+	Stp-n-Ꞽmn.w-mr-kꜣ-Rꜥw [Thronname Alexanders des Großen] <i> proper noun (royal name) </i>		TLA 883613 CC BY-SA 4.0
+	Stp-n-Rꜥw-mr.y-Ꞽmn.w-Rꜥw [Thronname Ptolemaios' I.] <i> proper noun (royal name) </i>		TLA 886487 CC BY-SA 4.0
+	Stẖ.y-mr-n-Ꞽmn.w [Eigenname Sethos I.] <i> proper noun (royal name) </i>		TLA 854874 CC BY-SA 4.0
+	sṯ.tï Asiate <i> noun (masc.) </i>		TLA 885443 CC BY-SA 4.0
+	sṯꜣ Differenz; Rest <i> noun (fem.) </i>		TLA 886157 CC BY-SA 4.0
+	sd [Stoffband] <i> noun (masc.) </i>		TLA 885368 CC BY-SA 4.0
+	sd-m-rʾ umzingelt sein <i> verb </i>		TLA 889391 CC BY-SA 4.0
+	sdndn durchwandern <i> verb (causative verb) </i>		TLA 885545 CC BY-SA 4.0
+	š.t Abteilung <i> noun (fem.) </i>		TLA 886019 CC BY-SA 4.0
+	Šꜣ.w Schicksal <i> proper noun (deity name) </i>		TLA 860007 CC BY-SA 4.0
+	šꜣr nachtblind sein (o. Ä.) <i> verb </i>		TLA 884708 CC BY-SA 4.0
+	šꜥḏ Gemetzel <i> noun (masc.) </i>		TLA 888548 CC BY-SA 4.0
+	šw.t-mwt [Krankheitserscheinung] <i> noun (fem.) </i>		TLA 884969 CC BY-SA 4.0
+	šw.t-nṯr [Krankheitserscheinung] <i> noun (fem.) </i>		TLA 884972 CC BY-SA 4.0
+	Šbk Schabako <i> proper noun (royal name) </i>		TLA 862851 CC BY-SA 4.0
+	Šbtk Schabataka <i> proper noun (royal name) </i>		TLA 863231 CC BY-SA 4.0
+	šp [Getränk] <i> noun (masc.) </i>		TLA 885377 CC BY-SA 4.0
+	Šps-Nb.tï [Nebtiname Schepseskafs] <i> proper noun (royal name) </i>		TLA 884075 CC BY-SA 4.0
+	šf verächtlich sein <i> verb </i>		TLA 883844 CC BY-SA 4.0
+	šf.w [sündhafte Handlung] <i> noun (masc.) </i>		TLA 883442 CC BY-SA 4.0
+𓈝𓐝𓏏𓏭𓂻	Šm.tï Wandelnder <i> proper noun (deity name) </i>	N40-Aa15-X1-Z4-D54	TLA 500130 CC BY-SA 4.0
+	Šmꜣ.y [Wanderdämon] <i> proper noun (deity name) </i>		TLA 881120 CC BY-SA 4.0
+	šmšm [Schlange] <i> noun (masc.) </i>		TLA 883016 CC BY-SA 4.0
+	šzp-ꜥnḫ Sphinx (?) <i> noun (masc.) </i>		TLA 886589 CC BY-SA 4.0
+	Ššnq-mr-Ꞽmn.w Scheschonk-mer-Amun <i> proper noun (royal name) </i>		TLA 880673 CC BY-SA 4.0
+	Ššnq-zꜣ-Bꜣs.tït-mr-Ꞽmn.w Scheschonk-za-Bastet-mer-Imen <i> proper noun (royal name) </i>		TLA 887570 CC BY-SA 4.0
+	Ššnq-zꜣ-Bꜣs.tït-mr-Ꞽmn.w-nṯr-ḥqꜣ-Ꞽwn.w Scheschonk-za-Bastet-mer-Amun-netjer-heqa-Iunu <i> proper noun (royal name) </i>		TLA 886649 CC BY-SA 4.0
+	štwt Anklage <i> noun (masc.) </i>		TLA 884702 CC BY-SA 4.0
+	Šd-Tꜣ.wï [Nebtiname Dedumoses] <i> proper noun (royal name) </i>		TLA 860711 CC BY-SA 4.0
+	šdd [Pflanzenbestandteil] <i> noun (masc.) </i>		TLA 887444 CC BY-SA 4.0
+	qꜣ.t [Pflanze] <i> noun (fem.) </i>		TLA 884231 CC BY-SA 4.0
+	Qꜣ-ꜥ Qaa <i> proper noun (royal name) </i>		TLA 882272 CC BY-SA 4.0
+	Qꜣ-ꜥ-nb.tï [Nebtiname Qaas] <i> proper noun (royal name) </i>		TLA 882509 CC BY-SA 4.0
+	Qꜣ-ḥḏ.t-mr.y-Rꜥw [Horusname Thutmosis' III.] <i> proper noun (royal name) </i>		TLA 879431 CC BY-SA 4.0
+	Qꜣ-ḫꜥ.w [Horusname Taharqas]; [Nebtiname Taharqas] <i> proper noun (royal name) </i>		TLA 863225 CC BY-SA 4.0
+	Qꜣ-šw.tï [Goldname Mentuhoteps II.] <i> proper noun (royal name) </i>		TLA 859718 CC BY-SA 4.0
+	Qꜣi̯-kꜣ-Rꜥw [Thronname Ibis] <i> proper noun (royal name) </i>		TLA 859965 CC BY-SA 4.0
+	qꜥḥ.w [Schlange] <i> noun (masc.) </i>		TLA 886097 CC BY-SA 4.0
+	qbḥ Schlächter <i> noun (masc.) </i>		TLA 885482 CC BY-SA 4.0
+	qfdi̯ sitzen <i> verb </i>		TLA 885551 CC BY-SA 4.0
+	qmꜣ-tꜣ Erdbeben <i> noun (masc.) </i>		TLA 885128 CC BY-SA 4.0
+	qn [Tier] <i> noun (masc.) </i>		TLA 887603 CC BY-SA 4.0
+	Qn-nḏ.tï-ꞽnb-mnḫ-tꜣ-ḏr=f [Nebtiname Domitians] <i> proper noun (royal name) </i>		TLA 882422 CC BY-SA 4.0
+	Qn-nḏ.tï-nṯr.w-ꞽnb-mnḫ-n-Tꜣ-mrꞽ [Nebtiname Ptolemaios' III.] <i> proper noun (royal name) </i>		TLA 883280 CC BY-SA 4.0
+	qnꞽ gelb werden <i> verb </i>		TLA 885605 CC BY-SA 4.0
+	qnb Fläche (o.Ä.) <i> noun (masc.) </i>		TLA 885680 CC BY-SA 4.0
+	qrḥ Topf; Töpferware <i> noun (masc.) </i>		TLA 885650 CC BY-SA 4.0
+	Qlwptr.t Kleopatra <i> proper noun (royal name) </i>		TLA 853964 CC BY-SA 4.0
+	Qlwptr.t-ḏd.tw-n=s-Trwpyn Kleopatra Tryphaina <i> proper noun (royal name) </i>		TLA 860526 CC BY-SA 4.0
+	Kꜣ Ka <i> proper noun (royal name) </i>		TLA 882902 CC BY-SA 4.0
+	Kꜣ-wꜥf-tꜣ.w [Horusname Amenophis’ I.] <i> proper noun (royal name) </i>		TLA 879026 CC BY-SA 4.0
+	Kꜣ-wr Große Schlange <i> proper noun (deity name) </i>		TLA 857276 CC BY-SA 4.0
+	Kꜣ-m-Wꜣs.t [Horusname Ahmoses] <i> proper noun (royal name) </i>		TLA 878930 CC BY-SA 4.0
+	kꜣ-mw.t=f Stier seiner Mutter <i> noun (epithet) </i>		TLA 851374 CC BY-SA 4.0
+	Kꜣ-nḫt-ꜥnḫ-m-Mꜣꜥ.t [Horusname Ramses' IV.] <i> proper noun (royal name) </i>		TLA 859117 CC BY-SA 4.0
+	Kꜣ-nḫt-wḥm-ḥꜣb-sd [Horusname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 886055 CC BY-SA 4.0
+	Kꜣ-nḫt-wsr-pḥ.tï [Horusname Thutmosis’ II.] <i> proper noun (royal name) </i>		TLA 879029 CC BY-SA 4.0
+	Kꜣ-nḫt-mꜣꞽ-ḥbn.n=f [Horusname Merenptahs] <i> proper noun (royal name) </i>		TLA 880637 CC BY-SA 4.0
+	Kꜣ-nḫt-mr.y-Ꞽtn [Horusname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 859292 CC BY-SA 4.0
+	Kꜣ-nḫt-mr-psḏ.t-ḫꜥ-m-Npyt [Horusname von Nastasen] <i> proper noun (royal name) </i>		TLA 850074 CC BY-SA 4.0
+	Kꜣ-nḫt-mr-Mꜣꜥ.t-nb-ꜥnḫ-wḏꜣ-snb-ḥꜣb.w-sd-mꞽ-ꞽtꞽ=f-Ptḥ-Tꜣ-ṯnn [Horusname Ramses' II.] <i> proper noun (royal name) </i>		TLA 860346 CC BY-SA 4.0
+	Kꜣ-nḫt-mr-Mꜣꜥ.t-nb-ḥꜣb.w-sd-mꞽ-ꞽtꞽ=f-Ptḥ-Tꜣ-ṯnn [Horusname Ramses' II.] <i> proper noun (royal name) </i>		TLA 852673 CC BY-SA 4.0
+	Kꜣ-nḫt-msṯ.w-Rꜥw [Horusname Scheschonks III.] <i> proper noun (royal name) </i>		TLA 886652 CC BY-SA 4.0
+	Kꜣ-nḫt-ḥꜥ-m-Mꜣꜥ.t [Horusname Merenptahs] <i> proper noun (royal name) </i>		TLA 859135 CC BY-SA 4.0
+	Kꜣ-nḫt-ḥw-Pḏ.wt-9 [Horusname Merenptahs] <i> proper noun (royal name) </i>		TLA 880640 CC BY-SA 4.0
+	Kꜣ-nḫt-ḫꜥ-m-Mꜣꜥ.t [Horusname Amenophis' III.] <i> proper noun (royal name) </i>		TLA 880541 CC BY-SA 4.0
+	Kꜣ-nḫt-ḫꜥ-m-Npyt [Horusname Piyes] <i> proper noun (royal name) </i>		TLA 861211 CC BY-SA 4.0
+	Kꜣ-nḫt-zꜣ-Ꞽtm.w [Horusname Ramses' II.] <i> proper noun (royal name) </i>		TLA 882470 CC BY-SA 4.0
+	Kꜣ-nḫt-sꜥnḫ-Tꜣ.wï [Horusname Sethos' I.] <i> proper noun (royal name) </i>		TLA 854799 CC BY-SA 4.0
+	Kꜣ-nḫt-spd-ꜥb.wï [Horusname Amenophis' II.] <i> proper noun (royal name) </i>		TLA 880226 CC BY-SA 4.0
+	Kꜣ-nḫt-qꜣ-šw.tï [Horusname Amenophis' IV.] <i> proper noun (royal name) </i>		TLA 852054 CC BY-SA 4.0
+	Kꜣ-nḫt-twt-msw.t [Horusname Tutanchamuns] <i> proper noun (royal name) </i>		TLA 859797 CC BY-SA 4.0
+	Kꜣ-nḫt-twt-ḫꜥ.w [Horusname Thutmosis' IV.] <i> proper noun (royal name) </i>		TLA 860015 CC BY-SA 4.0
+	Kꜣ-ẖ.t [Horusname Mykerinos'] <i> proper noun (royal name) </i>		TLA 883520 CC BY-SA 4.0
+	kꜣš.ꞽ Kuschit <i> noun (masc.) </i>		TLA 888128 CC BY-SA 4.0
+	Kysrs Caesar <i> proper noun (royal name) </i>		TLA 853051 CC BY-SA 4.0
+	Kysrs-ꜥnḫ-ḏ.t [Eigenname Augustus'] <i> proper noun (royal name) </i>		TLA 853048 CC BY-SA 4.0
+	Kysrs-ꜥnḫ-ḏ.t-mr-Ꜣs.t [Eigenname Augustus'] <i> proper noun (royal name) </i>		TLA 853050 CC BY-SA 4.0
+	Kysrs-ꜥnḫ-ḏ.t-mr-Ptḥ-Ꜣs.t [Eigenname Augustus'] <i> proper noun (royal name) </i>		TLA 853049 CC BY-SA 4.0
+	Kysrs-mr-Ptḥ-Ꜣs.t [Eigenname Augustus'] <i> proper noun (royal name) </i>		TLA 853047 CC BY-SA 4.0
+	Kysrs-nt.ï-ḫw Kaisaros Sebastos <i> proper noun (royal name) </i>		TLA 860619 CC BY-SA 4.0
+	Kysrs-Tmtyns Caesar Domitian <i> proper noun (royal name) </i>		TLA 875393 CC BY-SA 4.0
+	Kysrs-Tmtyns-Sbsts Caesar Domitian Sebastos <i> proper noun (royal name) </i>		TLA 875384 CC BY-SA 4.0
+	kbr.t [Mineral] <i> noun </i>		TLA 888134 CC BY-SA 4.0
+𓎡𓅓𓃀𓇋𓍿𓏏	Kmbḏ Kambyses <i> proper noun (royal name) </i>	V31-G17-D58-M17-V13-X1	TLA 713962 CC BY-SA 4.0
+	knm.wt Oasenbewohner <i> noun (fem.) </i>		TLA 883337 CC BY-SA 4.0
+	Krwtys Claudius <i> proper noun (royal name) </i>		TLA 862852 CC BY-SA 4.0
+	gꜣb.t (Nasen)loch <i> noun (fem.) </i>		TLA 882791 CC BY-SA 4.0
+	gꜣr [Myrrhenstrauch] <i> noun (masc.) </i>		TLA 885779 CC BY-SA 4.0
+	gs Trauerfrisur <i> noun (masc.) </i>		TLA 885467 CC BY-SA 4.0
+	gs-pꜣw.t [Opferkuchen] <i> noun (masc.) </i>		TLA 887027 CC BY-SA 4.0
+	tʾ-1 [Brot] <i> noun (masc.) </i>		TLA 885356 CC BY-SA 4.0
+	tʾ-3 Dreikornbrot <i> noun (masc.) </i>		TLA 885389 CC BY-SA 4.0
+	Tywtwts Diodotos <i> proper noun (royal name) </i>		TLA 885077 CC BY-SA 4.0
+	tꞽs.t Genossin <i> noun (fem.) </i>		TLA 884450 CC BY-SA 4.0
+	Tyts Titus <i> proper noun (royal name) </i>		TLA 862845 CC BY-SA 4.0
+	Tyts-pꜣ-nṯr Titus divus <i> proper noun (royal name) </i>		TLA 875387 CC BY-SA 4.0
+	tw=w [Präs.I-Pron. pl.3.c.] <i> pronoun (personal pronoun) </i>		TLA 883949 CC BY-SA 4.0
+	tw=f [Präs.I-Pron. sg.3.m.] <i> pronoun (personal pronoun) </i>		TLA 883946 CC BY-SA 4.0
+	tw-s [Partikel] <i> grammatical particle </i>		TLA 883388 CC BY-SA 4.0
+	Twt-ꜥnḫ-Ꞽmn.w-ḥqꜣ-Ꞽwn.w-Šmꜥ.w [Eigenname Tutanchamuns] <i> proper noun (royal name) </i>		TLA 855570 CC BY-SA 4.0
+	Twt-ꜥnḫ-Ꞽtn Tut-anch-Aton <i> proper noun (royal name) </i>		TLA 859796 CC BY-SA 4.0
+	Twt-msw.t [Nebtiname Ahmoses] <i> proper noun (royal name) </i>		TLA 878927 CC BY-SA 4.0
+	Tbrys Tiberius <i> proper noun (royal name) </i>		TLA 854006 CC BY-SA 4.0
+	Tbrys-Krwtys Tiberius Claudius <i> proper noun (royal name) </i>		TLA 860620 CC BY-SA 4.0
+	tp.ï erster <i> numeral (ordinal numeral) </i>		TLA 882965 CC BY-SA 4.0
+	tpḥ mutig sein <i> verb </i>		TLA 885812 CC BY-SA 4.0
+	Tmtyns Domitian <i> proper noun (royal name) </i>		TLA 862850 CC BY-SA 4.0
+	Tryns Trajan <i> proper noun (royal name) </i>		TLA 862849 CC BY-SA 4.0
+	th.wt Frevlerin <i> noun (fem.) </i>		TLA 883088 CC BY-SA 4.0
+	Thr-qꜣ Taharqa <i> proper noun (royal name) </i>		TLA 862990 CC BY-SA 4.0
+𓏏𓎡𓅓𓂻𓀭	Tkm Tekem <i> proper noun (deity name) </i>	X1-V31-G17-D54-A40	TLA 173670 CC BY-SA 4.0
+	Tklt Takelot <i> proper noun (royal name) </i>		TLA 879041 CC BY-SA 4.0
+	Tklt-mr.y-Ꞽmn.w Takelot-mery-Amun <i> proper noun (royal name) </i>		TLA 886451 CC BY-SA 4.0
+	Tklt-zꜣ-Ꜣs.t-mr-Ꞽmn.w Takelot-za-Aset-mer-Imen <i> proper noun (royal name) </i>		TLA 884468 CC BY-SA 4.0
+	ṯ [Gefäß oder Öl] <i> noun (masc.) </i>		TLA 885455 CC BY-SA 4.0
+	ṯꜣm.t Vorhaut <i> noun (fem.) </i>		TLA 883778 CC BY-SA 4.0
+	Ṯꜣz-Tꜣ.wï [Goldname Ahmoses] <i> proper noun (royal name) </i>		TLA 878924 CC BY-SA 4.0
+	ṯꞽṯꞽ Stolperer (?) (vom Herzen) <i> noun (masc.) </i>		TLA 889271 CC BY-SA 4.0
+	Ṯmꜣ-ꜥ [Horusname Nektanebis'] <i> proper noun (royal name) </i>		TLA 882452 CC BY-SA 4.0
+	Ṯn-m-ẖ.t-snsn-ḥp-ꜥnḫ-ḥr-msḫn.t [Horusname Ptolemaios' VI.] <i> proper noun (royal name) </i>		TLA 853950 CC BY-SA 4.0
+	Ṯn-m-ẖ.t-snsn-ḥp-ꜥnḫ-ḥr-msḫn.t=sn [Horusname Ptolemaios' VI.] <i> proper noun (royal name) </i>		TLA 880967 CC BY-SA 4.0
+	dwꜣ-Tꜣ.wï [Schiff] <i> noun (masc.) </i>		TLA 882854 CC BY-SA 4.0
+	dfꜣ.t [Substantiv] <i> noun (fem.) </i>		TLA 884711 CC BY-SA 4.0
+	Dn Den <i> proper noun (royal name) </i>		TLA 882275 CC BY-SA 4.0
+	dnw.t Quadratelle <i> noun (fem.) </i>		TLA 889445 CC BY-SA 4.0
+𓂧𓈖𓂧𓈖	Dndn.w Der Wanderer <i> proper noun (deity name) </i>	D46-N35-D46-N35	TLA 180030 CC BY-SA 4.0
+	dr pökeln <i> verb </i>		TLA 883334 CC BY-SA 4.0
+	Drywš Darius <i> proper noun (royal name) </i>		TLA 859849 CC BY-SA 4.0
+	drp.t Gabe <i> noun (fem.) </i>		TLA 883364 CC BY-SA 4.0
+	dḥꜣ [Schlange] <i> noun (masc.) </i>		TLA 887606 CC BY-SA 4.0
+	dḫn.t Taktangeberin <i> noun (fem.) </i>		TLA 885806 CC BY-SA 4.0
+	dšr.tï Wüstenbewohner <i> noun (masc.) </i>		TLA 888698 CC BY-SA 4.0
+	ḏꜥḏꜥ Beweglichkeit (?) <i> noun (masc.) </i>		TLA 883019 CC BY-SA 4.0
+	ḏbꜣ.t [Baum] <i> noun (fem.) </i>		TLA 887144 CC BY-SA 4.0
+	ḏbꜣ.t-nfr.t [Baum] <i> noun (fem.) </i>		TLA 887147 CC BY-SA 4.0
+	Ḏr Djer <i> proper noun (royal name) </i>		TLA 882281 CC BY-SA 4.0
+	Ḏr.t-ꜥnḫ-Ꞽmn.w-tꞽ.t-Rꜥw [Thronname Arqamanis (Ergamenes II.)] <i> proper noun (royal name) </i>		TLA 853962 CC BY-SA 4.0
+	Ḏr.tïw Die Djertu (Vorfahren oder Falkengötter) <i> proper noun (deity name) </i>		TLA 853089 CC BY-SA 4.0
+	Ḏḥw.tï-ms.w-Nfr-ḫꜥ.w Thutmosis-Neferchau <i> proper noun (royal name) </i>		TLA 879032 CC BY-SA 4.0
+	Ḏḥw.tï-ms.w-ḥqꜣ-Wꜣs.t Thutmosis-Hekawaset <i> proper noun (royal name) </i>		TLA 879299 CC BY-SA 4.0
+	Ḏḥw.tï-ms.w-ḥqꜣ-Mꜣꜥ.t Thutmosis-heqa-Maat <i> proper noun (royal name) </i>		TLA 879080 CC BY-SA 4.0
+	Ḏḥw.tï-ms.w-ḫꜥ-mꞽ-Rꜥw Thutmosis-Chamire <i> proper noun (royal name) </i>		TLA 879035 CC BY-SA 4.0
+	Ḏḥw.tï-ms.w-zmꜣ-ḫpr Thutmosis-zema-cheper <i> proper noun (royal name) </i>		TLA 879083 CC BY-SA 4.0
+	Ḏsr Djoser <i> proper noun (royal name) </i>		TLA 853625 CC BY-SA 4.0
+	Ḏsr-msḫꜥ.w [Horusname Ptolemaios' XII.] <i> proper noun (royal name) </i>		TLA 878909 CC BY-SA 4.0
+𓂦𓂋𓄟𓈍𓏥𓎛𓂋𓐑𓊪𓋹𓃒	Ḏsr-msḫꜥ.w-ḥnꜥ-ḥp-ꜥnḫ [Horusname Ptolemaios' XII.] <i> proper noun (royal name) </i>	D45-D21-F31-N28-Z2-V28-D21-Aa5-Q3-S34-E1	TLA 865313 CC BY-SA 4.0
+	Ḏsr-ḫꜥ.w-sḫm-pḥ.tï-ꜥnḫ-ḥr-nb-n-mꜣꜣ=f-mꞽ-Ꜣḫ.tï [Goldname Piyes] <i> proper noun (royal name) </i>		TLA 861212 CC BY-SA 4.0
+	Ḏsr-ḫpr.w-Rꜥw [Thronname Haremhabs (Kurzform)] <i> proper noun (royal name) </i>		TLA 853122 CC BY-SA 4.0
+	Ḏsr-ḫpr.w-Rꜥw-stp-n-Rꜥw [Thronname Haremhabs] <i> proper noun (royal name) </i>		TLA 853121 CC BY-SA 4.0
+	ḏtf [Krankheit] <i> noun (masc.) </i>		TLA 889298 CC BY-SA 4.0
+	Ḏd-nzw.yt-mꞽ-Ꞽtm.w [Nebtiname Thutmosis' IV.] <i> proper noun (royal name) </i>		TLA 860016 CC BY-SA 4.0
+	Ḏd-ḥtp-Rꜥw [Thronname Dedumoses] <i> proper noun (royal name) </i>		TLA 860713 CC BY-SA 4.0
+	ḏdb [Schlange] <i> noun (masc.) </i>		TLA 887597 CC BY-SA 4.0
+	Ḏḏ.w-ms Dedumose <i> proper noun (royal name) </i>		TLA 860714 CC BY-SA 4.0

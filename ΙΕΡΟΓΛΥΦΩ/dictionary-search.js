@@ -10,6 +10,11 @@ const DICT_URL = '../dictionary.txt';
 // pristine; we load both so additions are instantly searchable. The file is
 // optional — a missing or empty one is never fatal.
 const ADDITIONS_URL = '../dict-additions.txt';
+// Thesaurus Linguae Aegyptiae lemma list (English glosses). Kept SEPARATE from
+// the proprietary core because it is CC BY-SA 4.0 — the ShareAlike obligation
+// applies only to this file. Loaded alongside the core so its entries are
+// searchable too. Also optional — a missing file is never fatal.
+const TLA_URL = '../dictionary-tla.txt';
 
 // Initialize the application
 function initializeApp() {
@@ -40,6 +45,16 @@ async function loadBundledDictionary() {
                 if (addText) processedDictionary = processedDictionary.concat(addText.split('\n'));
             }
         } catch (_) { /* additions are optional */ }
+
+        // Fold in the CC BY-SA TLA lemma list (separate file, see TLA_URL above).
+        // Static like the core, so the normal HTTP cache is fine.
+        try {
+            const tlaRes = await fetch(TLA_URL);
+            if (tlaRes.ok) {
+                const tlaText = await tlaRes.text();
+                if (tlaText) processedDictionary = processedDictionary.concat(tlaText.split('\n'));
+            }
+        } catch (_) { /* TLA layer is optional */ }
 
         if (searchButton) searchButton.disabled = false;
         // Show the entry count as a quiet placeholder in the results panel; it
@@ -124,6 +139,24 @@ function initializeResultClickInsert() {
     });
 }
 
+// MdC ↔ Leiden transliteration bridge. The core file is mostly MdC-style ASCII
+// (A i a H x X S T D) while the CC BY-SA TLA file uses Leiden Unicode
+// (ꜣ ꞽ ꜥ ḥ ḫ ẖ š ṯ ḏ); the core itself even mixes the two. So a query in either
+// scheme is expanded to BOTH forms before matching, letting one search find both
+// spellings. This is purely additive — the original term is always kept, so the
+// bridge can only broaden results, never drop one.
+const MDC_TO_LEIDEN = { A:'ꜣ', I:'ꞽ', i:'ꞽ', a:'ꜥ', H:'ḥ', x:'ḫ', X:'ẖ', S:'š', T:'ṯ', D:'ḏ' };
+const LEIDEN_TO_MDC = { 'ꜣ':'A', 'ꞽ':'i', 'ꜥ':'a', 'ḥ':'H', 'ḫ':'x', 'ẖ':'X', 'š':'S', 'ṯ':'T', 'ḏ':'D',
+                        'Ꜣ':'A', 'Ꞽ':'i', 'Ꜥ':'a', 'Ḥ':'H', 'Ḫ':'x', 'Š':'S', 'Ṯ':'T', 'Ḏ':'D' };
+const toLeiden = s => [...s].map(c => MDC_TO_LEIDEN[c] || c).join('');
+const toMdc    = s => [...s].map(c => LEIDEN_TO_MDC[c] || c).join('');
+// All distinct MdC/Leiden spellings of a term, regex-escaped, ready to OR together.
+function tlitVariants(term) {
+    const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const variants = new Set([term, toLeiden(term), toMdc(term)]);
+    return [...variants].map(escape);
+}
+
 // Get or create regex patterns
 function getSearchRegex(searchInput) {
     if (searchInput === cachedRegex.input) {
@@ -131,20 +164,22 @@ function getSearchRegex(searchInput) {
     }
 
     const terms = searchInput.split(/\s+/);
-    const escapedTerms = terms.map(term =>
-        term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    );
+    // Each term becomes a group of its transliteration variants: (?:imnH|ꞽmnḥ).
+    const termGroups = terms.map(term => {
+        const v = tlitVariants(term);
+        return v.length > 1 ? `(?:${v.join('|')})` : v[0];
+    });
 
-    const exactPattern = escapedTerms.join('[\s-]*');
-    const loosePattern = escapedTerms
-        .map(term => `(?=.*${term})`)
+    const exactPattern = termGroups.join('[\s-]*');
+    const loosePattern = termGroups
+        .map(group => `(?=.*${group})`)
         .join('');
 
     cachedRegex = {
         input: searchInput,
         exact: new RegExp(exactPattern, 'iu'),
         loose: new RegExp(loosePattern, 'iu'),
-        highlight: new RegExp(`(${escapedTerms.join('|')})`, 'giu')
+        highlight: new RegExp(`(${termGroups.join('|')})`, 'giu')
     };
 
     return cachedRegex;

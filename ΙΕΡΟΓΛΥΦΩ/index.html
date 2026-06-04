@@ -234,6 +234,7 @@
     <!-- Right-click context menu for the canvas. Hidden until shown via JS. -->
     <div id="canvasCtxMenu" class="canvas-ctx-menu hidden">
         <button data-action="identify">𓂀 What does this say?</button>
+        <button data-action="inspect">𓏞 Inspect / Convert</button>
         <!-- Authoring only: revealed by dict-author.js when served from localhost. -->
         <button data-action="dict-add" id="ctxDictAdd" hidden>💾 Save to dictionary</button>
         <hr class="ctx-divider" id="ctxDictAddHr" hidden>
@@ -272,6 +273,17 @@
                 <li><a href="https://www.paypal.com/ncp/payment/PMWMHAY55RZSE" target="_blank" rel="noopener">𓋹 Support the project</a></li>
             </ul>
             <p class="about-credit">Created by Massimo Mazzon · © 2024</p>
+        </div>
+    </div>
+
+    <!-- Inspect / Convert modal: per-representation rows for the selected signs
+         (glyphs, Unicode, MdC, best-effort dictionary reading), each copyable.
+         Reuses the .help-overlay backdrop; populated by openInspectModal(). -->
+    <div class="help-overlay" id="inspectOverlay">
+        <div class="inspect-card" role="dialog" aria-label="Inspect selection">
+            <button class="about-close" id="inspectCloseBtn" title="Close" aria-label="Close">×</button>
+            <h2 class="inspect-title">𓏞 Inspect / Convert</h2>
+            <div class="inspect-rows" id="inspectRows"></div>
         </div>
     </div>
 

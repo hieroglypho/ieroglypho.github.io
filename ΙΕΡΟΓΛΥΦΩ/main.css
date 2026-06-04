@@ -675,6 +675,131 @@ canvas {
     color: #fff;
 }
 
+/* Inspect / Convert modal — dark card on the shared .help-overlay backdrop.
+   One row per representation: a label, the value, and a copy button. */
+.inspect-card {
+    position: relative;
+    width: min(560px, 94vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 26px 28px 22px;
+    background-color: #1a1a1a;
+    color: #e8e8e8;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.inspect-title {
+    margin: 0 0 18px;
+    font-size: 20px;
+    letter-spacing: 1px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.inspect-rows {
+    display: grid;
+    gap: 12px;
+}
+
+.inspect-row {
+    display: grid;
+    grid-template-columns: 96px 1fr auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.inspect-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #c9a227;
+}
+
+.inspect-value {
+    min-width: 0;
+    padding: 8px 10px;
+    background: #242424;
+    border: 1px solid #333;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #e8e8e8;
+    word-break: break-word;
+}
+
+.inspect-value.glyphs {
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', sans-serif;
+    font-size: 28px;
+    line-height: 1.2;
+}
+
+.inspect-value.unicode,
+.inspect-value.mdc {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.inspect-value.reading em {
+    color: #8fd3f4;
+    font-style: italic;
+}
+
+.inspect-value.empty {
+    color: #777;
+    font-style: italic;
+}
+
+/* Per-sign segmented reading: each segment leads with its glyph(s). */
+.inspect-value .seg-g {
+    font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', sans-serif;
+    font-size: 18px;
+    margin-right: 2px;
+}
+
+.inspect-value .seg-sep {
+    color: #777;
+}
+
+/* Caveat under the reading value (e.g. "not a known whole word"). */
+.inspect-note {
+    margin-top: 6px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    font-style: italic;
+    color: #9a9a9a;
+}
+
+.inspect-copy {
+    border: 1px solid #333;
+    background: #242424;
+    color: #ccc;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.inspect-copy:hover {
+    background: #2d2d2d;
+    border-color: #4a4a4a;
+    color: #fff;
+}
+
+.inspect-copy:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.inspect-copy.copied {
+    border-color: #c9a227;
+    color: #f0d781;
+}
+
 #tools {
     position: fixed;
     bottom: 20px;
@@ -1183,6 +1308,10 @@ canvas {
     /* Inputs don't inherit font-family — needed so a dragged/typed Extended-A
        glyph renders instead of showing as tofu. */
     font-family: 'Noto Sans Egyptian Hieroglyphs', 'Hieroglyphica Extended', sans-serif;
+}
+
+#dictionarySearchInput {
+    font-size: 1.25rem;
 }
 
 .search-button {

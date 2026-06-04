@@ -256,6 +256,140 @@ function identifySelection(objs) {
     renderIdentifyResults(out, run, scope, findWordsInRun(run));
 }
 
+// =============================================================================
+// Inspect / Convert modal — multiple representations of the selected signs
+// =============================================================================
+// Triggered from the canvas right-click menu after the user selects signs.
+// Shows one copyable row per representation: glyphs, Unicode code points, MdC,
+// and a best-effort dictionary reading. Deterministic rows (glyphs/Unicode/MdC)
+// always fill; the reading is whatever the dictionary lookup yields, or empty.
+
+// "U+131CB U+13429 …" for a glyph run (codepoints, not UTF-16 units).
+function _wfUnicodePoints(run) {
+    return Array.from(run)
+        .map(ch => 'U+' + ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0'))
+        .join(' ');
+}
+
+// Best-effort reading for a run. Returns { text, html, exact } or null.
+//   - exact match  → the run IS a dictionary word; show that one gloss (exact:true).
+//   - otherwise    → tile the WHOLE run left-to-right with the longest known words
+//                    (and single-glyph readings), so the reading reflects every
+//                    selected sign. Signs no entry covers show as "?". This is why
+//                    selecting one sign vs. two now gives different readings.
+// Null only when nothing in the run resolves at all (or no dictionary loaded).
+function _wfReadingForRun(run) {
+    if (typeof findWordsInRun !== 'function') return null;
+    const res = findWordsInRun(run);
+    if (!res || res.error) return null;
+
+    if (res.exact[0]) {
+        const g = res.exact[0].gloss;
+        return { text: g.replace(/<\/?i>/g, '').trim(), html: _wfGloss(g), exact: true };
+    }
+
+    // Index every positioned match (multi-glyph `inside` words + `single` readings)
+    // by its start codepoint, longest-first, then walk the run taking the longest
+    // match at each position — a greedy segmentation.
+    const byStart = new Map();
+    for (const e of [...res.inside, ...res.single]) {
+        if (!byStart.has(e.start)) byStart.set(e.start, []);
+        byStart.get(e.start).push(e);
+    }
+    const cps = Array.from(run);
+    const segs = [];
+    for (let pos = 0; pos < cps.length; ) {
+        const pick = (byStart.get(pos) || []).sort((a, b) => b.len - a.len)[0];
+        if (pick) { segs.push({ glyphs: pick.glyphs, gloss: pick.gloss }); pos = pick.end; }
+        else { segs.push({ glyphs: cps[pos], gloss: null }); pos++; }
+    }
+    if (!segs.some(s => s.gloss)) return null;   // nothing resolved
+
+    const text = segs.map(s => `${s.glyphs} ${s.gloss ? s.gloss.replace(/<\/?i>/g, '').trim() : '?'}`).join(' · ');
+    const html = segs.map(s =>
+        `<span class="inspect-seg"><span class="seg-g">${_wfEsc(s.glyphs)}</span> ${s.gloss ? _wfGloss(s.gloss) : '?'}</span>`
+    ).join('<span class="seg-sep"> · </span>');
+    return { text, html, exact: false };
+}
+
+function openInspectModal(objs) {
+    const overlay = document.getElementById('inspectOverlay');
+    const rowsEl = document.getElementById('inspectRows');
+    if (!overlay || !rowsEl) return;
+
+    const { run } = (typeof compositionGlyphRun === 'function')
+        ? compositionGlyphRun(objs) : { run: '' };
+
+    const mdc = (typeof mdcStringForObjs === 'function') ? mdcStringForObjs(objs) : '';
+    const reading = run ? _wfReadingForRun(run) : null;
+
+    // Reading is judged on all the selected signs *together*. Only an exact
+    // dictionary match is a confirmed word; anything else is flagged, since the
+    // combination may be a valid word that simply isn't in the dictionary yet.
+    let readingHtml = '', readingCopy = '', readingNote = '';
+    if (run && reading && reading.exact) {
+        readingHtml = reading.html; readingCopy = reading.text;
+    } else if (run && reading) {
+        readingHtml = reading.html; readingCopy = reading.text;
+        readingNote = 'No dictionary word matches all these signs together — it may be a valid word ' +
+            'that isn’t recorded yet. Shown as per-sign readings (· = next sign, ? = sign with no entry).';
+    } else if (run) {
+        readingNote = 'Not in the dictionary. These signs together may still be a valid word that ' +
+            'simply isn’t recorded yet.';
+    }
+
+    // { label, cls, copy (plain text for clipboard), html (display markup), note }.
+    // Empty copy → the row shows a placeholder (or its note) and the copy button
+    // is disabled.
+    const rows = [
+        { label: 'Glyphs',  cls: 'glyphs',  copy: run,                 html: _wfEsc(run) },
+        { label: 'Unicode', cls: 'unicode', copy: run ? _wfUnicodePoints(run) : '', html: _wfEsc(_wfUnicodePoints(run)) },
+        { label: 'MdC',     cls: 'mdc',     copy: mdc,                 html: _wfEsc(mdc) },
+        { label: 'Reading', cls: 'reading', copy: readingCopy,        html: readingHtml, note: readingNote },
+    ];
+
+    rowsEl.innerHTML = rows.map(r => {
+        const empty = !r.copy;
+        const noteHtml = r.note ? `<div class="inspect-note">${r.note}</div>` : '';
+        const mainHtml = empty ? (r.note ? '' : '<span class="empty">—</span>') : r.html;
+        return `<div class="inspect-row">` +
+            `<div class="inspect-label">${r.label}</div>` +
+            `<div class="inspect-value ${r.cls}${empty ? ' empty' : ''}">${mainHtml}${noteHtml}</div>` +
+            `<button class="inspect-copy" title="Copy ${r.label}"${empty ? ' disabled' : ''}>📋</button>` +
+            `</div>`;
+    }).join('');
+
+    // Wire each enabled copy button to its row's plain-text value.
+    rowsEl.querySelectorAll('.inspect-row').forEach((rowEl, i) => {
+        const btn = rowEl.querySelector('.inspect-copy');
+        if (!btn || btn.disabled) return;
+        btn.addEventListener('click', () => {
+            const text = rows[i].copy;
+            const ok = () => { btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1200); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(ok).catch(() => window.prompt('Copy:', text));
+            } else {
+                window.prompt('Copy:', text);
+            }
+        });
+    });
+
+    overlay.style.display = 'flex';
+}
+
+(function initInspectModal() {
+    if (typeof document === 'undefined') return;   // inert under Node (tests)
+    const overlay = document.getElementById('inspectOverlay');
+    if (!overlay) return;
+    const closeBtn = document.getElementById('inspectCloseBtn');
+    const close = () => { overlay.style.display = 'none'; };
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.style.display === 'flex') close();
+    });
+})();
+
 // Expose for both the editor (global scope, like the rest of the app) and the
 // harness page / future module use.
 if (typeof window !== 'undefined') {
@@ -263,6 +397,7 @@ if (typeof window !== 'undefined') {
     window.wfCoverage = wfCoverage;
     window.identifySelection = identifySelection;
     window.compositionGlyphRun = compositionGlyphRun;
+    window.openInspectModal = openInspectModal;
 }
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { findWordsInRun, wfCoverage, wfParseDictionary };

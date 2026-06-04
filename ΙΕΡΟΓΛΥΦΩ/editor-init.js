@@ -292,6 +292,14 @@ function initCanvasContextMenu() {
                 if (typeof identifySelection === 'function') identifySelection(objs);
                 break;
             }
+            case 'inspect': {
+                // Same selection logic as identify — the active selection, else
+                // the right-clicked glyph.
+                const active = canvas.getActiveObjects ? canvas.getActiveObjects() : [];
+                const objs = active.length ? active : (ctxTarget ? [ctxTarget] : null);
+                if (typeof openInspectModal === 'function') openInspectModal(objs);
+                break;
+            }
             case 'dict-add': {
                 // Localhost-only authoring: same selection logic as identify —
                 // the active selection, else the right-clicked glyph.

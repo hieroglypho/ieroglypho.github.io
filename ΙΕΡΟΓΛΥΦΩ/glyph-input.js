@@ -1398,12 +1398,12 @@ function mdcSplitRows(boxes, avgH) {
 
 // Copy the current selection to the clipboard as MdC code. Bound to the toolbar
 // "→MdC" button and the `m` shortcut.
-function exportSelectionToMdC() {
-    const signs = canvas.getActiveObjects().filter(o => o.type === 'text' && !o._pageGuide);
-    if (signs.length === 0) {
-        showCanvasToast('Select some signs to copy as MdC');
-        return;
-    }
+// Pure: build the MdC string for a list of sign objects (no clipboard, no toast).
+// Returns '' when the list has no glyph signs. Shared by exportSelectionToMdC and
+// the Inspect modal so the two never drift.
+function mdcStringForObjs(objs) {
+    const signs = (objs || []).filter(o => o.type === 'text' && !o._pageGuide);
+    if (signs.length === 0) return '';
 
     const boxes = signs.map(o => {
         o.setCoords();
@@ -1414,9 +1414,17 @@ function exportSelectionToMdC() {
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
 
     // Rows first (line breaks), then guillotine each row into cadrats.
-    const mdc = mdcSplitRows(boxes, avgH)
+    return mdcSplitRows(boxes, avgH)
         .map(row => mdcFromBoxes(row, avgW, avgH).str)
         .join(' ! ');
+}
+
+function exportSelectionToMdC() {
+    const mdc = mdcStringForObjs(canvas.getActiveObjects());
+    if (!mdc) {
+        showCanvasToast('Select some signs to copy as MdC');
+        return;
+    }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(mdc)

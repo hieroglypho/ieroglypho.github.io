@@ -394,19 +394,14 @@
         }
     
         .rainbow-donate {
-            display: grid;
-            place-items: center;
-            padding: 0;
+            justify-content: center;
             background: #2a2a2a;
             border: 1px solid #3a3a3a;
-            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            width: 50px;
-            height: 50px;
-            line-height: 1;
+            font-size: 15px;
+            line-height: 1.4;
         }
+        .rainbow-donate:hover { background: #353535; }
 
         .rainbow-donate span {
             display: block;
@@ -442,7 +437,7 @@
             <div class="paper-header">
                 <p class="paper-title">Hieroglyphica · ΙΕΡΟΓΛΥΦΩ</p>
                 <p class="paper-subtitle">A Browser-Native Composition Environment for Egyptian Epigraphy</p>
-                <p class="paper-meta">M. Mazzon · hieroglyphica.org · Draft v0.2 — 28 May 2026</p>
+                <p class="paper-meta">M. Mazzon · hieroglyphica.org · Draft v0.3 — 4 June 2026</p>
             </div>
 
             <div class="dictionary-download" style="margin-bottom: 25px;">
@@ -456,7 +451,7 @@
 
             <h3>Abstract</h3>
             <p class="abstract">This paper introduces Hieroglyphica (ΙΕΡΟΓΛΥΦΩ), a browser-native composition environment for Ancient Egyptian writing, and situates it within the existing landscape of digital epigraphy tools. For two decades the desktop application JSesh (Rosmorduc 2014) has served as the de facto reference implementation for Manuel de Codage (MdC) authoring. Hieroglyphica retains the strengths of that lineage while extending the model in four directions relevant to contemporary epigraphic practice: (1) zero-install deployment via the web platform, removing the licensing, runtime, and font-configuration overhead that constrains teaching and peer review; (2) first-class support for the Egyptian Hieroglyphs Extended-A Unicode block (U+13460–U+143FF), enabling composition of the approximately 4,897 signs that fall outside the Gardiner core; (3) a linked three-row block primitive that binds glyph row, transliteration, and translation as a single editorial unit, mirroring the conventional publication layout; and (4) a hybrid PDF export that embeds an invisible Unicode text layer over the rasterised composition, producing artefacts that are simultaneously visually faithful in print and machine-searchable in digital indexes. We document the architecture, present a feature-by-feature comparison with JSesh, and discuss limitations and the planned roadmap.</p>
-            <p class="keywords"><strong>Keywords:</strong> digital epigraphy, Egyptian hieroglyphs, Manuel de Codage, JSesh, Unicode, Leiden conventions, Egyptology, web tools.</p>
+            <p class="keywords"><strong>Keywords:</strong> digital epigraphy, Egyptian hieroglyphs, Manuel de Codage, JSesh, Unicode, Leiden conventions, Thesaurus Linguae Aegyptiae, Egyptology, web tools.</p>
 
             <h3>1. Introduction</h3>
             <p>The digital encoding of Egyptian hieroglyphic writing has matured significantly since the codification of the Manuel de Codage (Buurman, Grimal, et al. 1988) and the subsequent Unicode allocations for Egyptian Hieroglyphs (U+13000–U+1342F, 2009) and Egyptian Hieroglyphs Extended-A (U+13460–U+143FF, 2022). Throughout that period JSesh has served as the de facto desktop authoring environment for epigraphers rendering MdC strings as typeset glyph blocks (Rosmorduc 2014). JSesh remains the reference implementation against which any new tool must be measured.</p>
@@ -484,7 +479,7 @@
             <h4>3.1 Platform</h4>
             <p>Hieroglyphica is a single-page web application served from hieroglyphica.org, requiring no installation. It is implemented in vanilla JavaScript with no build step; the canvas composition layer uses Fabric.js 5.2.4. Persistence is handled via JSON workspace files (load/save) and IndexedDB for dictionary caching. The application runs entirely client-side; no editorial content leaves the user's machine.</p>
             <h4>3.2 Glyph Repertoire and Fonts</h4>
-            <p>Hieroglyphica renders glyphs using Noto Sans Egyptian Hieroglyphs (Apache-2.0 / SIL-OFL) for the core Unicode block (U+13000–U+1342F) and a custom Hieroglyphica Extended font — developed by M. Mazzon specifically for this project — for Egyptian Hieroglyphs Extended-A (U+13460–U+143FF), exposing approximately 4,897 additional signs. Because rendering uses standard Unicode codepoints with embedded fonts, the same glyph data passes unchanged through copy, paste, export, and reimport — a property that the proprietary glyph-set approach used by JSesh does not provide.</p>
+            <p>Hieroglyphica renders glyphs using Noto Sans Egyptian Hieroglyphs (Apache-2.0 / SIL-OFL) for the core Unicode block (U+13000–U+1342F) and a custom Hieroglyphica Magna font — developed by M. Mazzon specifically for this project — for the Egyptian Hieroglyphs Extended-A Unicode block (U+13460–U+143FF), exposing approximately 4,897 additional signs. Because rendering uses standard Unicode codepoints with embedded fonts, the same glyph data passes unchanged through copy, paste, export, and reimport — a property that the proprietary glyph-set approach used by JSesh does not provide.</p>
             <h4>3.3 Input Modes</h4>
             <p>The editor exposes three input paradigms within a unified composition dialog:</p>
             <ul>
@@ -493,6 +488,7 @@
                 <li><strong>Three-line linked block.</strong> A glyph row paired with transliteration and translation rows, bound as a single editorial unit (see §3.5).</li>
             </ul>
             <p>Glyphs are entered by drag-from-palette, click-to-select, MdC code (with Unicode admitted in the same stream), or by drag from the dictionary search panel. The palette reflows on an auto-fill CSS grid and is drag-resizable.</p>
+            <p>The dictionary search panel draws on two layers held in separate files. The first is a proprietary Hieroglyphica core compiled by the author (© M. Mazzon, all rights reserved). The second is the Wikidata-linked lemma list of the Thesaurus Linguae Aegyptiae (Berlin-Brandenburgische Akademie der Wissenschaften &amp; Saxon Academy of Sciences and Humanities), reformatted for this tool and redistributed under CC BY-SA 4.0 (Thesaurus Linguae Aegyptiae 2024). The two are aggregated only at runtime, so the ShareAlike obligation is confined to the TLA file and does not reach the software, fonts, or the core. The TLA layer follows the Leiden Unified Transliteration, which the search bridges to the core's MdC-style transliteration so that a query in either scheme retrieves both.</p>
             <h4>3.4 Transliteration and Editorial Conventions</h4>
             <p>A dedicated transliteration keyboard surfaces the full Egyptological character set — ꜣ ꜥ ꞽ ḥ ḫ ẖ š ḳ ṯ ḏ — in lowercase and uppercase, with the combining diacritic H̱ (H + U+0331) handled inline. The full set of Leiden conventions ( [ ] ⌜ ⌝ ⟨ ⟩ { } … ) is available as a parallel palette inside the three-line dialog, addressing a long-standing pain point: epigraphers no longer leave the application to source editorial brackets from an external Unicode picker.</p>
             <h4>3.5 The Three-Line Linked Block</h4>
@@ -571,6 +567,7 @@
             <div class="references">
                 <p>Buurman, J., Grimal, N., van der Plas, D., Hallof, J., et al. (1988). <em>Inventaire des signes hiéroglyphiques en vue de leur saisie informatique: Manuel de codage.</em> Mémoires de l'Académie des Inscriptions et Belles-Lettres, 8. Paris: De Boccard.</p>
                 <p>Rosmorduc, S. (2014). "JSesh: a Hieroglyphic Text Editor." In <em>Egyptology in the Present: Experiential and Experimental Methods in Archaeology,</em> ed. C. Graves-Brown. Swansea: Classical Press of Wales.</p>
+                <p>Thesaurus Linguae Aegyptiae. (2024). <em>Hieroglyphic/hieratic lemma list, Wikidata-linked export.</em> Berlin-Brandenburgische Akademie der Wissenschaften &amp; Saxon Academy of Sciences and Humanities in Leipzig. edoc.bbaw.de, docId 5402. Licensed under CC BY-SA 4.0.</p>
                 <p>Unicode Consortium. (2009). <em>The Unicode Standard, Version 5.2.0.</em> Egyptian Hieroglyphs block (U+13000–U+1342F). Mountain View, CA: The Unicode Consortium.</p>
                 <p>Unicode Consortium. (2022). <em>The Unicode Standard, Version 15.0.0.</em> Egyptian Hieroglyphs Extended-A block (U+13460–U+143FF). Mountain View, CA: The Unicode Consortium.</p>
                 <p>Leiden Conventions. Standard reference for epigraphic editorial sigla, as codified at the International Congress of Orientalists, Leiden, 1931, and revised in subsequent papyrological and epigraphic practice.</p>
@@ -580,12 +577,6 @@
     </div>
 
         <footer>
-        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="rainbow-donate" title="Donate!">
-                <span>$:)</span>
-            </button>
-        </div>
-        
             <div style="margin-bottom: 15px;">
                 © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. • 
                 <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
@@ -600,6 +591,9 @@
                 <a href="https://www.tumblr.com/share/link?url=https://www.hieroglyphica.org&name=ΙΕΡΟΓΛΥΦΩ&description=Egyptian%20Hieroglyphs%20Tool" class="social-btn tumblr" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-tumblr"></i>Tumblr
                 </a>
+                <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="social-btn rainbow-donate" title="Donate!">
+                    <span>$:)</span>
+                </button>
                 <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-linkedin-in"></i>LinkedIn
                 </a>

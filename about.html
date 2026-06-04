@@ -284,19 +284,14 @@
         }
     
         .rainbow-donate {
-            display: grid;
-            place-items: center;
-            padding: 0;
+            justify-content: center;
             background: #2a2a2a;
             border: 1px solid #3a3a3a;
-            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            width: 50px;
-            height: 50px;
-            line-height: 1;
+            font-size: 15px;
+            line-height: 1.4;
         }
+        .rainbow-donate:hover { background: #353535; }
 
         .rainbow-donate span {
             display: block;
@@ -345,6 +340,11 @@
         <div class="about-section">
             <h2>Update Log</h2>
             <div class="update-entry">
+                <div class="update-date">June 4, 2026</div>
+                <div class="update-title">Thesaurus Linguae Aegyptiae lemma layer</div>
+                <p>The dictionary search now also draws on the Thesaurus Linguae Aegyptiae Wikidata-linked lemma list (BBAW &amp; Saxon Academy), reformatted and shipped as a separate file under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. A transliteration bridge lets one query match both the core's MdC-style spelling and TLA's Leiden Unicode. The proprietary core dictionary is unchanged.</p>
+            </div>
+            <div class="update-entry">
                 <div class="update-date">May 29, 2026</div>
                 <div class="update-title">Manuel de Codage spatial layout</div>
                 <p>The editor now lays glyphs out in 2D from Manuel de Codage notation: side-by-side (<code>*</code>), stacked (<code>:</code>), grouped (<code>( )</code>) cadrats, with word/sentence spacing, line and page breaks (<code>!</code> / <code>!!</code>), and serekh / hwt / frame enclosures (<code>&lt;S&gt; &lt;H&gt; &lt;F&gt;</code>). Choose "Individual signs" when pasting a series. See the in-app Help for the full operator list.</p>
@@ -352,7 +352,7 @@
             <div class="update-entry">
                 <div class="update-date">May 27, 2026</div>
                 <div class="update-title">v2 Release</div>
-                <p>MdC paste series accepts mixed Gardiner codes and raw hieroglyphs. Dictionary auto-saves to the browser and supports drag-to-canvas. Extended Hieroglyphica font adds 4,900+ glyphs. Help overlay rewritten; performance and undo reliability improved.</p>
+                <p>MdC paste series accepts mixed Gardiner codes and raw hieroglyphs. Dictionary auto-saves to the browser and supports drag-to-canvas. The Hieroglyphica Magna font adds 4,900+ glyphs. Help overlay rewritten; performance and undo reliability improved.</p>
             </div>
             <div class="update-entry">
                 <div class="update-date">December 23, 2024</div>
@@ -389,12 +389,6 @@
     </div>
 
             <footer>
-        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="rainbow-donate" title="Donate!">
-                <span>$:)</span>
-            </button>
-        </div>
-        
                 <div style="margin-bottom: 15px;">
                     © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. • 
                     <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
@@ -410,6 +404,9 @@
                 <a href="https://www.tumblr.com/share/link?url=https://www.hieroglyphica.org&name=ΙΕΡΟΓΛΥΦΩ&description=Egyptian%20Hieroglyphs%20Tool" class="social-btn tumblr" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-tumblr"></i>Tumblr
                 </a>
+                <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="social-btn rainbow-donate" title="Donate!">
+                    <span>$:)</span>
+                </button>
                 <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-linkedin-in"></i>LinkedIn
                 </a>

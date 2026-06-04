@@ -54,13 +54,13 @@
             font-family: var(--font-main);
             letter-spacing: 0.5px;
             margin: 0;
-            padding: 0 0 120px 0;
+            padding: 0 0 200px 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
         }
 
         @media (max-width: 600px) {
-            body { padding-bottom: 220px; }
+            body { padding-bottom: 300px; }
         }
 
         header {
@@ -308,19 +308,14 @@
         }
 
         .rainbow-donate {
-            display: grid;
-            place-items: center;
-            padding: 0;
+            justify-content: center;
             background: #2a2a2a;
             border: 1px solid #3a3a3a;
-            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            width: 50px;
-            height: 50px;
-            line-height: 1;
+            font-size: 15px;
+            line-height: 1.4;
         }
+        .rainbow-donate:hover { background: #353535; }
 
         .rainbow-donate span {
             display: block;
@@ -416,7 +411,7 @@
                     </li>
                     <li style="margin-bottom: 5px;">
                         <span class="feature-check" style="color: #4CAF50;">✓</span>
-                        Extended Font (+4,900 glyphs)<span class="new-badge">NEW</span>
+                        Hieroglyphica Magna font (+4,900 glyphs)<span class="new-badge">NEW</span>
 
                     </li>
                 </ul>
@@ -463,11 +458,6 @@
         </div>
     </div>
     <footer>
-        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="rainbow-donate" title="Donate!">
-                <span>$:)</span>
-            </button>
-        </div>
         <div style="margin-bottom: 15px;">
             © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. •
                 <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
@@ -507,6 +497,9 @@
             
             
             </a>
+            <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="social-btn rainbow-donate" title="Donate!">
+                <span>$:)</span>
+            </button>
             <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-linkedin-in"></i>
                 LinkedIn

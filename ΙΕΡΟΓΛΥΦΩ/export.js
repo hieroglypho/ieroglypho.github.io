@@ -189,21 +189,31 @@ function exportBgColor() {
     return '#ffffff';
 }
 
+// Supersample factor for raster exports. The Fabric objects are vector (font
+// glyphs + shapes), so re-rendering them at N× — instead of blitting the
+// screen-resolution backing store — yields genuinely crisp output. At 1× the
+// embedded raster is ~96 DPI and looks soft when zoomed or printed; 3× ≈ 288 DPI
+// (near photo-print quality). Raise for sharper output at the cost of file size.
+const EXPORT_SUPERSAMPLE = 3;
+
 // Render the background image (if visible) and the Fabric canvas pixels onto
 // a fresh canvas, so callers get a single flat raster matching what the user
 // sees — minus the editing grid. Used by Save-as-PNG, Save-as-PDF, Copy-image.
 async function compositeCanvasWithBg() {
     return withGridHidden(async () => {
+        const SS = EXPORT_SUPERSAMPLE;
+        const w = canvas.width, h = canvas.height;
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
+        tempCanvas.width = w * SS;
+        tempCanvas.height = h * SS;
         const ctx = tempCanvas.getContext('2d');
+        ctx.scale(SS, SS);   // author in logical px; pixels land at SS resolution
 
         // Opaque backing: the Fabric canvas is transparent unless a colour was
         // picked (the editor's grey is CSS, not canvas pixels), so without this
         // PNG/PDF exports came out transparent and viewers painted a checkerboard.
         ctx.fillStyle = exportBgColor();
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, w, h);
 
         const bgImage = document.getElementById('bgImage');
         if (bgImage && bgImage.style.display !== 'none' && bgImage.src) {
@@ -212,7 +222,7 @@ async function compositeCanvasWithBg() {
                 img.crossOrigin = 'anonymous';
                 img.onload = () => {
                     ctx.globalAlpha = parseFloat(bgImage.style.opacity) || 0.5;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, w, h);
                     ctx.globalAlpha = 1;
                     resolve();
                 };
@@ -220,12 +230,13 @@ async function compositeCanvasWithBg() {
                 img.src = bgImage.src;
             });
         }
-        // The backing element is retina-scaled (width × devicePixelRatio), so
-        // downscale device px -> logical px. Blitting 1:1 kept only the top-left
-        // 1/dpr region on HiDPI screens, which dropped off-corner content.
-        const el = canvas.getElement();
-        ctx.drawImage(el, 0, 0, el.width, el.height, 0, 0, canvas.width, canvas.height);
-        stampExportWatermark(ctx, canvas.width, canvas.height);
+        // Re-render the vector objects at SS× (respecting the current viewport,
+        // so pan/zoom is preserved as before) rather than blitting the backing
+        // store — keeps glyph edges crisp at print DPI. fab is already w·SS×h·SS,
+        // so draw it 1:1 into the SS-scaled context.
+        const fab = canvas.toCanvasElement(SS);
+        ctx.drawImage(fab, 0, 0, w, h);
+        stampExportWatermark(ctx, w, h);
         return tempCanvas;
     });
 }
@@ -393,11 +404,13 @@ function getContentBounds(padding = 8) {
 async function compositeCropForPDF(bounds) {
     return withGridHidden(async () => {
         const { left, top } = bounds;
+        const SS = EXPORT_SUPERSAMPLE;
         const w = Math.round(bounds.width), h = Math.round(bounds.height);
         const out = document.createElement('canvas');
-        out.width = w;
-        out.height = h;
+        out.width = w * SS;
+        out.height = h * SS;
         const ctx = out.getContext('2d');
+        ctx.scale(SS, SS);   // author in logical px; pixels land at SS resolution
 
         // Opaque background (white) so the PDF isn't transparent — see exportBgColor.
         ctx.fillStyle = exportBgColor();
@@ -421,13 +434,13 @@ async function compositeCropForPDF(bounds) {
             });
         }
 
-        // Fabric pixels. Draw the whole (retina) backing store downscaled to
-        // logical size, translated so the crop origin lands at (0,0). This works
-        // for any region — including one that extends past the canvas edge (a
-        // page-guide rect on a small window); those areas keep the white fill —
-        // without source-rectangle clipping.
-        const el = canvas.getElement();
-        ctx.drawImage(el, 0, 0, el.width, el.height, -left, -top, canvas.width, canvas.height);
+        // Fabric objects, re-rendered as vectors at SS× over the crop region —
+        // not a blit of the screen-resolution backing store — so glyph edges
+        // stay crisp at print DPI. The caller is at an identity viewport, so the
+        // crop coords map 1:1. Regions past the canvas edge (a page-guide rect on
+        // a small window) simply keep the white fill. fab is w·SS×h·SS; draw 1:1.
+        const fab = canvas.toCanvasElement(SS, { left, top, width: w, height: h });
+        ctx.drawImage(fab, 0, 0, w, h);
 
         stampExportWatermark(ctx, w, h);
         return out;
@@ -544,6 +557,21 @@ async function saveToPDF() {
                 } catch (e) {
                     console.warn('PDF text layer disabled:', e);
                 }
+            }
+
+            // Footer: the site URL centred in the bottom margin, as real (vector,
+            // selectable) PDF text in a built-in font — crisp at any zoom. In
+            // page-guide mode the image is full-bleed, so the footer sits lightly
+            // over the artwork's lower edge; otherwise it lands in white margin.
+            try {
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(8);
+                pdf.setTextColor(150);
+                pdf.text('www.hieroglyphica.org', pageW / 2, pageH - MARGIN / 2,
+                         { align: 'center', baseline: 'middle' });
+                pdf.setTextColor(0);   // restore default for any later writes
+            } catch (e) {
+                console.warn('PDF footer skipped:', e);
             }
 
             const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`;

@@ -20,6 +20,10 @@ desktop.ini
 *.tmp
 *.orig
 
+# Editor PDF exports — the in-app export drops canvas_<timestamp>.pdf into the
+# working dir; transient artifacts, not part of the site
+canvas_*.pdf
+
 # Paper working drafts (the published .docx is tracked; LibreOffice .odt is a local draft)
 Hieroglyphica-paper.odt
 .~lock.*#
@@ -29,6 +33,8 @@ tutorial/
 
 # Dictionary-source evaluation ledger — local research notes, not part of the site
 DICTIONARY-SOURCES.local.md
+# Local research/handoff notes
+*.local.md
 
 # Wikidata/TLA dictionary-expansion scaffolding — regenerable working files
 prototype-wikidata/

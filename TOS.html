@@ -6,6 +6,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, follow">
     <title>Legal - ΙΕΡΟΓΛΥΦΩ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -42,13 +43,40 @@
             color: var(--text-color);
         }
 
-        header {
-            font-family: var(--font-hieroglyph);
+        .nav-tabs {
+            font-family: var(--font-main);
+            font-weight: 500;
+            display: flex;
             background-color: var(--header-bg);
+            padding: 5px 0;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav-tabs a {
             color: white;
-            padding: 10px;
-            text-align: center;
-            font-size: 24px;
+            text-decoration: none;
+            padding: 5px 10px;
+            font-size: 16px;
+        }
+
+        .nav-tabs a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* HOME link sits centered in the nav bar; styled like the other tabs. */
+        .nav-tabs a.nav-editor {
+            background-color: var(--button-bg);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 4px;
+        }
+
+        .nav-tabs a.nav-editor:hover {
+            background-color: var(--button-hover);
         }
 
         main {
@@ -216,7 +244,14 @@
     </style>
 </head>
 <body>
-    <header>ΙΕΡΟΓΛΥΦΩ</header>
+    <nav class="nav-tabs">
+        <a href="about.html">ABOUT</a>
+        <a href="tutorials.html">TUTORIALS</a>
+        <a class="nav-brand" href="index.html">HOME</a>
+        <a href="research.html">RESEARCH</a>
+        <a href="dictionary.html">DICTIONARY</a>
+        <a class="nav-editor" href="ΙΕΡΟΓΛΥΦΩ/">✍ ΙΕΡΟΓΛΥΦΩ</a>
+    </nav>
 
     <main>
         <div class="content-box">

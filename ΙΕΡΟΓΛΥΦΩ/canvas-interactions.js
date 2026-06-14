@@ -246,6 +246,12 @@ canvas.on('mouse:dblclick', function (options) {
         openKeyboard();
         const keyboardInput = document.getElementById('keyboardInput');
         keyboardInput.value = activeTextObject.text;
+        // Show the object's real size so saving an edit preserves it (otherwise
+        // the stale default in this field would shrink a resized text on save).
+        const fontSizeInput = document.getElementById('keyboardFontSize');
+        if (fontSizeInput && typeof activeTextObject.fontSize === 'number') {
+            fontSizeInput.value = Math.round(activeTextObject.fontSize);
+        }
     }
 });
 
@@ -795,8 +801,18 @@ function objInkExtent(obj) {
     // Ink top/bottom as a fraction of the font line box, mapped onto the actual
     // on-canvas box height. (Fabric's box height differs from the font line box
     // by a small constant multiplier; the fractional position is preserved.)
+    //
+    // Hieroglyphs have no shared baseline with Latin and no descenders, so their
+    // "bottom" is the full visible ink. Latin/transliteration text instead aligns
+    // by its alphabetic baseline — descenders (g, j, y) hang below — which matches
+    // Egyptological typesetting and keeps words with and without descenders
+    // consistent with one another.
+    const fam = obj.fontFamily || '';
+    const isHiero = /Hieroglyph|Hieroglyphica/i.test(fam);
     const topFrac = (m.fontBoundingBoxAscent - m.actualBoundingBoxAscent) / lineH;
-    const botFrac = (m.fontBoundingBoxAscent + m.actualBoundingBoxDescent) / lineH;
+    const botFrac = isHiero
+        ? (m.fontBoundingBoxAscent + m.actualBoundingBoxDescent) / lineH  // ink bottom
+        : m.fontBoundingBoxAscent / lineH;                               // baseline
     return {
         left: box.left, right: box.right,
         top: box.top + topFrac * b.height,

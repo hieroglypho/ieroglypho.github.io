@@ -52,9 +52,10 @@ function addKeyboardText() {
                 }
             });
         } else {
+            const at = getInsertPoint();
             var textBox = new fabric.IText(text, {
-                left: textPosition.x,
-                top: textPosition.y,
+                left: at.x,
+                top: at.y,
                 fontSize: fontSize, // Use the parsed fontSize
                 borderColor: '#CCCCCC',
                 cornerColor: '#CCCCCC',
@@ -198,7 +199,8 @@ async function addGlyphsFromDialog() {
     try {
         await document.fonts.load(`${fontSize}px "Noto Sans Egyptian Hieroglyphs"`);
     } catch (_) { /* best-effort */ }
-    addGlyphTextRun(glyphString, 200, 200, fontSize);
+    const at = getInsertPoint();
+    addGlyphTextRun(glyphString, at.x, at.y, fontSize);
     closeGlyphTextDialog();
 }
 
@@ -240,8 +242,9 @@ async function addThreeLineBlock(glyphsRaw, translit, translation, glyphSize) {
     const gap = Math.round(glyphSize * 0.18);
 
     const blockId = `block_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
-    const baseX = 200;
-    let y = 200;
+    const _at = getInsertPoint();
+    const baseX = _at.x;
+    let y = _at.y;
 
     const common = {
         left: baseX,

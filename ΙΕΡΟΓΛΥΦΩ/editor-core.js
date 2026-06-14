@@ -159,6 +159,48 @@ var canvas = new fabric.Canvas('c', {
     targetFindTolerance: 4
 });
 
+// --- Viewport-aware insertion anchor ----------------------------------------
+// Dialog inserts (keyboard, glyph-text run, three-line block) used to drop new
+// objects at fixed scene coordinates (e.g. 200,200). After zooming or panning,
+// those coordinates can sit outside the visible area, so the new object lands
+// off-screen. These helpers map the *currently visible* region back into scene
+// coordinates so inserts land where the user is actually looking.
+
+// Centre of the visible canvas in scene (object) coordinates.
+function getViewportCenter() {
+    const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
+    const zoom = canvas.getZoom() || 1;
+    return {
+        x: (canvas.getWidth() / 2 - vpt[4]) / zoom,
+        y: (canvas.getHeight() / 2 - vpt[5]) / zoom
+    };
+}
+
+// Visible canvas region as a scene-coordinate rectangle.
+function getViewportSceneRect() {
+    const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
+    const zoom = canvas.getZoom() || 1;
+    return {
+        left: -vpt[4] / zoom,
+        top: -vpt[5] / zoom,
+        right: (canvas.getWidth() - vpt[4]) / zoom,
+        bottom: (canvas.getHeight() - vpt[5]) / zoom
+    };
+}
+
+// Where a dialog insert should anchor: honour the user's last click point if it
+// is still on-screen (intentional placement), otherwise fall back to the centre
+// of the current view so the object is never spawned out of sight.
+function getInsertPoint() {
+    const r = getViewportSceneRect();
+    if (textPosition &&
+        textPosition.x >= r.left && textPosition.x <= r.right &&
+        textPosition.y >= r.top && textPosition.y <= r.bottom) {
+        return { x: textPosition.x, y: textPosition.y };
+    }
+    return getViewportCenter();
+}
+
 function drawGrid() {
     const GRID_SIZE = 20;
     const zoom = canvas.getZoom();

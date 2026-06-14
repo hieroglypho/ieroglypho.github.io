@@ -517,7 +517,10 @@ function snapshotModify(action) {
         const o = canvas.getObjects().find(obj => obj.id === id);
         if (o) objects.push({
             id, left: o.left, top: o.top, scaleX: o.scaleX, scaleY: o.scaleY,
-            angle: o.angle, flipX: o.flipX, flipY: o.flipY
+            angle: o.angle, flipX: o.flipX, flipY: o.flipY,
+            // fontSize only exists on text objects; carried so a "Set size"
+            // change round-trips through undo/redo.
+            ...(typeof o.fontSize === 'number' ? { fontSize: o.fontSize } : {})
         });
     });
     return { type: 'modify', actionType: action.actionType,
@@ -530,6 +533,7 @@ function applySnapshot(objects) {
         if (!obj) return;
         obj.set({ left: s.left, top: s.top, scaleX: s.scaleX, scaleY: s.scaleY,
                   angle: s.angle, flipX: s.flipX, flipY: s.flipY });
+        if (typeof s.fontSize === 'number') obj.set('fontSize', s.fontSize);
         obj.setCoords();
     });
 }
@@ -761,77 +765,93 @@ function isArrangedVertically(objects) {
     // consider it a vertical arrangement
     return avgVertDist > avgHorizDist * 1.5;
 }
-function alignObjects(direction = 'horizontal') {
-    const activeObjects = canvas.getActiveObjects();
-    if (activeObjects.length === 0) return;
+// Visible ink extent of an object in absolute canvas coords. A glyph's fabric
+// line box is far taller than its rendered sign (the font's ascent/descent
+// padding), so aligning by the raw bounding box drops signs visually off — a
+// tall glyph box's bottom sits well below its ink. For single-line text we map
+// the font's real ink box (Canvas measureText) into the object's bounding rect;
+// everything else (shapes, multi-line, groups) already has a tight enough box
+// and uses the bounding rect as-is. Call after discardActiveObject so the
+// bounding rect is in true canvas coordinates.
+let _alignMeasureCtx = null;
+function objInkExtent(obj) {
+    const b = obj.getBoundingRect(true, true);
+    const box = { left: b.left, right: b.left + b.width, top: b.top, bottom: b.top + b.height };
+    const isText = obj.type === 'text' || obj.type === 'i-text';
+    const text = isText ? (obj.text || '') : '';
+    // Only single-line text gets ink mapping: a multi-line box spans several
+    // baselines that one measureText() call can't describe.
+    if (!isText || !text.trim() || text.indexOf('\n') !== -1) return box;
 
-    // Cache scaled heights once — getScaledHeight() can be expensive on groups.
-    const scaledHeights = activeObjects.map(obj => obj.getScaledHeight());
+    if (!_alignMeasureCtx) _alignMeasureCtx = document.createElement('canvas').getContext('2d');
+    _alignMeasureCtx.font = `100px ${obj.fontFamily || 'sans-serif'}`;
+    _alignMeasureCtx.textBaseline = 'alphabetic';
+    const m = _alignMeasureCtx.measureText(text);
+    if (typeof m.actualBoundingBoxAscent !== 'number' ||
+        typeof m.fontBoundingBoxAscent !== 'number') return box;
+    const lineH = m.fontBoundingBoxAscent + m.fontBoundingBoxDescent;
+    if (!(lineH > 0)) return box;
 
-    // Snapshot pre-align state for undo, shaped to match the 'moving' undo branch.
-    const capturedObjects = activeObjects.map(obj => ({
-        id: obj.id,
-        state: obj.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
-    }));
-    const activeSel = canvas.getActiveObject();
-    const capturedGroupState = (activeSel && activeSel.type === 'activeSelection') ? {
-        left: activeSel.left,
-        top: activeSel.top,
-        angle: activeSel.angle,
-        scaleX: activeSel.scaleX,
-        scaleY: activeSel.scaleY,
-        width: activeSel.width,
-        height: activeSel.height
-    } : null;
-
-    const getRefPoint = {
-        horizontal: () => {
-            const center = activeObjects.reduce((sum, obj, i) =>
-                sum + (obj.top + scaledHeights[i] / 2), 0);
-            return center / activeObjects.length;
-        },
-        top: () => Math.min(...activeObjects.map(obj => obj.top)),
-        bottom: () => Math.max(...activeObjects.map((obj, i) =>
-            obj.top + scaledHeights[i])),
-        left: () => Math.min(...activeObjects.map(obj => obj.left))
+    // Ink top/bottom as a fraction of the font line box, mapped onto the actual
+    // on-canvas box height. (Fabric's box height differs from the font line box
+    // by a small constant multiplier; the fractional position is preserved.)
+    const topFrac = (m.fontBoundingBoxAscent - m.actualBoundingBoxAscent) / lineH;
+    const botFrac = (m.fontBoundingBoxAscent + m.actualBoundingBoxDescent) / lineH;
+    return {
+        left: box.left, right: box.right,
+        top: box.top + topFrac * b.height,
+        bottom: box.top + botFrac * b.height
     };
+}
 
-    const alignTo = getRefPoint[direction]();
+function alignObjects(direction = 'horizontal') {
+    const selection = canvas.getActiveObjects();
+    if (selection.length === 0) return;
 
-    // Apply alignment
-    activeObjects.forEach((obj, i) => {
-        const props = {
-            horizontal: { top: alignTo - scaledHeights[i] / 2 },
-            top: { top: alignTo },
-            bottom: { top: alignTo - scaledHeights[i] },
-            left: { left: alignTo }
-        };
-        obj.set(props[direction]);
-        obj.setCoords();
-    });
+    // Flush absolute coords: inside an ActiveSelection each child's left/top is
+    // group-relative, so we measure + delta-move in true canvas coords instead
+    // (same approach as centerObjectsHorizontally). This makes the move
+    // origin-agnostic too — glyphs use centre origin, runs/blocks use top/left,
+    // and the old math wrongly assumed a top origin for everything.
+    canvas.discardActiveObject();
 
-    if (activeObjects.length > 1 || capturedGroupState) {
-        pushUndo({
-            type: 'modify',
-            actionType: 'moving',
-            state: {
-                type: 'group',
-                groupState: capturedGroupState,
-                objects: capturedObjects
-            }
-        });
-    } else {
-        pushUndo({
-            type: 'modify',
-            actionType: 'moving',
-            state: {
-                type: 'single',
-                id: activeObjects[0].id,
-                state: capturedObjects[0].state
-            }
-        });
+    const undoActions = selection.map(o => ({
+        type: 'modify', actionType: 'moving',
+        state: {
+            type: 'single', id: o.id,
+            state: o.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY', 'flipX', 'flipY'])
+        }
+    }));
+
+    // Measure each object's visible extent once, in absolute canvas coords.
+    const items = selection.map(o => ({ obj: o, ext: objInkExtent(o) }));
+
+    // Shift an object by a canvas-space delta. Because coords were flushed to
+    // absolute, adding the delta to the origin point moves the whole box rigidly
+    // regardless of the object's origin.
+    const moveX = (it, d) => { if (d) { it.obj.set('left', it.obj.left + d); it.obj.setCoords(); } };
+    const moveY = (it, d) => { if (d) { it.obj.set('top', it.obj.top + d); it.obj.setCoords(); } };
+
+    if (direction === 'left') {
+        const target = Math.min(...items.map(i => i.ext.left));
+        items.forEach(i => moveX(i, target - i.ext.left));
+    } else if (direction === 'top') {
+        const target = Math.min(...items.map(i => i.ext.top));
+        items.forEach(i => moveY(i, target - i.ext.top));
+    } else if (direction === 'bottom') {
+        const target = Math.max(...items.map(i => i.ext.bottom));
+        items.forEach(i => moveY(i, target - i.ext.bottom));
+    } else { // 'horizontal' — align on a common vertical centre (visible ink)
+        const target = items.reduce((s, i) => s + (i.ext.top + i.ext.bottom) / 2, 0) / items.length;
+        items.forEach(i => moveY(i, target - (i.ext.top + i.ext.bottom) / 2));
     }
 
+    recordBatch(undoActions);
+
+    // Restore the multi-object selection so the user can keep nudging it.
+    if (selection.length > 1) {
+        canvas.setActiveObject(new fabric.ActiveSelection(selection, { canvas }));
+    }
     canvas.requestRenderAll();
 }
 
@@ -902,6 +922,61 @@ function centerObjectsHorizontally() {
     recordBatch(undoActions);
 
     canvas.setActiveObject(new fabric.ActiveSelection(selection, { canvas }));
+    canvas.requestRenderAll();
+}
+
+// Right-click → "Set size…": set a nominal fontSize on every selected text
+// object (single glyph, glyph run, three-line block, or keyboard text). The
+// keyboard's default is 18; drag-drop glyphs land at 60. Any manual handle
+// scaling is folded back to scale 1 so the number entered is the honest size.
+// Non-text shapes (lines/circles/rects) have no fontSize and are skipped.
+function setSelectionSize(objs) {
+    const list = (objs && objs.length ? objs : []).filter(
+        o => o && typeof o.fontSize === 'number'
+    );
+    if (list.length === 0) {
+        // Nothing sizeable picked — tell the user rather than silently no-op.
+        alert('Select one or more glyphs or text objects first.\n' +
+              '(Shapes like lines and circles are resized by dragging their handles.)');
+        return;
+    }
+
+    // Seed the prompt with the current honest size (fontSize × scaleY) when the
+    // whole selection shares one; otherwise leave it blank.
+    const effective = list.map(o => Math.round(o.fontSize * (o.scaleY || 1)));
+    const uniform = effective.every(v => v === effective[0]);
+    const seed = uniform ? String(effective[0]) : '';
+
+    const raw = prompt(
+        `Set size for ${list.length} item${list.length > 1 ? 's' : ''} ` +
+        `(keyboard default is 18, drag-drop glyphs are 60):`, seed);
+    if (raw === null) return;                 // cancelled
+    const size = parseFloat(raw);
+    if (!isFinite(size) || size <= 0) { alert('Please enter a positive number.'); return; }
+    const clamped = Math.min(2000, Math.max(2, size));
+
+    // Flush to absolute coords so recorded left/top aren't group-relative.
+    canvas.discardActiveObject();
+
+    const undoActions = list.map(o => ({
+        type: 'modify', actionType: 'scaling',
+        state: { type: 'single', id: o.id,
+            state: o.toJSON(['left', 'top', 'angle', 'scaleX', 'scaleY',
+                             'flipX', 'flipY', 'fontSize']) }
+    }));
+
+    list.forEach(o => {
+        o.set({ fontSize: clamped, scaleX: 1, scaleY: 1 });
+        o.setCoords();
+    });
+
+    recordBatch(undoActions);
+
+    if (list.length > 1) {
+        canvas.setActiveObject(new fabric.ActiveSelection(list, { canvas }));
+    } else {
+        canvas.setActiveObject(list[0]);
+    }
     canvas.requestRenderAll();
 }
 

@@ -308,6 +308,14 @@ function initCanvasContextMenu() {
                 if (typeof dictAuthorStart === 'function') dictAuthorStart(objs);
                 break;
             }
+            case 'resize': {
+                // Same target logic as identify/inspect: the active selection,
+                // else the right-clicked object.
+                const active = canvas.getActiveObjects ? canvas.getActiveObjects() : [];
+                const objs = active.length ? active : (ctxTarget ? [ctxTarget] : null);
+                if (typeof setSelectionSize === 'function') setSelectionSize(objs);
+                break;
+            }
             case 'copy': copyCanvasImage(); break;
             case 'png':  saveToPNG();       break;
             case 'svg':  saveToSVG();       break;

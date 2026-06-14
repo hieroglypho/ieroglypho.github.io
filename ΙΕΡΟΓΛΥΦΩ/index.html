@@ -235,6 +235,7 @@
     <div id="canvasCtxMenu" class="canvas-ctx-menu hidden">
         <button data-action="identify">𓂀 What does this say?</button>
         <button data-action="inspect">𓏞 Inspect / Convert</button>
+        <button data-action="resize">𓂁 Set size…</button>
         <!-- Authoring only: revealed by dict-author.js when served from localhost. -->
         <button data-action="dict-add" id="ctxDictAdd" hidden>💾 Save to dictionary</button>
         <hr class="ctx-divider" id="ctxDictAddHr" hidden>
@@ -459,13 +460,13 @@
              links. See share-worker/README.md. -->
         <script>window.SHARE_API = 'https://hieroglyphica-share.linguaaegypta.workers.dev';</script>
         <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
-        <script defer src="editor-core.js?v=9e758c94"></script>
-        <script defer src="canvas-interactions.js?v=33a4b202"></script>
+        <script defer src="editor-core.js?v=313882b6"></script>
+        <script defer src="canvas-interactions.js?v=dbcac3ee"></script>
         <script defer src="workspace.js?v=0c80f926"></script>
         <script defer src="export.js?v=7f9d177a"></script>
         <script defer src="drawing-tools.js?v=5a24babd"></script>
-        <script defer src="glyph-input.js?v=048f65f3"></script>
-        <script defer src="editor-init.js?v=bf0c289b"></script>
+        <script defer src="glyph-input.js?v=6da0e0f0"></script>
+        <script defer src="editor-init.js?v=d26d106b"></script>
         <script defer src="dictionary-search.js?v=8e9afc82"></script>
         <script defer src="word-finder.js?v=4dae9fe0"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->

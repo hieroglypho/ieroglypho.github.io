@@ -61,7 +61,7 @@
             font-family: var(--font-main);
             letter-spacing: 0.5px;
             margin: 0;
-            padding: 0 0 100px 0;
+            padding: 0;
             background-color: var(--primary-bg);
             color: var(--text-color);
         }
@@ -190,14 +190,31 @@
         }
 
         footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
             text-align: center;
             background-color: #1a1a1a;
-            padding:10px;
+            padding: 16px 10px;
+            margin-top: 40px;
             border-top: 1px solid #333;
+            width: 100%;
             box-sizing: border-box;
+        }
+
+        .footer-meta {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .footer-meta a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .footer-share-label {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 10px;
         }
 
         .social-buttons {
@@ -207,72 +224,40 @@
             flex-wrap: wrap;
         }
 
+        /* Icon-only chips: muted by default, brand colour on hover. Text labels
+           stay in the DOM (font-size:0) so screen readers still announce them. */
         .social-btn {
             display: inline-flex;
             align-items: center;
-            padding: 8px 12px;
-            font-size: 14px;
-            font-weight: bold;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 0;
             text-decoration: none;
-            border-radius: 5px;
-            color: #fff;
-            transition: background-color 0.3s ease;
-            min-width: 90px;
+            border-radius: 8px;
+            color: #cfcfcf;
+            background-color: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
         }
 
         .social-btn i {
-            margin-right: 8px;
+            margin-right: 0;
+            font-size: 16px;
         }
 
-        .facebook {
-            background-color: #3b5998;
-        }
-        .facebook:hover {
-            background-color: #324d84;
+        .social-btn:hover {
+            color: #fff;
+            transform: translateY(-2px);
         }
 
-        .twitter {
-            background-color: #1da1f2;
-        }
-        .twitter:hover {
-            background-color: #178cd1;
-        }
-
-        .tumblr {
-            background-color: #35465c;
-        }
-        .tumblr:hover {
-            background-color: #2c3b4d;
-        }
-
-        .linkedin {
-            background-color: #0077b5;
-        }
-        .linkedin:hover {
-            background-color: #005f93;
-        }
-
-        .reddit {
-            background-color: #ff4500;
-        }
-        .reddit:hover {
-            background-color: #cc3700;
-        }
-
-        .telegram {
-            background-color: #0088cc;
-        }
-        .telegram:hover {
-            background-color: #0072a1;
-        }
-
-        @media (max-width: 600px) {
-            .social-btn {
-                padding: 6px 10px;
-                font-size: 12px;
-                min-width: 80px;
-            }
-        }
+        .facebook:hover { background-color: #3b5998; border-color: #3b5998; }
+        .twitter:hover  { background-color: #1da1f2; border-color: #1da1f2; }
+        .tumblr:hover   { background-color: #35465c; border-color: #35465c; }
+        .linkedin:hover { background-color: #0077b5; border-color: #0077b5; }
+        .reddit:hover   { background-color: #ff4500; border-color: #ff4500; }
+        .telegram:hover { background-color: #0088cc; border-color: #0088cc; }
     
         .rainbow-donate {
             justify-content: center;
@@ -360,30 +345,30 @@
     </div>
 
         <footer>
-            <div style="margin-bottom: 15px;">
-                © 2024–2026 ΙΕΡΟΓΛΥΦΩ. All rights reserved. •
-                <a href="TOS.html" target="_blank" style="color: #fff; text-decoration: underline;">Terms & Privacy</a>
-            </div>            <div style="margin-bottom: 15px;">show ❤️ by sharing us on:</div>
+            <div class="footer-meta">
+                © 2024–2026 ΙΕΡΟΓΛΥΦΩ · <a href="TOS.html" target="_blank">Terms &amp; Privacy</a> · using ΙΕΡΟΓΛΥΦΩ in your work? please credit <strong>hieroglyphica.org</strong>
+            </div>
+            <div class="footer-share-label">show ❤️ by sharing</div>
             <div class="social-buttons">
-                <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.hieroglyphica.org" class="social-btn facebook" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.hieroglyphica.org" class="social-btn facebook" title="Share on Facebook" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-facebook-f"></i>Facebook
                 </a>
-                <a href="https://x.com/intent/tweet?url=https://www.hieroglyphica.org&text=Check%20out%20ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn twitter" target="_blank" rel="noopener noreferrer">
+                <a href="https://x.com/intent/tweet?url=https://www.hieroglyphica.org&text=Check%20out%20ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn twitter" title="Share on Twitter / X" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-twitter"></i>Twitter
                 </a>
-                <a href="https://www.tumblr.com/share/link?url=https://www.hieroglyphica.org&name=ΙΕΡΟΓΛΥΦΩ&description=Egyptian%20Hieroglyphs%20Tool" class="social-btn tumblr" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.tumblr.com/share/link?url=https://www.hieroglyphica.org&name=ΙΕΡΟΓΛΥΦΩ&description=Egyptian%20Hieroglyphs%20Tool" class="social-btn tumblr" title="Share on Tumblr" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-tumblr"></i>Tumblr
                 </a>
                 <button onclick="window.open('https://www.paypal.com/ncp/payment/PMWMHAY55RZSE', '_blank')" class="social-btn rainbow-donate" title="Donate!">
                     <span>$:)</span>
                 </button>
-                <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ&summary=Egyptian%20Hieroglyphs%20Tool" class="social-btn linkedin" title="Share on LinkedIn" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-linkedin-in"></i>LinkedIn
                 </a>
-                <a href="https://reddit.com/submit?url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn reddit" target="_blank" rel="noopener noreferrer">
+                <a href="https://reddit.com/submit?url=https://www.hieroglyphica.org&title=ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn reddit" title="Share on Reddit" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-reddit-alien"></i>Reddit
                 </a>
-                <a href="https://t.me/share/url?url=https://www.hieroglyphica.org&text=Check%20out%20ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn telegram" target="_blank" rel="noopener noreferrer">
+                <a href="https://t.me/share/url?url=https://www.hieroglyphica.org&text=Check%20out%20ΙΕΡΟΓΛΥΦΩ%20-%20Egyptian%20Hieroglyphs%20Tool" class="social-btn telegram" title="Share on Telegram" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-telegram-plane"></i>Telegram
                 </a>
             </div>

@@ -163,7 +163,14 @@ function getSearchRegex(searchInput) {
         return cachedRegex;
     }
 
-    const terms = searchInput.split(/\s+/);
+    // Drop pure-punctuation tokens (e.g. a lone "-" between terms): they are
+    // separators the user typed, not query terms, and would otherwise highlight
+    // every hyphen in the results and skew the match logic. Keep tokens that
+    // contain at least one letter or number; fall back to the raw split if a
+    // query is nothing but punctuation, so it still searches for itself.
+    let terms = searchInput.split(/\s+/);
+    const meaningful = terms.filter(t => /[\p{L}\p{N}]/u.test(t));
+    if (meaningful.length) terms = meaningful;
     // Each term becomes a group of its transliteration variants: (?:imnH|ꞽmnḥ).
     const termGroups = terms.map(term => {
         const v = tlitVariants(term);

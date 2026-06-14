@@ -785,7 +785,7 @@ window.addEventListener('keydown', function (e) {
     }
 
     // Cycle through objects (Ctrl + Arrow Keys)
-    if (e.ctrlKey && ['ArrowRight', 'ArrowLeft'].includes(e.key)) {
+    if (e.ctrlKey && !isInTextField && ['ArrowRight', 'ArrowLeft'].includes(e.key)) {
         e.preventDefault();
         // Skip the page guide — it's a non-content overlay, never selectable.
         const objects = canvas.getObjects().filter(o => !o._pageGuide);
@@ -952,7 +952,7 @@ window.addEventListener('keydown', function (e) {
 
     // Move objects with arrow keys
     
-    if (!e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+    if (!e.ctrlKey && !isInTextField && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         if (activeObject && !activeObject.locked) { // Add check for locked property
             const moveAmount = e.shiftKey ? 1 : 5;
             switch (e.key) {

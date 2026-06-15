@@ -115,6 +115,46 @@ canvas.on('mouse:wheel', function (opt) {
     opt.e.stopPropagation();
 });
 
+// Fit every object (all signs/text, ignoring the page-guide overlay) into the
+// visible canvas with a small margin, then centre it. Bound to the "F" shortcut.
+// Resets to 1:1 when the canvas is empty. Like wheel/pinch zoom, this doesn't
+// move the background tracing layer (it tracks pans, not absolute viewport).
+function fitCanvasToContent() {
+    const objs = canvas.getObjects().filter(o => !o._pageGuide);
+    const vw = canvas.getWidth();
+    const vh = canvas.getHeight();
+
+    if (objs.length === 0) {
+        canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+        try { clearExistingGrid(); drawGrid(); } catch (_) { }
+        canvas.requestRenderAll();
+        return;
+    }
+
+    // Union of every object's bounding box, in scene coords (no viewport).
+    canvas.discardActiveObject();
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    objs.forEach(o => {
+        const b = o.getBoundingRect(true, true);
+        minX = Math.min(minX, b.left);
+        minY = Math.min(minY, b.top);
+        maxX = Math.max(maxX, b.left + b.width);
+        maxY = Math.max(maxY, b.top + b.height);
+    });
+
+    const contentW = Math.max(1, maxX - minX);
+    const contentH = Math.max(1, maxY - minY);
+    const margin = 0.92;                       // ~8% breathing room around content
+    let zoom = Math.min(vw / contentW, vh / contentH) * margin;
+    zoom = Math.min(Math.max(0.1, zoom), 5);   // same clamp as wheel/pinch zoom
+
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    canvas.setViewportTransform([zoom, 0, 0, zoom, vw / 2 - zoom * cx, vh / 2 - zoom * cy]);
+    try { clearExistingGrid(); drawGrid(); } catch (_) { }
+    canvas.requestRenderAll();
+}
+
 // Slide the background-image DOM layer by (dx, dy) screen px so it tracks a
 // viewport pan. Shared by the Alt-drag pan and the two-finger touch pan; reads
 // the current scale out of the inline transform so a zoomed bg stays put.

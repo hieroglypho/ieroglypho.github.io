@@ -942,6 +942,11 @@ window.addEventListener('keydown', function (e) {
             alignObjects(alignMap[e.key.toLowerCase()]);
             return;
         }
+        // Fit all content into the visible canvas.
+        if (e.key.toLowerCase() === 'f') {
+            fitCanvasToContent();
+            return;
+        }
         if (e.key.toLowerCase() === 'r') {
             mirrorTextObject(activeObject);
             return;

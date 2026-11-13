@@ -141,3 +141,9 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
   `dictionary-search.js`). Byte-for-byte the same code, just partitioned — verified the
   concatenation reproduces the original and each file passes `node --check`. Kept classic
   scripts / global functions (no ESM). `script.js` removed.
+- **2026-11-13** — Editor ≡ menu: added "🎓 Learn to read hieroglyphs (course)" (`#courseBtn`,
+  inline `onclick` → opens `../course/` in a new tab), above "Gardiner signs (Wiki)". HTML-only;
+  no JS changed. The course itself is developed in the sibling `ieroglypho-courseware/` folder
+  and will be deployed here as `/course/`. **Don't push this link before `/course/` exists.**
+  Note: the bare domain `hieroglyphica.org` is forwarded by Squarespace to the www homepage and
+  drops the path, so absolute links must use `https://www.hieroglyphica.org/…`.

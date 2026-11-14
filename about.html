@@ -129,6 +129,21 @@
             background-color: var(--button-hover);
         }
 
+        /* "NEW" pill on the COURSE tab. To retire it, delete the span in the nav. */
+        .nav-tabs .nav-new {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 0 6px;
+            border-radius: 9px;
+            background-color: #f4b942;
+            color: #1c2e3f;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            line-height: 16px;
+            vertical-align: 2px;
+        }
+
         .content {
             max-width: 800px;
             margin: 40px auto;
@@ -328,7 +343,7 @@
     <nav class="nav-tabs">
         <a href="about.html">ABOUT</a>
         <a href="tutorials.html">TUTORIALS</a>
-        <a href="course/">COURSE</a>
+        <a href="course/">COURSE<span class="nav-new">NEW</span></a>
         <a class="nav-brand" href="index.html">HOME</a>
         <a href="research.html">RESEARCH</a>
         <a href="dictionary.html">DICTIONARY</a>

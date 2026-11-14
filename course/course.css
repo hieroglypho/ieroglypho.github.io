@@ -59,6 +59,9 @@ a { color: var(--button-bg); }
 .nav-tabs a.nav-editor { background: var(--button-bg); font-weight: 700; border-radius: 4px; }
 .nav-tabs a.nav-editor:hover { background: var(--button-hover); }
 .nav-tabs a.active { border-bottom: 2px solid var(--gold); }
+/* "NEW" pill on the COURSE tab (same as on the site's pages). To retire it, delete the span in each nav. */
+.nav-tabs .nav-new { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 9px; background: #f4b942; color: #1c2e3f;
+    font-size: 10px; font-weight: 800; letter-spacing: .06em; line-height: 16px; vertical-align: 2px; }
 
 /* ---------- class header + progress ---------- */
 .class-hero { background: var(--header-bg); color: #fff; padding: 36px 16px 28px; text-align: center; }

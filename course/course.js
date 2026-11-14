@@ -966,6 +966,7 @@ function track(event, data = {}) {
     const url = CFG.analytics;
     if (!url) return;
     if (navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
+    if (location.protocol !== 'https:' || location.hostname === 'localhost') return;   // local preview
     const body = JSON.stringify({ e: event, c: CLASS_ID || 'home', ...data });
     try {
         if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }));

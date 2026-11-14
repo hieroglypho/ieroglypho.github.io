@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn to Read Hieroglyphs — Free Course · ΙΕΡΟΓΛΥΦΩ</title>
+<meta name="description" content="A self-paced Middle Egyptian course for beginners and intermediates: weekly classes with games, drills, spaced-repetition review and hands-on missions in the free ΙΕΡΟΓΛΥΦΩ hieroglyph editor. First five classes free.">
+<link rel="canonical" href="https://www.hieroglyphica.org/course/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="course.css">
+</head>
+<body>
+<nav class="nav-tabs">
+    <a href="/about.html">ABOUT</a>
+    <a href="/tutorials.html">TUTORIALS</a>
+    <a class="active" href="./">COURSE</a>
+    <a class="nav-brand" href="/index.html">HOME</a>
+    <a href="/research.html">RESEARCH</a>
+    <a href="/dictionary.html">DICTIONARY</a>
+    <a class="nav-editor" href="/ΙΕΡΟΓΛΥΦΩ/">✍ ΙΕΡΟΓΛΥΦΩ</a>
+</nav>
+
+<header class="class-hero">
+    <div class="kicker">Middle Egyptian · beginner → intermediate · self-paced</div>
+    <h1>Learn to Read Hieroglyphs</h1>
+    <p>One class a week. Real inscriptions from the first lesson. Games and drills instead of rote memorising, and every exercise built hands-on in the ΙΕΡΟΓΛΥΦΩ editor.</p>
+    <div class="hero-glyphs"><span data-m="S34-N35:Aa1-U28-S29" data-label="ankh, udja, seneb: life, prosperity, health"></span></div>
+</header>
+
+<main>
+<section class="step" id="today">
+    <div class="activity" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+            <h3 style="margin:0">Today</h3>
+            <p id="today-text" style="margin:4px 0 0">Start with Class 1. It takes about an hour.</p>
+        </div>
+        <a class="btn" id="today-btn" href="class-01/">Start Class 1 →</a>
+    </div>
+</section>
+
+<section class="step" id="method">
+    <h2>How it works</h2>
+    <p class="lead">Built on study methods that research shows work, not on reading and highlighting.</p>
+    <div class="method-grid">
+        <div><b>🎯 Test, don’t reread</b>Every class is mostly quizzes, games and puzzles. Pulling an answer from memory strengthens it far more than reviewing it. <small>(retrieval practice)</small></div>
+        <div><b>📅 A little, often</b>Your review deck brings each sign back just before you’d forget it. Five minutes a day. <small>(spaced repetition)</small></div>
+        <div><b>🔀 Mixed drills</b>Drills shuffle look-alike signs together so your eye learns the differences. <small>(interleaving)</small></div>
+        <div><b>✍ Build it yourself</b>Writing and arranging signs in the ΙΕΡΟΓΛΥΦΩ editor fixes them in memory. You keep everything you make. <small>(the drawing effect)</small></div>
+        <div><b>🏺 Real texts early</b>You read royal names in Class 1 and a genuine offering stela by the end of Module B.</div>
+        <div><b>📘 A standard grammar</b>The grammar follows James P. Allen’s <i>Middle Egyptian</i> (3rd ed.), the leading university textbook, and uses its transliteration. The book is optional.</div>
+    </div>
+</section>
+
+<section class="step" id="reference">
+    <div class="activity" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <span class="hg-med" data-m="G1-M17-D36"></span>
+        <div style="flex:1;min-width:200px"><h3 style="margin:0">The Egyptian “Alphabet”</h3><p style="margin:2px 0 0" class="lead">All 25 one-consonant signs, in dictionary order, with how to say each one.</p></div>
+        <a class="btn ghost" href="alphabet/">Open the reference →</a>
+    </div>
+</section>
+
+<section class="step" id="classes">
+    <h2>Classes</h2>
+    <p class="lead">Module A (the script) is free. The rest of the course is coming soon for members.</p>
+    <h3>Module A · The script <span class="cite" style="white-space:normal">free</span></h3>
+    <ul class="class-list" id="list-a"></ul>
+    <h3>Module B · Nouns and sentences without verbs</h3>
+    <ul class="class-list" id="list-b"></ul>
+    <h3>Module C · The verb</h3>
+    <ul class="class-list" id="list-c"></ul>
+    <h3>Module D · Clauses and real reading</h3>
+    <ul class="class-list" id="list-d"></ul>
+</section>
+
+<section class="step" data-discord hidden>
+    <div class="community">
+        <p><b>💬 Learn together.</b> The ΙΕΡΟΓΛΥΦΩ Discord has a channel for every class, a #show-and-tell for your cartouches, and weekly reading challenges.</p>
+        <a class="btn" data-discord-link>Join the Discord →</a>
+    </div>
+</section>
+
+<section class="step" id="portfolio">
+    <h2>Your scroll</h2>
+    <p class="lead">Everything you’ve built in ΙΕΡΟΓΛΥΦΩ missions. It’s stored in this browser only, so keep important links somewhere safe too.</p>
+    <div class="activity"><ul class="portfolio" id="scroll"></ul></div>
+</section>
+</main>
+
+<footer class="site">© 2024–2026 ΙΕΡΟΓΛΥΦΩ · <a href="/TOS.html">Terms &amp; Privacy</a> · <a href="https://www.hieroglyphica.org">hieroglyphica.org</a></footer>
+
+<script src="config.js"></script>
+<script src="signs.js"></script>
+<script src="course.js"></script>
+<script>
+(function () {
+const H = HQ, el = H.el;
+// [module, no, title, blurb, href or null]
+const CLASSES = [
+    ['a', 1, 'Read Like Champollion', 'How the script works · direction & groups · crack four royal cartouches', 'class-01/'],
+    ['a', 2, 'The Egyptian “Alphabet” I', 'The first twelve one-consonant signs · transliteration · reading by sound · a royal family at Saqqara', 'class-02/'],
+    ['a', 3, 'The Egyptian “Alphabet” II', 'The other thirteen one-consonant signs · the four h’s · dictionary order · phonetic complements · Khufu and Tutankhamun', 'class-03/'],
+    ['a', 4, 'Two- and Three-Consonant Signs', 'Eighteen of the most common big signs · word-sign or sound-sign · how a spelling is built · Imhotep, Memphis and Pharaoh', 'class-04/'],
+    ['a', 5, 'Kings and Gods', 'Determinatives · plurals and gods-first spellings · the five royal names · capstone: read the Abydos king list', 'class-05/'],
+    ['b', 6, 'Nouns', 'Gender, number, “of”', null],
+    ['b', 7, 'Pronouns', '“I, you, he, she” · suffix pronouns', null],
+    ['b', 8, 'Adjectives', 'Agreement · nisbe adjectives', null],
+    ['b', 9, 'Prepositions and the Offering Formula', 'Learn ḥtp-dj-nsw as a set phrase', null],
+    ['b', 10, 'Sentences Without Verbs I', 'Adjectival and nominal sentences', null],
+    ['b', 11, 'Sentences Without Verbs II', 'Adverbial sentences · numbers and dates', null],
+    ['b', 12, 'Capstone: an Offering Stela', 'Parse a real stela, word by word', null],
+    ['c', 13, 'Verbs and the Infinitive', '', null], ['c', 14, 'The Pseudo-verbal Construction', '', null],
+    ['c', 15, 'Commands and Particles', '', null], ['c', 16, 'The Stative', '', null],
+    ['c', 17, 'The sḏm.n.f', '', null], ['c', 18, 'The sḏm.f I', '', null], ['c', 19, 'The sḏm.f II', '', null],
+    ['c', 20, 'Passives and Other Suffix Forms', '', null], ['c', 21, 'Checkpoint: a Narrative', '', null],
+    ['d', 22, 'Adverb Clauses', '', null], ['d', 23, 'Noun Clauses', '', null], ['d', 24, 'Relative Clauses', '', null],
+    ['d', 25, 'Active Participles', '', null], ['d', 26, 'Passive Participles', '', null], ['d', 27, 'Emphatic Sentences', '', null],
+    ['d', 28, 'Reading: The Shipwrecked Sailor', '', null], ['d', 29, 'Reading: Sinuhe', '', null], ['d', 30, 'Reading: Stelae and Hymns', '', null]
+];
+const FREE = 5;
+const summary = H.store.get('hq-classes', {});
+for (const [mod, no, title, blurb, href] of CLASSES) {
+    const id = 'class-' + String(no).padStart(2, '0');
+    const s = summary[id];
+    const pct = s && s.total ? Math.round(100 * s.done / s.total) : 0;
+    const badge = no <= FREE
+        ? (href ? (pct === 100 ? '✓ done' : pct ? pct + '%' : 'free') : 'free · soon')
+        : 'members';
+    const li = el('li', { class: href ? '' : 'soon' },
+        el('div', { class: 'no' }, no),
+        el('div', {}, el('h3', {}, href ? el('a', { href }, title) : title), blurb ? el('p', {}, blurb) : null,
+            href && pct ? el('div', { class: 'mini-bar' }, el('i', { style: `width:${pct}%` })) : null),
+        el('span', { class: 'badge' + (no > FREE ? ' locked' : '') }, badge));
+    document.getElementById('list-' + mod).append(li);
+}
+
+// Today: cards due across all classes + next class
+const cards = H.store.get('hq-srs-cards', {});
+const due = H.srsDue(Object.keys(cards).map(id => ({ id }))).length;
+const next = CLASSES.find(c => {
+    if (!c[4]) return false;
+    const s = summary['class-' + String(c[1]).padStart(2, '0')];
+    return !s || s.done < s.total;
+});
+if (Object.keys(summary).length) {
+    const parts = [];
+    if (due) parts.push(`<b>${due}</b> review card${due > 1 ? 's' : ''} due (about ${Math.max(1, Math.round(due * 0.25))} min)`);
+    else parts.push('No review cards due: nice.');
+    if (next) parts.push(`Continue <b>Class ${next[1]}: ${next[2]}</b>`);
+    document.getElementById('today-text').innerHTML = parts.join(' · ');
+    const btn = document.getElementById('today-btn');
+    if (next) { btn.href = next[4] + (due ? '#s9' : ''); btn.textContent = due ? 'Review now →' : `Continue Class ${next[1]} →`; }
+    else { btn.href = 'class-01/#s9'; btn.textContent = 'Review deck →'; }
+}
+
+// Portfolio
+const list = H.store.get('hq-portfolio', []);
+const ul = document.getElementById('scroll');
+if (!list.length) ul.append(el('li', {}, 'Nothing yet. Your first piece is Mission 1 in Class 1.'));
+list.forEach(p => ul.append(el('li', {},
+    el('span', {}, '📜'), el('a', { href: p.url, target: '_blank', rel: 'noopener' }, p.title),
+    el('span', { class: 'cite' }, new Date(p.at).toLocaleDateString()))));
+
+H.render();
+H.community();
+H.track('open');
+})();
+</script>
+</body>
+</html>

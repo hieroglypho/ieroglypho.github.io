@@ -3,10 +3,11 @@
 A static site hosted on **GitHub Pages** (`CNAME` → hieroglyphica.org). No build step,
 no bundler, no server-side logic. Everything is plain HTML/CSS/JS served as-is.
 
-There are **two independent surfaces** in this repo:
+There are **three independent surfaces** in this repo:
 
 1. **Marketing / content site** — the repo root (`/`)
 2. **The editor app** — the `ΙΕΡΟΓΛΥΦΩ/` folder (`/ΙΕΡΟΓΛΥΦΩ/`)
+3. **The hieroglyphs course** — the `course/` folder (`/course/`), a published copy (see §3)
 
 They share *no* live code. Each marketing page is self-contained (inline `<style>`); the
 editor is the only place the JavaScript lives.
@@ -96,6 +97,23 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 
 ---
 
+## 3. The hieroglyphs course (`course/`)
+
+Served at `www.hieroglyphica.org/course/`. **This folder is a published copy: don't edit it
+here.** The source lives in the private repo `ieroglypho-courseware` (sibling folder), and
+`tools/deploy-free.sh` there copies the free classes into this folder, replacing what is here.
+
+- Contents: course home (`index.html`), shared `course.js` / `course.css` / `signs.js` /
+  `config.js`, `alphabet/`, and `class-01/` … `class-05/` (each with its `audio/` recordings).
+- **Free classes only (1–5).** This repo is public. Members-only classes (6 onward) must never
+  be committed here; the deploy script copies from a fixed list and removes anything else.
+- The course has its own stylesheet and scripts and shares no code with the editor. It links
+  to the site's pages and the editor with root-relative links (`/about.html`, `/ΙΕΡΟΓΛΥΦΩ/`).
+- The six content pages carry a `COURSE` tab in their nav (`<a href="course/">`), and
+  `sitemap.xml` lists the course home, the five classes and the alphabet page.
+
+---
+
 ## Conventions & gotchas (rules of the road)
 
 - **Classic scripts only.** Top-level `function` / `let` / `const` declarations are shared
@@ -144,6 +162,10 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 - **2026-11-13** — Editor ≡ menu: added "🎓 Learn to read hieroglyphs (course)" (`#courseBtn`,
   inline `onclick` → opens `../course/` in a new tab), above "Gardiner signs (Wiki)". HTML-only;
   no JS changed. The course itself is developed in the sibling `ieroglypho-courseware/` folder
-  and will be deployed here as `/course/`. **Don't push this link before `/course/` exists.**
+  and is deployed here as `/course/` (see the next entry).
   Note: the bare domain `hieroglyphica.org` is forwarded by Squarespace to the www homepage and
   drops the path, so absolute links must use `https://www.hieroglyphica.org/…`.
+- **2026-11-14** — Course published: `course/` added (free Classes 1–5, alphabet page, course
+  home; copied from the private `ieroglypho-courseware` repo by its `tools/deploy-free.sh`),
+  `COURSE` tab added to the nav of the six content pages, seven course URLs added to
+  `sitemap.xml`. See §3: the folder is a copy, and paid classes never go in this repo.

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unlock the Full Course — ΙΕΡΟΓΛΥΦΩ Hieroglyphs Course</title>
+<meta name="description" content="Classes 6 to 30 of the ΙΕΡΟΓΛΥΦΩ hieroglyphs course: Middle Egyptian grammar, the verb, and real texts, from the Shipwrecked Sailor to Sinuhe. One payment, no subscription.">
+<link rel="canonical" href="https://www.hieroglyphica.org/course/members/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../course.css">
+</head>
+<body>
+<nav class="nav-tabs">
+    <a href="/about.html">ABOUT</a>
+    <a href="/tutorials.html">TUTORIALS</a>
+    <a class="active" href="../">COURSE<span class="nav-new">NEW</span></a>
+    <a class="nav-brand" href="/index.html">HOME</a>
+    <a href="/research.html">RESEARCH</a>
+    <a href="/dictionary.html">DICTIONARY</a>
+    <a class="nav-editor" href="https://www.hieroglyphica.org/ΙΕΡΟΓΛΥΦΩ/">✍ ΙΕΡΟΓΛΥΦΩ</a>
+</nav>
+
+<header class="class-hero">
+    <div class="kicker">Hieroglyphs course · members</div>
+    <h1>Unlock the full course</h1>
+    <p>You can read the script. Classes 6 to 30 teach you the language: its grammar, its verbs, and then real texts, read in the original.</p>
+    <div class="hero-glyphs"><span data-m="S34-F35-R4" data-label="Life, beauty and peace"></span></div>
+</header>
+
+<main style="max-width:820px">
+
+<div class="callout tip" id="notice" hidden></div>
+
+<section class="step" id="member" hidden>
+    <h2>You're a member ✓</h2>
+    <p>Signed in on this device as <b id="member-email"></b>.</p>
+    <div class="row-btns">
+        <a class="btn" id="member-continue" href="../class-06/">Continue to Class 6 →</a>
+        <a class="btn ghost" href="../">Course home</a>
+    </div>
+    <p class="lead" style="margin-top:14px">Using a shared computer? <a href="../api/signout">Sign out on this device</a>.</p>
+</section>
+
+<section class="step" id="buy">
+    <h2>What members get</h2>
+    <ul>
+        <li><b>Module B · Nouns and sentences without verbs</b> (Classes 6 to 12): nouns, pronouns, adjectives, prepositions and the offering formula, numbers and dates, your first whole sentences, and a real offering stela read word by word.</li>
+        <li><b>Module C · The verb</b> (Classes 13 to 21): the verb forms of Middle Egyptian, commands and particles, and a first narrative.</li>
+        <li><b>Module D · Clauses and real reading</b> (Classes 22 to 30): clauses and participles, then whole texts: the Shipwrecked Sailor, Sinuhe, stelae and hymns.</li>
+        <li>The same kind of class as Module A: a lesson you can listen to, games and drills, missions in the ΙΕΡΟΓΛΥΦΩ editor, a review deck and an exit check. A new class every week until all 30 are out.</li>
+    </ul>
+    <p><b>One payment, no subscription.</b> <span id="price-line"></span>Your access does not run out. Use it on any device: on a new one, sign in with the email address you paid with.</p>
+    <div class="row-btns" id="buy-row">
+        <a class="btn" id="buy-btn" href="#">Unlock the full course →</a>
+    </div>
+    <p class="lead" id="buy-soon" hidden>The members' course opens soon. Classes 1 to 5 are free and open now: <a href="../">start there</a>.</p>
+    <p class="cite" id="buy-terms" style="white-space:normal">Payment is handled by Stripe; we never see your card. Your access starts as soon as you have paid. By buying, you ask for it to start straight away, and you accept that once it has started you lose the 14-day right to cancel that applies to online purchases in the EU. See our <a href="/TOS.html">Terms &amp; Privacy</a>.</p>
+</section>
+
+<section class="step" id="signin">
+    <h2>Already a member?</h2>
+    <p>On a new device, or after clearing your browser, enter the email address you paid with. We'll send you a link that signs you in on this device.</p>
+    <form id="signin-form" class="row-btns" style="align-items:center">
+        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" aria-label="Email address"
+               style="flex:1;min-width:200px;padding:10px 12px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit">
+        <button class="btn" type="submit">Email me a link</button>
+    </form>
+    <div id="signin-msg"></div>
+    <p class="lead">Your progress, review deck and scroll are saved in each browser, so they don't move with you to a new device yet.</p>
+    <p class="lead">A problem with a purchase? Write to us with the contact form at the bottom of the <a href="/TOS.html">Terms &amp; Privacy</a> page.</p>
+</section>
+
+</main>
+
+<footer class="site">© 2024–2026 ΙΕΡΟΓΛΥΦΩ · <a href="/TOS.html">Terms &amp; Privacy</a> · <a href="https://www.hieroglyphica.org">hieroglyphica.org</a></footer>
+
+<script src="../config.js"></script>
+<script src="../signs.js"></script>
+<script src="../course.js"></script>
+<script>
+(function () {
+const CFG = window.HQ_CONFIG || {};
+const $ = (id) => document.getElementById(id);
+const q = new URLSearchParams(location.search);
+const open = !!(CFG.membersOpen && CFG.paymentLink);
+
+const NOTICES = {
+    'unlock=failed': 'We couldn’t confirm that payment. If you were charged, enter your email address below and we’ll send you a sign-in link; if that doesn’t work, write to us.',
+    'unlock=expired': 'That payment confirmation link has expired. Enter the email address you paid with below, and we’ll send you a sign-in link.',
+    'unlock=revoked': 'This purchase was refunded, so it no longer unlocks the course.',
+    'signin=expired': 'That sign-in link has expired. Links work for one hour: ask for a new one below.',
+    'signin=invalid': 'That sign-in link isn’t complete. Copy the whole link from the email, or ask for a new one below.'
+};
+for (const [k, msg] of Object.entries(NOTICES)) {
+    const [name, val] = k.split('=');
+    if (q.get(name) === val) { $('notice').textContent = msg; $('notice').hidden = false; }
+}
+const wanted = /^class-\d\d$/.test(q.get('class') || '') ? q.get('class') : null;
+if (wanted && $('notice').hidden) {
+    $('notice').innerHTML = `<b>Class ${Number(wanted.slice(6))}</b> is part of the members’ course.` + (open ? ' Unlock it below, or sign in if you’re already a member.' : '');
+    $('notice').hidden = false;
+}
+if (wanted) $('member-continue').href = `../${wanted}/`, $('member-continue').textContent = `Continue to Class ${Number(wanted.slice(6))} →`;
+
+// Buying
+if (open) {
+    $('buy-btn').href = CFG.paymentLink;
+    $('buy-btn').addEventListener('click', () => HQ.track('unlock_click', { c: 'members' }));
+    if (CFG.memberPrice) $('price-line').textContent = CFG.memberPrice + ', once. ';
+} else {
+    $('buy-row').hidden = true; $('buy-terms').hidden = true; $('buy-soon').hidden = false;
+    $('signin').hidden = true;
+}
+
+// Already signed in? (Answered by the course Worker; on a copy without it, nothing happens.)
+fetch('../api/me', { credentials: 'same-origin', cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(me => {
+        if (!me || !me.member) return;
+        $('member-email').textContent = me.email;
+        $('member').hidden = false; $('buy').hidden = true; $('signin').hidden = true;
+        if (q.get('class') && !q.get('unlock') && !q.get('signin')) $('notice').hidden = true;
+    }).catch(() => {});
+
+// Sign-in link
+$('signin-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value.trim();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    let msg;
+    try {
+        const r = await fetch('../api/signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        const d = await r.json().catch(() => ({}));
+        msg = d.ok ? `If <b>${HQ.el('span', {}, email).innerHTML}</b> bought the course, a sign-in link is on its way. It works for one hour. Check your spam folder if it doesn’t arrive in a few minutes.`
+            : d.error === 'email' ? 'That doesn’t look like an email address.'
+            : 'Sign-in by email isn’t available right now. Please write to us with the contact form on the Terms page.';
+        $('signin-msg').replaceChildren(HQ.el('div', { class: 'feedback show ' + (d.ok ? 'ok' : 'no'), html: msg }));
+    } catch (_) {
+        $('signin-msg').replaceChildren(HQ.el('div', { class: 'feedback show no' }, 'Couldn’t reach the server. Check your connection and try again.'));
+    }
+    btn.disabled = false;
+});
+
+HQ.render();
+HQ.track('open', { c: 'members' });
+})();
+</script>
+</body>
+</html>

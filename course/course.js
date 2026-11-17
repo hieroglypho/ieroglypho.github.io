@@ -6,8 +6,8 @@
  *   HQ.render(root)            draw every [data-m] element (MdC -> hieroglyphs)
  *   HQ.initClass(id, title)    progress bar, TOC ticks, completion banner
  *   HQ.quiz / classify / sprint / direction / order / decipher / rebus /
- *   HQ.flashcards / mission / nameCartouche / match / transcribe / spell
- *                              — activity engines
+ *   HQ.flashcards / mission / nameCartouche / match / transcribe / spell /
+ *   HQ.worked / compose        — activity engines
  *
  * Every activity calls HQ.done(activityId) when the learner meets its bar.
  * All persistence is localStorage, wrapped so a blocked store never breaks
@@ -267,7 +267,10 @@ function quiz(host, questions, opts) {
 
 /* --------------------------------------------------------- classify -- *
  * Sort items into bins, one at a time. items: [{ m, hl: index of highlighted
- * group, tr, gloss, a: bin index, why }]. Highlighted sign shown in gold.     */
+ * group, tr, gloss, a: bin index, why }]. Highlighted sign shown in gold.
+ * Without hl the whole word is the question: then give opts.ask (the prompt)
+ * and, when the caption would give the answer away, opts.show: 'gloss' (no
+ * transliteration until the feedback) or 'none'.                              */
 function classify(host, items, opts) {
     const body = card(host, opts);
     function start() {
@@ -286,10 +289,14 @@ function classify(host, items, opts) {
             body.append(el('div', { class: 'qcount' }, `Item ${i + 1} of ${list.length} · score ${score}`));
             const word = hg(it.m, { cls: 'hg-big' });
             const cads = word.querySelectorAll('.cad');
-            if (cads[it.hl]) cads[it.hl].style.color = 'var(--gold)';
-            cads.forEach((c, k) => { if (k !== it.hl) c.style.opacity = '.55'; });
-            body.append(el('div', { class: 'papyrus' }, word, el('div', { html: `<span class="tr">${it.tr}</span> “${it.gloss}”` })));
-            body.append(el('p', { html: `What job is the <b style="color:var(--gold)">gold sign</b> doing here?` }));
+            if (it.hl != null) {
+                if (cads[it.hl]) cads[it.hl].style.color = 'var(--gold)';
+                cads.forEach((c, k) => { if (k !== it.hl) c.style.opacity = '.55'; });
+            }
+            const caption = opts.show === 'none' ? null
+                : el('div', { html: opts.show === 'gloss' ? `“${it.gloss}”` : `<span class="tr">${it.tr}</span> “${it.gloss}”` });
+            body.append(el('div', { class: 'papyrus' }, word, caption));
+            body.append(el('p', { html: opts.ask || `What job is the <b style="color:var(--gold)">gold sign</b> doing here?` }));
             const bins = el('div', { class: 'bins' });
             opts.bins.forEach((label, idx) => bins.append(el('button', { class: 'choice', html: label, onclick: (e) => {
                 const ok = idx === it.a; if (ok) score++;
@@ -736,7 +743,9 @@ const MULTI = {
     M18: 'jj', U28: 'ḏꜣ', N28: 'ḫꜥ',
     S34: 'ꜥnḫ', F35: 'nfr', R4: 'ḥtp', L1: 'ḫpr', F21: 'sḏm', R8: 'nṯr',
     // Class 5 (royal signs). The sun N5 stays out: it is also a determinative (hrw "day").
-    D28: 'kꜣ', M23: 'sw', L2: 'bjt', X8: 'dj', C10: 'mꜣꜥt', F12: 'wsr'
+    D28: 'kꜣ', M23: 'sw', L2: 'bjt', X8: 'dj', C10: 'mꜣꜥt', F12: 'wsr',
+    // Class 6 (nouns). The town O49 and the hills N25 stay out: both are also determinatives.
+    T22: 'sn', S38: 'ḥqꜣ', I6: 'km', W24: 'nw'
 };
 /* Split an MdC spelling into readable parts: [{ g: glyphs, v: value | null }].
  * Two reed leaves in a row are read together as y. One-consonant signs that
@@ -956,6 +965,130 @@ function spell(host, items, opts) {
     start();
 }
 
+/* ----------------------------------------------------------- worked -- *
+ * Worked → faded examples, for the grammar classes. Every item is a phrase
+ * taken apart in the same few steps. A step with `show` is given (worked);
+ * a step with `choices` is asked. The first item gives every step, the last
+ * ones ask them all. items: [{ m, cart?, intro?: html, result: html, steps:
+ * [{ label, show: html } | { label, q?: html, choices: [html], a: index,
+ * why?: html }] }]. Items stay in the order written (that is the fading).
+ * opts.pass (default .75): share of the asked steps right first time.      */
+function worked(host, items, opts) {
+    const body = card(host, opts);
+    const pass = opts.pass ?? 0.75;
+    function start() {
+        let i = 0, asked = 0, right = 0;
+        function show() {
+            body.textContent = '';
+            if (i >= items.length) {
+                const ok = !asked || right >= Math.ceil(pass * asked);
+                if (ok) done(opts.id);
+                body.append(el('p', { html: `<b>${right} / ${asked}</b> steps right first time. ${ok ? 'You can take a phrase apart.' : `You need ${Math.ceil(pass * asked)}. Go through the examples again: the steps are always the same.`}` }));
+                body.append(el('div', { class: 'row-btns' }, el('button', { class: 'btn ghost', onclick: start }, '↻ Again')));
+                return;
+            }
+            const it = items[i];
+            const worked = it.steps.every(s => s.show != null);
+            body.append(el('div', { class: 'qcount' }, `Example ${i + 1} of ${items.length}` + (worked ? ' · worked for you' : '')));
+            body.append(el('div', { class: 'papyrus' }, hg(it.m, { cls: 'hg-big', cart: it.cart })));
+            if (it.intro) body.append(el('p', { html: it.intro }));
+            const list = el('ol', { class: 'parse-steps' });
+            const foot = el('div');
+            body.append(list, foot);
+            let k = 0;
+            function step() {
+                if (k >= it.steps.length) {
+                    foot.replaceChildren(feedback(true, it.result),
+                        el('div', { class: 'row-btns' }, el('button', { class: 'btn', onclick: () => { i++; show(); } }, i + 1 < items.length ? 'Next example →' : 'See score')));
+                    return;
+                }
+                const s = it.steps[k++];
+                const li = el('li', {}, el('b', {}, s.label + ': '));
+                list.append(li);
+                if (s.show != null) { li.append(el('span', { html: s.show })); return step(); }
+                asked++;
+                if (s.q) li.append(el('span', { html: s.q }));
+                const grid = el('div', { class: 'choice-grid' });
+                shuffle(s.choices.map((c, idx) => ({ c, idx }))).forEach(({ c, idx }) => grid.append(el('button', { class: 'choice', html: c, onclick: () => {
+                    const ok = idx === s.a;
+                    if (ok) right++;
+                    li.classList.add(ok ? 'ok' : 'no');
+                    li.replaceChildren(el('b', {}, s.label + ': '), el('span', { html: (ok ? '✓ ' : '✗ ') + s.choices[s.a] + (s.why ? ` <span class="lead">${s.why}</span>` : '') }));
+                    step();
+                } })));
+                li.append(grid);
+            }
+            step();
+        }
+        show();
+    }
+    start();
+}
+
+/* ---------------------------------------------------------- compose -- *
+ * Build a phrase from word tiles (production, the reverse of worked()).
+ * opts.words is the word bank: { key: { m, tr } }. items: [{ en, note?: html,
+ * tiles: [keys, decoys included], a: [[keys in order], ...every accepted
+ * answer, the model answer first], why?: html, hint?: html }]. Two tries,
+ * then the model answer is shown. opts.pass (default .7) right first time. */
+function compose(host, items, opts) {
+    const body = card(host, opts);
+    const pass = opts.pass ?? 0.7;
+    const W = opts.words;
+    const wordEl = (k, cls) => el('span', { class: 'compose-word' }, hg(W[k].m, { cls }), el('span', { class: 'tr' }, W[k].tr));
+    function start() {
+        const list = opts.keepOrder ? items.slice() : shuffle(items);
+        let i = 0, clean = 0;
+        function show() {
+            body.textContent = '';
+            if (i >= list.length) {
+                const ok = clean >= Math.ceil(pass * list.length);
+                if (ok) done(opts.id);
+                body.append(el('p', { html: `<b>${clean} / ${list.length}</b> built right first time. ${ok ? 'You are writing Egyptian.' : `You need ${Math.ceil(pass * list.length)}. Go again: the phrases come back in a new order.`}` }));
+                body.append(el('div', { class: 'row-btns' }, el('button', { class: 'btn ghost', onclick: start }, '↻ Again')));
+                return;
+            }
+            const it = list[i];
+            let tries = 0, picked = [], finished = false;
+            body.append(el('div', { class: 'qcount' }, `Phrase ${i + 1} of ${list.length} · ${clean} right first time`));
+            body.append(el('p', { class: 'spell-target', html: `Write <b>“${it.en}”</b>${it.note ? ` <span class="lead">${it.note}</span>` : ''}` }));
+            const out = el('div', { class: 'papyrus spell-out compose-out' });
+            const draw = () => {
+                out.textContent = '';
+                if (!picked.length) out.append(el('span', { class: 'lead' }, 'Tap the words below, in the order they are spoken.'));
+                picked.forEach(k => out.append(wordEl(k, 'hg-med')));
+            };
+            draw();
+            const pal = el('div', { class: 'compose-pal' });
+            shuffle(it.tiles).forEach(k => pal.append(el('button', { type: 'button', class: 'compose-tile', 'aria-label': W[k].tr,
+                onclick: () => { if (finished || picked.length >= 6) return; picked.push(k); draw(); } }, wordEl(k, ''))));
+            const msg = el('div');
+            body.append(out, pal, el('div', { class: 'row-btns' },
+                el('button', { class: 'btn', onclick: check }, 'Check'),
+                el('button', { class: 'btn ghost', onclick: () => { if (!finished) { picked.pop(); draw(); } } }, '⌫ Undo'),
+                el('button', { class: 'btn ghost', onclick: () => { if (!finished) { picked = []; draw(); } } }, 'Clear')), msg);
+            function check() {
+                if (finished || !picked.length) return;
+                const ok = it.a.some(a => a.join(' ') === picked.join(' '));
+                tries++;
+                if (ok || tries >= 2) {
+                    finished = true;
+                    if (ok && tries === 1) clean++;
+                    const model = ok ? picked : it.a[0];
+                    const answer = el('div', { class: 'papyrus compose-out', style: 'margin-top:8px' }, model.map(k => wordEl(k, 'hg-med')));
+                    const fb = feedback(ok, `${ok ? '✓' : '✗ It is'} <span class="tr">${model.map(k => W[k].tr).join(' ')}</span>. ${it.why || ''}`);
+                    const nextBtn = el('div', { class: 'row-btns' }, el('button', { class: 'btn', onclick: () => { i++; show(); } }, i + 1 < list.length ? 'Next →' : 'See score'));
+                    msg.replaceChildren(...(ok ? [fb, nextBtn] : [fb, answer, nextBtn]));
+                } else {
+                    msg.replaceChildren(feedback(false, (it.hint || 'Not yet. Check the order of the words and their endings.') + ' One more try.'));
+                }
+            }
+        }
+        show();
+    }
+    start();
+}
+
 
 /* ----------------------------------------------------------- tracking -- *
  * Anonymous usage counters: which classes are opened, which activities get
@@ -997,7 +1130,8 @@ function community() {
 const SAY_OVERRIDE = { 'ꜥnḫ': 'ankh', 'jmn': 'imen', 'Jmn': 'Amun', 'Ptwlmys': 'Ptolemy', 'Rꜥ': 'Ra', 'rꜥ': 'ra', 'sꜣ': 'sa', 'Ḏḥwtj': 'Djehuti',
     'Jnpw': 'Inpu', 'Ppy': 'Pepi', 'Ttj': 'Teti', 'Sbk': 'Sobek', 'wbn': 'weben', 'hbny': 'hebeny',
     'zꜣ': 'sa', 'Snfrw': 'Sneferu', 'Ptḥ': 'Ptah', 'wḥꜣt': 'wehat', 'zj': 'zi',
-    'wr': 'wer', 'wḏꜣ': 'wedja', 'jj': 'ii', 'Jj': 'Ii', 'Mn': 'Men', 'Ḫprj': 'Khepri' };
+    'wr': 'wer', 'wḏꜣ': 'wedja', 'jj': 'ii', 'Jj': 'Ii', 'Mn': 'Men', 'Ḫprj': 'Khepri',
+    'ḥjmt': 'hemet', 'ḥjmwt': 'hemut', 'mjwt': 'mut', 'njwt': 'niut' };
 const SAY_LETTER = { 'ꜣ': 'aleph', 'ꜥ': 'ayin', 'j': 'yod', 'y': 'y', 'w': 'w', 'ḥ': 'dotted h', 'ḫ': 'kh', 'ẖ': 'kh', 'š': 'sh', 'ṯ': 'tj', 'ḏ': 'dj', 'z': 'z', 'q': 'q' };
 const SAY_UNIT = { 'ꜣ': ['a', 1], 'ꜥ': ['a', 1], 'j': ['i', 1], 'ḥ': ['h', 0], 'ḫ': ['kh', 0], 'ẖ': ['kh', 0], 'š': ['sh', 0], 'ṯ': ['tj', 0], 'ḏ': ['dj', 0], 'z': ['s', 0], 'q': ['k', 0] };
 function sayWord(w) {
@@ -1309,8 +1443,15 @@ function alphabet(host, opts = {}) {
     }
 }
 
+/* Pages mark what to show before the members' course opens (data-members-soon) and after
+ * (data-members-open, written with the hidden attribute so it stays hidden without JS).
+ * HQ_CONFIG.membersOpen picks one. course.js loads at the end of <body>, so the DOM is here. */
+document.querySelectorAll('[data-members-open], [data-members-soon]').forEach(n => {
+    n.hidden = n.hasAttribute('data-members-open') ? !CFG.membersOpen : !!CFG.membersOpen;
+});
+
 /* --------------------------------------------------------------- API -- */
 window.HQ = { store, render, hg, glyph, glyphs, allen, normTr, normKey, trMatches, initClass, done,
     quiz, classify, sprint, direction, order, decipher, rebus, flashcards, mission,
-    nameCartouche, match, transcribe, spell, soundParts, srsDue, EDITOR_URL, el, track, community, sayTr, ttsScript, ttsKey, egyptianWords, alphabet, ALPHABET };
+    nameCartouche, match, transcribe, spell, worked, compose, soundParts, srsDue, EDITOR_URL, el, track, community, sayTr, ttsScript, ttsKey, egyptianWords, alphabet, ALPHABET };
 })();

@@ -320,3 +320,24 @@ table.plain td.titles .hg { font-size: 30px; }
 /* long strips of signs (mission strips, phrases) wrap instead of overflowing on phones */
 .papyrus .hg { flex-wrap: wrap; justify-content: center; row-gap: .12em; max-width: 100%; }
 table.plain td.tr { white-space: nowrap; }
+
+/* worked(): worked → faded examples (grammar classes, from Class 6) */
+.parse-steps { margin: 12px 0 0; padding-left: 24px; }
+.parse-steps li { margin: 10px 0; }
+.parse-steps li.ok::marker { color: var(--ok); font-weight: 700; }
+.parse-steps li.no::marker { color: var(--bad); font-weight: 700; }
+.parse-steps .choice-grid { margin-top: 8px; }
+.parse-steps .lead { font-size: 14px; }
+/* compose(): build a phrase from word tiles */
+.compose-pal { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+.compose-tile { font: inherit; min-width: 68px; padding: 8px 10px 6px; border-radius: 10px; border: 1px solid var(--papyrus-line); background: var(--papyrus); color: var(--text); cursor: pointer; }
+.compose-tile:hover { border-color: var(--button-bg); }
+.compose-tile .hg { font-size: 32px; }
+.compose-word { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+.compose-word .tr { font-size: 15px; }
+.compose-out { gap: 16px; flex-wrap: wrap; }
+/* a table whose signs are mostly stacked groups: draw them larger */
+table.plain.large .gl, table.plain.large td.gl { font-size: 38px; }
+table.plain.large td .hg { flex-wrap: wrap; row-gap: .12em; }
+/* members-only classes: kicker pill and the course home's preview badge */
+.class-hero .kicker .members { border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px; margin-left: 4px; }

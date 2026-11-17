@@ -5,13 +5,24 @@ window.HQ_CONFIG = {
     discord: 'https://discord.gg/UJ7Xq2cT5',
 
     // Anonymous, cookieless usage counters (see course-worker/). Empty = no tracking.
-    // e.g. 'https://hieroglyphica-course.<you>.workers.dev/e'
-    analytics: '',
+    // Same-origin address, served by the course Worker's /course/api/e route.
+    analytics: 'https://www.hieroglyphica.org/course/api/e',
 
     // Read-aloud (browser speech, free, no server). Set false to hide the Listen buttons.
     readAloud: true,
 
     // Play buttons on the alphabet page. Keep false until the teacher's recordings are in
     // course/audio/alphabet/ (see RECORDING.md there); then set true.
-    alphabetAudio: false
+    alphabetAudio: false,
+
+    // Members' classes (Class 6 onward). Keep false until the paid unlock serves them at this
+    // address: until then the course home lists them without a link, because the public site
+    // does not carry them. A local preview links them whatever this says.
+    membersOpen: false,
+
+    // The paid unlock (see course-worker/README.md). paymentLink: the Stripe Payment Link,
+    // https://buy.stripe.com/… ; memberPrice: how the price reads on the members' page, e.g.
+    // '€49'. The buy button shows only when membersOpen is true and paymentLink is set.
+    paymentLink: '',
+    memberPrice: ''
 };

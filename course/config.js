@@ -2,7 +2,7 @@
  * Leave a value empty ('') to switch that feature off; the pages hide it. */
 window.HQ_CONFIG = {
     // Discord invite link, e.g. 'https://discord.gg/AbCdEf'. Empty = community boxes hidden.
-    discord: 'https://discord.gg/UJ7Xq2cT5',
+    discord: 'https://discord.gg/KhuHhGTvV8',
 
     // Anonymous, cookieless usage counters (see course-worker/). Empty = no tracking.
     // Same-origin address, served by the course Worker's /course/api/e route.

@@ -320,6 +320,7 @@ function sprint(host, deck, opts) {
     const body = card(host, opts);
     const secs = opts.seconds || 60;
     const bestKey = 'hq-best-' + opts.id;
+    const byName = opts.answer === 'name';           // answer with the meaning (deck item .name), not the reading
     function lobby(msg) {
         body.textContent = '';
         const best = store.get(bestKey, 0);
@@ -346,15 +347,16 @@ function sprint(host, deck, opts) {
             let card;
             do { card = deck[Math.floor(Math.random() * deck.length)]; } while (deck.length > 1 && card === last);
             last = card;
-            const seen = new Set([card.tr]), others = [];     // never two buttons with the same answer
-            for (const d of shuffle(deck)) { if (others.length === 3) break; if (!seen.has(d.tr)) { seen.add(d.tr); others.push(d); } }
+            const ans = (d) => byName ? d.name : d.tr;
+            const seen = new Set([ans(card)]), others = [];   // never two buttons with the same answer
+            for (const d of shuffle(deck)) { if (others.length === 3) break; if (!seen.has(ans(d))) { seen.add(ans(d)); others.push(d); } }
             const opts4 = shuffle([card, ...others]);
             stage.textContent = '';
             stage.append(el('div', { class: 'prompt-glyph' }, hg(card.m)));
             const grid = el('div', { class: 'choice-grid' });
-            opts4.forEach(o => grid.append(el('button', { class: 'choice', style: 'text-align:center;font-size:20px', html: `<span class="tr">${o.tr}</span>`, onclick: (e) => {
+            opts4.forEach(o => grid.append(el('button', { class: 'choice', style: 'text-align:center;font-size:' + (byName ? '16px' : '20px'), html: byName ? o.name : `<span class="tr">${o.tr}</span>`, onclick: (e) => {
                 if (left <= 0) return;
-                const ok = o === card;
+                const ok = ans(o) === ans(card);
                 if (ok) { score += streak >= 5 ? 2 : 1; streak++; }
                 else { streak = 0; misses.push(card); }
                 e.currentTarget.classList.add(ok ? 'right' : 'wrong');
@@ -371,7 +373,7 @@ function sprint(host, deck, opts) {
             const uniq = [...new Set(misses)];
             const msg = el('div', {},
                 el('p', { html: `<b>Time!</b> Score <b>${score}</b>${isBest ? ' — new personal best 🏆' : ''}. ${score >= opts.target ? 'Target reached.' : `Target is ${opts.target}.`}` }),
-                uniq.length ? el('p', { class: 'lead', html: 'Review these: ' + uniq.map(c => `<span class="gl">${glyphs(c.m)}</span> <span class="tr">${c.tr}</span>`).join(' · ') }) : null);
+                uniq.length ? el('p', { class: 'lead', html: 'Review these: ' + uniq.map(c => `<span class="gl">${glyphs(c.m)}</span> <span class="tr">${c.tr}</span>` + (byName ? ` ${c.name}` : '')).join(' · ') }) : null);
             lobby(msg);
         }
         next();
@@ -745,7 +747,9 @@ const MULTI = {
     // Class 5 (royal signs). The sun N5 stays out: it is also a determinative (hrw "day").
     D28: 'kꜣ', M23: 'sw', L2: 'bjt', X8: 'dj', C10: 'mꜣꜥt', F12: 'wsr',
     // Class 6 (nouns). The town O49 and the hills N25 stay out: both are also determinatives.
-    T22: 'sn', S38: 'ḥqꜣ', I6: 'km', W24: 'nw'
+    T22: 'sn', S38: 'ḥqꜣ', I6: 'km', W24: 'nw',
+    // Class 7 (pronouns). The rush M22 stays out: it is written twice for nn.
+    U36: 'ḥm', G40: 'pꜣ'
 };
 /* Split an MdC spelling into readable parts: [{ g: glyphs, v: value | null }].
  * Two reed leaves in a row are read together as y. One-consonant signs that
@@ -1035,6 +1039,7 @@ function compose(host, items, opts) {
     const body = card(host, opts);
     const pass = opts.pass ?? 0.7;
     const W = opts.words;
+    const joinTr = (keys) => keys.map(k => W[k].tr).reduce((a, t) => a + (a && !/^[.=]/.test(t) ? ' ' : '') + t, '');
     const wordEl = (k, cls) => el('span', { class: 'compose-word' }, hg(W[k].m, { cls }), el('span', { class: 'tr' }, W[k].tr));
     function start() {
         const list = opts.keepOrder ? items.slice() : shuffle(items);
@@ -1076,7 +1081,7 @@ function compose(host, items, opts) {
                     if (ok && tries === 1) clean++;
                     const model = ok ? picked : it.a[0];
                     const answer = el('div', { class: 'papyrus compose-out', style: 'margin-top:8px' }, model.map(k => wordEl(k, 'hg-med')));
-                    const fb = feedback(ok, `${ok ? '✓' : '✗ It is'} <span class="tr">${model.map(k => W[k].tr).join(' ')}</span>. ${it.why || ''}`);
+                    const fb = feedback(ok, `${ok ? '✓' : '✗ It is'} <span class="tr">${joinTr(model)}</span>. ${it.why || ''}`);
                     const nextBtn = el('div', { class: 'row-btns' }, el('button', { class: 'btn', onclick: () => { i++; show(); } }, i + 1 < list.length ? 'Next →' : 'See score'));
                     msg.replaceChildren(...(ok ? [fb, nextBtn] : [fb, answer, nextBtn]));
                 } else {
@@ -1149,8 +1154,17 @@ function sayWord(w) {
     u.forEach((x, i) => { if (i && !x.v && !u[i - 1].v) out += 'e'; out += x.s; });
     return cap ? out[0].toUpperCase() + out.slice(1) : out;
 }
+/* Suffix pronouns after a dot or = (pr.f, zꜣ.j) are spoken joined to their
+ * word, the classroom way: pr.f "per-ef", ḥm.s "hem-es".                     */
+const SAY_SUFFIX = { j: 'i', k: 'ek', ṯ: 'tjet', t: 'et', f: 'ef', s: 'es', n: 'en', ṯn: 'tjen', tn: 'ten', sn: 'sen' };
 function sayTr(text) {
-    return text.split(/([\s\-.=]+)/).map(part => /[\s\-.=]/.test(part) ? (part.includes('-') ? '-' : ' ') : (part ? sayWord(part) : '')).join('');
+    let suffix = false;
+    return text.split(/([\s\-.=]+)/).map(part => {
+        if (/[\s\-.=]/.test(part)) { suffix = /^[.=]$/.test(part.trim()); return suffix ? '-' : part.includes('-') ? '-' : ' '; }
+        if (!part) return '';
+        const bare = part.replace(/[()]/g, '');
+        return suffix && SAY_SUFFIX[bare] ? SAY_SUFFIX[bare] : sayWord(part);
+    }).join('');
 }
 function speakableText(node) {
     const c = node.cloneNode(true);
@@ -1448,6 +1462,50 @@ function alphabet(host, opts = {}) {
  * HQ_CONFIG.membersOpen picks one. course.js loads at the end of <body>, so the DOM is here. */
 document.querySelectorAll('[data-members-open], [data-members-soon]').forEach(n => {
     n.hidden = n.hasAttribute('data-members-open') ? !CFG.membersOpen : !!CFG.membersOpen;
+});
+
+/* Early-access list: <div data-early-access="home" hidden></div> becomes a sign-up box while
+ * HQ_CONFIG.earlyAccess is on and the members' course is not open yet. The value names the page
+ * in the list (home | class-05 | members). The Worker sends a confirmation link first. */
+document.querySelectorAll('[data-early-access]').forEach(n => {
+    n.hidden = !(CFG.earlyAccess && !CFG.membersOpen);
+    if (n.hidden) return;
+    n.className = 'callout tip early-box';
+    n.innerHTML = `<b>Get early access</b>
+        <p>Leave your email address and we'll write to you <b>once</b>, when the members' course opens,
+        with a personal <b>early-bird price</b> for the people on this list. When the offer ends, we
+        delete your address.</p>
+        <form class="email-row" novalidate>
+            <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" aria-label="Email address">
+            <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+            <button class="btn" type="submit">Tell me when it opens</button>
+        </form>
+        <div class="early-msg" role="status"></div>
+        <p class="cite" style="white-space:normal">We send a confirmation link first. No newsletter, no sharing:
+        see <a href="/TOS.html#early-access">Privacy</a>.</p>`;
+    const form = n.querySelector('form'), msg = n.querySelector('.early-msg');
+    const say = (ok, html) => msg.replaceChildren(el('div', { class: 'feedback show ' + (ok ? 'ok' : 'no'), html }));
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = form.email.value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say(false, 'That doesn’t look like an email address.');
+        const btn = form.querySelector('button');
+        btn.disabled = true;
+        try {
+            const r = await fetch('/course/api/early', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, from: n.dataset.earlyAccess || '', website: form.website.value }) });
+            const d = await r.json().catch(() => ({}));
+            if (d.ok) {
+                say(true, `Almost done: we’ve sent a confirmation link to <b>${el('span', {}, email).innerHTML}</b>. Open it to join the list. Check your spam folder if it doesn’t arrive in a few minutes.`);
+                form.hidden = true;
+            } else say(false, d.error === 'email' ? 'That doesn’t look like an email address.'
+                : d.error === 'busy' ? 'Lots of sign-ups today: please try again tomorrow.'
+                : 'Sign-up isn’t available right now. Please try again later.');
+        } catch (_) {
+            say(false, 'Couldn’t reach the server. Check your connection and try again.');
+        }
+        btn.disabled = false;
+    });
 });
 
 /* --------------------------------------------------------------- API -- */

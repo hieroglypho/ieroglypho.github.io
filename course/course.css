@@ -341,3 +341,17 @@ table.plain.large .gl, table.plain.large td.gl { font-size: 38px; }
 table.plain.large td .hg { flex-wrap: wrap; row-gap: .12em; }
 /* members-only classes: kicker pill and the course home's preview badge */
 .class-hero .kicker .members { border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px; margin-left: 4px; }
+
+/* Class 7: a stela laid out as rows of labelled lines */
+.papyrus.stela { display: flex; flex-direction: column; gap: 12px; }
+.papyrus.stela > div + div { border-top: 1px dashed var(--papyrus-line); padding-top: 10px; }
+
+/* Email forms: early-access box, members' sign-in */
+.email-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.email-row input[type=email] { flex: 1; min-width: 200px; padding: 10px 12px; font: inherit; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--card); color: inherit; }
+.email-row .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.early-box p { margin: 8px 0 0; }
+.finish .early-box { color: var(--text); text-align: left; max-width: 560px; margin: 18px auto 8px; }
+.finish .early-box a:not(.btn) { color: var(--button-bg); }
+.finish .early-box .btn { margin-top: 0; }

@@ -34,6 +34,13 @@
 
 <div class="callout tip" id="notice" hidden></div>
 
+<section class="step" id="leave" hidden>
+    <h2>Leave the early-access list</h2>
+    <p>This removes your email address from the list. We won't write to you about the course again.</p>
+    <div class="row-btns"><button class="btn" id="leave-btn" type="button">Remove my address</button></div>
+    <div id="leave-msg"></div>
+</section>
+
 <section class="step" id="member" hidden>
     <h2>You're a member ✓</h2>
     <p>Signed in on this device as <b id="member-email"></b>.</p>
@@ -57,15 +64,15 @@
         <a class="btn" id="buy-btn" href="#">Unlock the full course →</a>
     </div>
     <p class="lead" id="buy-soon" hidden>The members' course opens soon. Classes 1 to 5 are free and open now: <a href="../">start there</a>.</p>
+    <div data-early-access="members" hidden></div>
     <p class="cite" id="buy-terms" style="white-space:normal">Payment is handled by Stripe; we never see your card. Your access starts as soon as you have paid. By buying, you ask for it to start straight away, and you accept that once it has started you lose the 14-day right to cancel that applies to online purchases in the EU. See our <a href="/TOS.html">Terms &amp; Privacy</a>.</p>
 </section>
 
 <section class="step" id="signin">
     <h2>Already a member?</h2>
     <p>On a new device, or after clearing your browser, enter the email address you paid with. We'll send you a link that signs you in on this device.</p>
-    <form id="signin-form" class="row-btns" style="align-items:center">
-        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" aria-label="Email address"
-               style="flex:1;min-width:200px;padding:10px 12px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit">
+    <form id="signin-form" class="email-row">
+        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" aria-label="Email address">
         <button class="btn" type="submit">Email me a link</button>
     </form>
     <div id="signin-msg"></div>
@@ -92,7 +99,14 @@ const NOTICES = {
     'unlock=expired': 'That payment confirmation link has expired. Enter the email address you paid with below, and we’ll send you a sign-in link.',
     'unlock=revoked': 'This purchase was refunded, so it no longer unlocks the course.',
     'signin=expired': 'That sign-in link has expired. Links work for one hour: ask for a new one below.',
-    'signin=invalid': 'That sign-in link isn’t complete. Copy the whole link from the email, or ask for a new one below.'
+    'signin=invalid': 'That sign-in link isn’t complete. Copy the whole link from the email, or ask for a new one below.',
+    'early=confirmed': 'You’re on the early-access list ✓ We’ll write to you once, when the members’ course opens, with your personal early-bird link.',
+    'early=invalid': 'That link has expired or isn’t complete. Copy the whole link from the email. An address that isn’t confirmed within 7 days is removed from the list.',
+    'early=closed': 'The early-bird offer has ended. You can still unlock the course below.',
+    'early=used': 'This early-bird link has already been used to buy the course. Sign in below with the same email address.',
+    'early=member': 'That email address already has the full course. Sign in below with it.',
+    'early=failed': 'We couldn’t open the payment page. Please try again in a few minutes; if it keeps failing, write to us.',
+    'early=cancelled': 'Payment cancelled. Your early-bird link still works until the offer ends.'
 };
 for (const [k, msg] of Object.entries(NOTICES)) {
     const [name, val] = k.split('=');
@@ -113,6 +127,24 @@ if (open) {
 } else {
     $('buy-row').hidden = true; $('buy-terms').hidden = true; $('buy-soon').hidden = false;
     $('signin').hidden = true;
+}
+
+// Leaving the early-access list (the link in its emails). A button, not the link itself, removes
+// the address: mail scanners open links, and would otherwise remove people without asking.
+const leaveTok = q.get('leave') || '';
+if (/^[A-Za-z0-9_-]{43}$/.test(leaveTok)) {
+    $('leave').hidden = false;
+    $('leave-btn').addEventListener('click', async () => {
+        $('leave-btn').disabled = true;
+        let good = false;
+        try {
+            const r = await fetch('../api/early', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leave: leaveTok }) });
+            good = !!(await r.json().catch(() => ({}))).ok || r.status === 404;
+        } catch (_) { /* below */ }
+        $('leave-msg').replaceChildren(HQ.el('div', { class: 'feedback show ' + (good ? 'ok' : 'no') },
+            good ? 'Done: your address is no longer on the list.' : 'Couldn’t reach the server. Please try again, or write to us.'));
+        if (!good) $('leave-btn').disabled = false;
+    });
 }
 
 // Already signed in? (Answered by the course Worker; on a copy without it, nothing happens.)

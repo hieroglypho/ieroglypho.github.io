@@ -24,5 +24,11 @@ window.HQ_CONFIG = {
     // https://buy.stripe.com/… ; memberPrice: how the price reads on the members' page, e.g.
     // '€49'. The buy button shows only when membersOpen is true and paymentLink is set.
     paymentLink: '',
-    memberPrice: ''
+    memberPrice: '',
+
+    // Early-access list (course-worker/README.md, "Early access and the early-bird price"): while
+    // membersOpen is false, the course home, the end of Class 5 and the members' page ask for an
+    // email address to tell when the members' course opens. Turn on only once the Worker's
+    // /course/api/early route is deployed with RESEND_API_KEY and MAIL_FROM.
+    earlyAccess: true
 };

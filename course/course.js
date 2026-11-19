@@ -753,7 +753,9 @@ const MULTI = {
     // Class 8 (adjectives). The nose D19 and the West emblem R14 stay out: both are also determinatives.
     D45: 'ḏsr', Aa11: 'mꜣꜥ', P8: 'ḫrw', G4: 'tjw',
     // Class 9 (prepositions). The mountain N26 and the offering-list signs (O3, X2, W22, F1, H1) stay out: hints spell them out by hand.
-    W19: 'mj', T28: 'ẖr', F39: 'jmꜣḫ'
+    W19: 'mj', T28: 'ẖr', F39: 'jmꜣḫ',
+    // Class 11 (numbers and dates). The numerals, the month, season and year signs and the open arms D35 stay out: hints spell them out by hand.
+    T21: 'wꜥ'
 };
 /* Split an MdC spelling into readable parts: [{ g: glyphs, v: value | null }].
  * Two reed leaves in a row are read together as y. One-consonant signs that

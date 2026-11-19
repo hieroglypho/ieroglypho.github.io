@@ -13,7 +13,7 @@ window.HQ_CONFIG = {
 
     // Play buttons on the alphabet page. Keep false until the teacher's recordings are in
     // course/audio/alphabet/ (see RECORDING.md there); then set true.
-    alphabetAudio: false,
+    alphabetAudio: true,
 
     // Members' classes (Class 6 onward). Keep false until the paid unlock serves them at this
     // address: until then the course home lists them without a link, because the public site

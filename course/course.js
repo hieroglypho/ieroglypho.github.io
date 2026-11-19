@@ -267,7 +267,8 @@ function quiz(host, questions, opts) {
 
 /* --------------------------------------------------------- classify -- *
  * Sort items into bins, one at a time. items: [{ m, hl: index of highlighted
- * group, tr, gloss, a: bin index, why }]. Highlighted sign shown in gold.
+ * group (or an array of indexes), tr, gloss, a: bin index, why }]. Highlighted
+ * signs shown in gold.
  * Without hl the whole word is the question: then give opts.ask (the prompt)
  * and, when the caption would give the answer away, opts.show: 'gloss' (no
  * transliteration until the feedback) or 'none'.                              */
@@ -290,8 +291,8 @@ function classify(host, items, opts) {
             const word = hg(it.m, { cls: 'hg-big' });
             const cads = word.querySelectorAll('.cad');
             if (it.hl != null) {
-                if (cads[it.hl]) cads[it.hl].style.color = 'var(--gold)';
-                cads.forEach((c, k) => { if (k !== it.hl) c.style.opacity = '.55'; });
+                const gold = [].concat(it.hl);
+                cads.forEach((c, k) => { if (gold.includes(k)) c.style.color = 'var(--gold)'; else c.style.opacity = '.55'; });
             }
             const caption = opts.show === 'none' ? null
                 : el('div', { html: opts.show === 'gloss' ? `“${it.gloss}”` : `<span class="tr">${it.tr}</span> “${it.gloss}”` });
@@ -755,7 +756,15 @@ const MULTI = {
     // Class 9 (prepositions). The mountain N26 and the offering-list signs (O3, X2, W22, F1, H1) stay out: hints spell them out by hand.
     W19: 'mj', T28: 'ẖr', F39: 'jmꜣḫ',
     // Class 11 (numbers and dates). The numerals, the month, season and year signs and the open arms D35 stay out: hints spell them out by hand.
-    T21: 'wꜥ'
+    T21: 'wꜥ',
+    // Class 13 (verbs). The determinatives (legs D54, A14, A55) and the emblem R15 in Ꜣbḏw stay out: hints spell them out by hand.
+    U1: 'mꜣ', W25: 'jn', G28: 'gm', P6: 'ꜥḥꜥ', U7: 'mr', N40: 'šm', D37: 'dj', U15: 'tm', V24: 'wḏ', S43: 'mdw',
+    // Class 14 (pseudo-verbal). The star N14 is only dwꜣ so far; if a later class uses it as a determinative (time words), drop it here.
+    E34: 'wn', T18: 'šms', N14: 'dwꜣ',
+    // Class 15 (imperative and particles). The determinative A7 (weariness) stays out.
+    Y3: 'zẖꜣ', N41: 'ḥm',
+    // Aa13 is jm in jmj "give!"; it is also read gs in other words, so drop it here if a class uses that value.
+    Aa13: 'jm'
 };
 /* Split an MdC spelling into readable parts: [{ g: glyphs, v: value | null }].
  * Two reed leaves in a row are read together as y. One-consonant signs that

@@ -85,6 +85,10 @@ function trMatches(input, key) {
 /* --------------------------------------------------------- MdC render -- *
  * A deliberately small Manuel de Codage subset, enough for teaching:
  *   -  next group     :  stack (top over bottom)     *  side by side
+ *   ^  insert: A^B draws B small inside A, by default in A's top-start corner
+ *      (U1^D4: the eye in the sickle's crook, as in mꜣꜣ). A position may follow
+ *      in brackets: ^[ts] ^[bs] ^[te] ^[be] ^[t] ^[b] ^[m] (top/bottom, start/end,
+ *      middle; start = the side the text begins on, so it mirrors in rtl).
  *   ( ) grouping      tokens are Gardiner codes (A1, Aa1, M17) or raw glyphs. */
 function tokenize(src) {
     const out = [];
@@ -93,6 +97,10 @@ function tokenize(src) {
     while (i < s.length) {
         const c = s[i];
         if (/\s/.test(c)) { i++; continue; }
+        if (c === '^') {
+            const pos = /^\^\[(ts|bs|te|be|t|b|m)\]/.exec(s.slice(i));
+            out.push({ type: 'op', v: '^', pos: pos ? pos[1] : 'ts' }); i += pos ? pos[0].length : 1; continue;
+        }
         if ('-:*()'.includes(c)) { out.push({ type: 'op', v: c }); i++; continue; }
         const m = /^[A-Za-z]{1,2}\d{1,3}[A-Za-z]?/.exec(s.slice(i));
         if (m && SIGNS[m[0]]) { out.push({ type: 'sign', v: SIGNS[m[0]], code: m[0] }); i += m[0].length; continue; }
@@ -112,7 +120,13 @@ function parse(tokens) {
         const t = tokens[p++];
         return t ? { k: 'g', v: t.v } : { k: 'g', v: '' };
     }
-    function row() { const kids = [atom()]; while (isOp('*')) { p++; kids.push(atom()); } return kids.length === 1 ? kids[0] : { k: 'row', kids }; }
+    function ins() {
+        const base = atom();
+        if (!isOp('^')) return base;
+        const pos = peek().pos; p++;
+        return { k: 'ins', base, inner: atom(), pos };
+    }
+    function row() { const kids = [ins()]; while (isOp('*')) { p++; kids.push(ins()); } return kids.length === 1 ? kids[0] : { k: 'row', kids }; }
     function stack() { const kids = [row()]; while (isOp(':')) { p++; kids.push(row()); } return kids.length === 1 ? kids[0] : { k: 'stack', kids }; }
     const groups = [];
     while (p < tokens.length) {
@@ -129,10 +143,16 @@ function build(node, scale) {
         if (scale !== 1) n.style.fontSize = scale + 'em';
         return n;
     }
+    if (node.k === 'ins') {
+        const box = el('span', { class: 'ins' }, build(node.base, 1),
+            el('span', { class: 'ins-in at-' + node.pos }, build(node.inner, 1)));
+        if (scale !== 1) box.style.fontSize = scale + 'em';
+        return box;
+    }
     const box = el('span', { class: node.k === 'stack' ? 'stack' : 'row' });
     const n = node.kids.length;
     const childScale = node.k === 'stack' ? (n === 2 ? 0.55 : 0.4) : (n === 2 ? 0.72 : 0.55);
-    node.kids.forEach(k => box.append(build(k, k.k === 'g' ? childScale : 1)));
+    node.kids.forEach(k => box.append(build(k, k.k === 'g' || k.k === 'ins' ? childScale : 1)));
     if (scale !== 1) box.style.fontSize = scale + 'em';
     return box;
 }
@@ -193,6 +213,83 @@ function refreshProgress() {
     summary[CLASS_ID] = { done: n, total: registered.size };
     store.set('hq-classes', summary);
     const fin = $('#finish'); if (fin) fin.hidden = n < registered.size;
+    refreshParts(s);
+}
+
+/* ---------------------------------------------------- parts + resume -- *
+ * initClass(id, { parts: { at: 's8', minutes: [35, 45] } }) splits a long
+ * class in two: Part 1 "Learn it" (warm-up, concepts, worked examples) and
+ * Part 2 "Use it" (from section `at` to the exit check). The outline shows
+ * the two parts, and a banner before Part 2 says it is a good place to stop.
+ * Every class also gets a "Continue" button at the top once some, but not
+ * all, of its activities are done: it jumps to the first section with
+ * something left to do. Neither is read aloud.                              */
+let PARTS = null;
+const stepSections = () => [...document.querySelectorAll('main section.step[id^="s"]')].filter(x => /^s\d+$/.test(x.id));
+const sectionTitle = (sec) => { const h = sec.querySelector(':scope > h2'); if (!h) return sec.id; const c = h.cloneNode(true); c.querySelectorAll('.num, .listen, button').forEach(x => x.remove()); return c.textContent.trim(); };
+const sectionActs = (sec) => [...sec.querySelectorAll('.activity[data-activity]')].map(a => a.dataset.activity);
+function initParts(opts) {
+    const main = $('main');
+    if (main && !$('#resume')) {
+        const start = $('#start');
+        const box = el('div', { id: 'resume', class: 'callout resume no-tts', hidden: true });
+        if (start) start.prepend(box); else main.prepend(box);
+    }
+    if (!opts || !opts.at) return;
+    const secs = stepSections();
+    const at = secs.findIndex(x => x.id === opts.at);
+    if (at < 1) return;
+    PARTS = { at: opts.at, minutes: opts.minutes || [], one: secs.slice(0, at), two: secs.slice(at) };
+    const label = (k) => `<b>Part ${k}</b> · ${k === 1 ? 'Learn it' : 'Use it'}` + (PARTS.minutes[k - 1] ? ` · about ${PARTS.minutes[k - 1]} min` : '');
+    // outline: two lists under their own headings
+    const ol = $('.toc ol');
+    if (ol) {
+        const lis = [...ol.children];
+        const cut = lis.findIndex(li => li.dataset.step === opts.at);
+        if (cut > 0) {
+            const second = el('ol', { start: String(cut + 1) });
+            lis.slice(cut).forEach(li => second.append(li));
+            const wrap = el('div', { class: 'toc-parts' });
+            ol.replaceWith(wrap);
+            wrap.append(el('div', { class: 'toc-part' }, el('div', { class: 'toc-part-h', html: label(1) }), ol),
+                        el('div', { class: 'toc-part' }, el('div', { class: 'toc-part-h', html: label(2) }), second));
+        }
+    }
+    // the break before Part 2
+    const two = PARTS.two[0];
+    const titles = PARTS.two.map(sectionTitle).map(t => t.replace(/^\d+\s*/, ''));
+    const END = /^(Review deck|Exit check|Capstone check)$/i;
+    const rest = titles.filter(t => !END.test(t));
+    const ends = titles.filter(t => END.test(t)).map(t => 'the ' + t.toLowerCase());
+    const brk = el('div', { class: 'part-break no-tts', id: 'part-2' },
+        el('div', { class: 'part-break-h' }, 'End of Part 1: a good place to stop'),
+        el('p', { class: 'part-break-status' }),
+        el('p', { html: 'Your progress is saved in this browser. When you come back, the <b>Continue</b> button at the top of the class brings you straight here.' }),
+        el('p', { class: 'part-break-next', html: label(2) + ': ' + rest.join(' · ') + (ends.length ? ', then ' + ends.join(' and ') : '') + '.' }));
+    two.before(brk);
+}
+function refreshParts(s) {
+    const box = $('#resume');
+    if (box) {
+        const secs = stepSections();
+        const anyDone = secs.some(sec => sectionActs(sec).some(a => s.has(a)));
+        const next = secs.find(sec => sectionActs(sec).some(a => !s.has(a)));
+        box.hidden = !(anyDone && next);
+        if (anyDone && next) {
+            const inTwo = PARTS && PARTS.two.includes(next);
+            const target = inTwo && next === PARTS.two[0] ? '#part-2' : '#' + next.id;
+            box.innerHTML = '';
+            box.append(el('b', {}, 'Welcome back. '), (inTwo ? 'Part 1 is behind you. ' : ''),
+                el('a', { class: 'btn', href: target }, `▶ Continue: ${inTwo && next === PARTS.two[0] ? 'Part 2, ' : ''}${sectionTitle(next).replace(/^\d+\s*/, '')}`));
+        }
+    }
+    const st = $('.part-break-status');
+    if (st && PARTS) {
+        const acts = PARTS.one.flatMap(sectionActs);
+        const n = acts.filter(a => s.has(a)).length;
+        st.innerHTML = n === acts.length ? `✓ Part 1 complete: all ${n} activities done.`
+            : `Part 1: <b>${n} of ${acts.length}</b> activities done. You can go on anyway, or go back for the ones you skipped (they show “not done yet”).`;
+    }
 }
 /* opts.ttsMaxEgyptian: leave paragraphs with more Egyptian words than this
  * out of the read-aloud (see egyptianWords below).                          */
@@ -200,6 +297,7 @@ function initClass(id, opts = {}) {
     CLASS_ID = id;
     TTS_MAX_EG = opts.ttsMaxEgyptian ?? null;
     render();
+    initParts(opts.parts);
     refreshProgress();
     community();
     readAloud();
@@ -579,9 +677,20 @@ function rebus(host, items, opts) {
  * course home can show "cards due". Boxes 0..5 -> 0,1,3,7,16,35 days.        */
 const BOX_DAYS = [0, 1, 3, 7, 16, 35];
 const today = () => Math.floor(Date.now() / 86400000);
-function srsDue(allCards) {
+/* Cards never seen enter at most NEW_PER_SESSION at a time, in the order given
+ * (a class's own cards come before older ones), so a learner who skipped the
+ * deck for a few classes meets a short session, not a pile of 100+ cards.
+ * Cards already seen are always due on schedule. srsDue(cards, Infinity) = all. */
+const NEW_PER_SESSION = 20;
+function srsSplit(allCards) {
     const srs = store.get('hq-srs', {});
-    return allCards.filter(c => !srs[c.id] || srs[c.id].due <= today());
+    const reviews = allCards.filter(c => srs[c.id] && srs[c.id].due <= today());
+    const fresh = allCards.filter(c => !srs[c.id]);
+    return { reviews, fresh };
+}
+function srsDue(allCards, newCap = NEW_PER_SESSION) {
+    const { reviews, fresh } = srsSplit(allCards);
+    return reviews.concat(fresh.slice(0, newCap));
 }
 function flashcards(host, cards, opts) {
     const body = card(host, opts);
@@ -597,10 +706,12 @@ function flashcards(host, cards, opts) {
     function lobby() {
         body.textContent = '';
         const due = srsDue(all);
+        const waiting = Math.max(0, srsSplit(all).fresh.length - NEW_PER_SESSION);
         const srs = store.get('hq-srs', {});
         const learned = all.filter(c => srs[c.id] && srs[c.id].box >= 2).length;
         body.append(el('div', { class: 'scoreline' }, el('span', { html: `Due now: <b>${due.length}</b>` }), el('span', { html: `Well known: <b>${learned} / ${all.length}</b>` }),
             earlier.length ? el('span', { html: `incl. <b>${earlier.length}</b> from earlier classes` }) : null));
+        if (waiting) body.append(el('p', { class: 'how' }, `New cards come in ${NEW_PER_SESSION} at a time. ${waiting} more wait${waiting > 1 ? '' : 's'} for your next session${waiting > NEW_PER_SESSION ? 's' : ''}.`));
         body.append(el('div', { class: 'row-btns' }, el('button', { class: 'btn', disabled: !due.length, onclick: () => session(due) }, due.length ? `▶ Review ${due.length} card${due.length > 1 ? 's' : ''}` : 'All caught up — come back tomorrow')));
     }
     function session(queue) {
@@ -764,7 +875,9 @@ const MULTI = {
     // Class 15 (imperative and particles). The determinative A7 (weariness) stays out.
     Y3: 'zẖꜣ', N41: 'ḥm',
     // Aa13 is jm in jmj "give!"; it is also read gs in other words, so drop it here if a class uses that value.
-    Aa13: 'jm'
+    Aa13: 'jm',
+    // Class 16 (stative). The pestle U33 (tj in the ending .tj) stays out: hints spell the stative endings out by hand.
+    F42: 'spr'
 };
 /* Split an MdC spelling into readable parts: [{ g: glyphs, v: value | null }].
  * Two reed leaves in a row are read together as y. One-consonant signs that

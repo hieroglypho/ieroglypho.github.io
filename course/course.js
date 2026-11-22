@@ -198,7 +198,7 @@ function refreshProgress() {
     const n = [...registered].filter(a => s.has(a)).length;
     const pct = Math.round(100 * n / total);
     const bar = $('.progress-bar > i'); if (bar) bar.style.width = pct + '%';
-    const lab = $('.progress-inner .pct'); if (lab) lab.textContent = `${n} / ${registered.size} activities`;
+    const lab = $('.progress-inner .pct'); if (lab) lab.innerHTML = `${n} / ${registered.size}<span class="pct-w"> activities</span>`;
     document.querySelectorAll('.activity[data-activity]').forEach(card => {
         const ok = s.has(card.dataset.activity);
         card.classList.toggle('complete', ok);
@@ -291,6 +291,186 @@ function refreshParts(s) {
             : `Part 1: <b>${n} of ${acts.length}</b> activities done. You can go on anyway, or go back for the ones you skipped (they show “not done yet”).`;
     }
 }
+/* ---------------------------------------------------------- catalogue -- *
+ * classes.js (window.HQ_CLASSES) lists every class. A class is "open" (linked)
+ * when it is built and the learner can reach it at this address: free classes
+ * always; members' classes once HQ_CONFIG.membersOpen is true, or in a local
+ * preview. A built members' class that is not open links to the members' page. */
+const CAT = window.HQ_CLASSES || { FREE: 5, TOTAL: 30, MODULES: {}, LIST: [] };
+const PREVIEW = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const MEMBERS_OPEN = !!CFG.membersOpen;
+const classIdOf = (no) => 'class-' + String(no).padStart(2, '0');
+const courseUrl = (path) => new URL(path, COURSE_ROOT).href;
+function classes() {
+    const summary = store.get('hq-classes', {});
+    return CAT.LIST.map(([mod, no, title, blurb, folder]) => {
+        const id = classIdOf(no), s = summary[id], free = no <= CAT.FREE;
+        const open = !!folder && (free || MEMBERS_OPEN || PREVIEW);
+        return { mod, no, id, title, blurb, folder, free, built: !!folder, open,
+            url: open ? courseUrl(folder) : folder ? courseUrl('members/') : null,
+            done: s ? s.done : 0, total: s ? s.total : 0,
+            pct: s && s.total ? Math.round(100 * s.done / s.total) : 0 };
+    });
+}
+/* Short status for lists: ✓ / 40% / 🔒 / soon. */
+function classStatus(c) {
+    if (!c.built) return 'soon';
+    if (!c.open) return '🔒';
+    return c.pct === 100 ? '✓' : c.pct ? c.pct + '%' : '';
+}
+/* Review cards due now across every class met so far (same rule as the decks). */
+function dueCount() {
+    const reg = store.get('hq-srs-cards', {});
+    return srsDue(Object.keys(reg).map(id => ({ id }))).length;
+}
+
+/* The class bar: the sticky progress bar of a class page also carries
+ * ← previous · "Class N of 30" menu (every class, the course home, the
+ * review deck) · next →, and the search button when search is on.          */
+function classBar() {
+    const inner = $('.progress-wrap .progress-inner');
+    if (!inner || $('.cb', inner)) return;
+    const list = classes();
+    const i = list.findIndex(c => c.id === CLASS_ID);
+    if (i < 0) return;
+    const cur = list[i];
+    const step = (c, dir) => {
+        const cls = 'cb-step' + (dir < 0 ? ' cb-prev' : ' cb-next');
+        if (!c) return el('span', { class: cls + ' cb-off', 'aria-hidden': 'true' }, dir < 0 ? '←' : '→');
+        const txt = dir < 0 ? `← ${c.no}` : `${c.no} →`;
+        if (!c.built) return el('span', { class: cls + ' cb-off', title: `Class ${c.no}: ${c.title} (coming soon)` }, txt);
+        return el('a', { class: cls, href: c.url, rel: dir < 0 ? 'prev' : 'next',
+            title: `${dir < 0 ? 'Previous' : 'Next'}: Class ${c.no}, ${c.title}${c.open ? '' : ' (members)'}`,
+            'aria-label': `${dir < 0 ? 'Previous' : 'Next'} class: Class ${c.no}, ${c.title}` }, c.open ? txt : txt.replace(String(c.no), c.no + ' 🔒'));
+    };
+    const pop = el('div', { class: 'cb-pop' });
+    const due = dueCount();
+    pop.append(el('div', { class: 'cb-top' },
+        el('a', { href: courseUrl('./') }, '⌂ Course home'),
+        el('a', { href: courseUrl('review/') }, '🗂 Review deck' + (due ? ` · ${due} due` : ''))));
+    for (const [mod, name] of Object.entries(CAT.MODULES)) {
+        const rows = list.filter(c => c.mod === mod);
+        if (!rows.length) continue;
+        pop.append(el('div', { class: 'cb-mod' }, name),
+            el('ol', { class: 'cb-list' }, rows.map(c => {
+                const st = classStatus(c);
+                const label = [el('span', { class: 'cb-no' }, c.no), el('span', { class: 'cb-t', html: c.title }), st ? el('span', { class: 'cb-st' + (st === '✓' ? ' ok' : '') }, st) : null];
+                const here = c.id === CLASS_ID;
+                return el('li', { class: (here ? 'here' : '') + (c.open ? '' : ' locked') },
+                    c.built && !here ? el('a', { href: c.url, title: c.open ? null : 'Members only' }, label)
+                        : el('span', { 'aria-current': here ? 'page' : null }, label));
+            })));
+    }
+    const menu = el('details', { class: 'cb-menu' },
+        el('summary', { title: 'All classes' }, el('span', { class: 'cb-long' }, `Class ${cur.no} of ${CAT.TOTAL}`), el('span', { class: 'cb-short' }, `Class ${cur.no}`)), pop);
+    const close = () => { menu.open = false; };
+    document.addEventListener('click', e => { if (menu.open && !menu.contains(e.target)) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.open) { close(); menu.querySelector('summary').focus(); } });
+    menu.addEventListener('toggle', () => {
+        if (!menu.open) return;
+        // phones: the list spans the screen, just under the bar (wherever the bar is now)
+        const narrow = innerWidth <= 600, r = menu.getBoundingClientRect();
+        // open downwards, or upwards when the bar is low on the screen and there is more room above
+        const below = innerHeight - r.bottom - 18, above = r.top - 18, up = below < 300 && above > below;
+        const room = Math.max(160, Math.min(560, up ? above : below));
+        pop.style.maxHeight = room + 'px';
+        pop.style.top = narrow ? (up ? Math.max(12, r.top - 6 - Math.min(room, pop.scrollHeight)) : r.bottom + 6) + 'px' : (up ? 'auto' : '');
+        pop.style.bottom = !narrow && up ? 'calc(100% + 6px)' : '';
+        // wider screens: hang the list under the button, shifted to stay inside the window
+        pop.style.left = '';
+        if (!narrow) {
+            const p = pop.getBoundingClientRect();
+            const dx = Math.max(12 - p.left, Math.min(0, innerWidth - 12 - p.right));
+            pop.style.left = dx + 'px';
+        }
+        // show the current class in the middle of the list (scrolls the list, never the page)
+        const h = $('li.here', pop);
+        if (h) pop.scrollTop = Math.max(0, h.offsetTop - pop.clientHeight / 2 + h.offsetHeight / 2);
+    });
+    const nav = el('nav', { class: 'cb', 'aria-label': 'Classes' }, step(list[i - 1], -1), menu, step(list[i + 1], 1));
+    inner.prepend(nav);
+    const lab = inner.querySelector(':scope > span:not(.pct)');
+    if (lab && /progress/i.test(lab.textContent)) lab.classList.add('cb-label');
+    searchButton(inner);
+}
+
+/* A small # after each section heading copies a link to that section
+ * (handy for asking about it on Discord). Headings are not read aloud.      */
+function sectionLinks() {
+    document.querySelectorAll('main section.step[id] > h2').forEach(h => {
+        if ($('.sec-link', h)) return;
+        const id = h.parentElement.id;
+        h.append(el('button', { class: 'sec-link', type: 'button', title: 'Copy a link to this section', 'aria-label': 'Copy a link to this section',
+            onclick: (e) => {
+                const b = e.currentTarget, url = location.origin + location.pathname + '#' + id;
+                try { history.replaceState(null, '', '#' + id); } catch (_) { /* file:// */ }
+                const ok = () => { b.classList.add('copied'); b.textContent = '✓ link copied'; setTimeout(() => { b.classList.remove('copied'); b.textContent = '#'; }, 1400); };
+                if (navigator.clipboard) navigator.clipboard.writeText(url).then(ok, () => prompt('Copy this link:', url));
+                else prompt('Copy this link:', url);
+            } }, '#'));
+    });
+}
+
+/* The finish banner's main button, when it has data-next: "Continue to
+ * Class N" once the next class is built and open here, otherwise "Back to
+ * the course". So a new class needs no edit to the previous one.            */
+function finishNext() {
+    const a = $('#finish a[data-next]');
+    if (!a) return;
+    const list = classes(), i = list.findIndex(c => c.id === CLASS_ID);
+    const next = i >= 0 ? list[i + 1] : null;
+    if (next && next.open) { a.href = next.url; a.textContent = `Continue to Class ${next.no} →`; }
+    else { a.href = courseUrl('./'); a.textContent = 'Back to the course →'; }
+}
+
+/* ------------------------------------------------------------- search -- *
+ * Quick search over every class (words, forms, topics, signs): search.js +
+ * the index files in search/ (tools/build-search.mjs). Built but not shown
+ * yet: it appears only with HQ_CONFIG.search = true, or in a local preview
+ * after opening any course page with ?search (?search=0 turns it off).
+ * search.js is loaded on first use, so pages without search never load it. */
+function searchEnabled() {
+    if (CFG.search === true) return true;
+    if (!PREVIEW) return false;
+    const m = location.search.match(/[?&]search(=([01]))?(&|$)/);
+    if (m) { try { m[2] === '0' ? sessionStorage.removeItem('hq-dev-search') : sessionStorage.setItem('hq-dev-search', '1'); } catch (_) { /* ignore */ } }
+    try { return sessionStorage.getItem('hq-dev-search') === '1'; } catch (_) { return false; }
+}
+let searchLoading = null;
+function openSearch(q) {
+    if (window.HQ && HQ.searchUI) return HQ.searchUI.open(q);
+    searchLoading = searchLoading || new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = courseUrl('search.js'); s.onload = res; s.onerror = rej;
+        document.head.append(s);
+    });
+    searchLoading.then(() => HQ.searchUI.open(q), () => { searchLoading = null; });
+}
+let searchKeys = false;
+function searchButton(host) {
+    if (!searchEnabled() || !host || $('.search-btn', host)) return;
+    host.append(el('button', { class: 'btn ghost search-btn', type: 'button', title: 'Search the course ( / )', 'aria-label': 'Search the course',
+        onclick: () => openSearch() }, '🔍', el('span', { class: 'search-btn-t' }, ' Search')));
+    if (searchKeys) return;
+    searchKeys = true;
+    document.addEventListener('keydown', e => {
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+        e.preventDefault(); openSearch();
+    });
+}
+
+/* Pages that are not classes (course home, review deck) call this instead of
+ * initClass: drawing, Discord boxes, the counter, and the search button.    */
+let PAGE_ID = null;
+function initPage(id, opts = {}) {
+    PAGE_ID = id;
+    render();
+    community();
+    if (opts.searchHost) searchButton(opts.searchHost);
+    track('open');
+}
+
 /* opts.ttsMaxEgyptian: leave paragraphs with more Egyptian words than this
  * out of the read-aloud (see egyptianWords below).                          */
 function initClass(id, opts = {}) {
@@ -299,6 +479,9 @@ function initClass(id, opts = {}) {
     render();
     initParts(opts.parts);
     refreshProgress();
+    classBar();
+    sectionLinks();
+    finishNext();
     community();
     readAloud();
     track('open');
@@ -877,7 +1060,11 @@ const MULTI = {
     // Aa13 is jm in jmj "give!"; it is also read gs in other words, so drop it here if a class uses that value.
     Aa13: 'jm',
     // Class 16 (stative). The pestle U33 (tj in the ending .tj) stays out: hints spell the stative endings out by hand.
-    F42: 'spr'
+    F42: 'spr',
+    // Class 19 (sḏm.f II). The papyrus clump M16 in the particle ḥꜣ.
+    M16: 'ḥꜣ',
+    // Class 21 (other suffix forms). The flax bundle M36 in the preposition ḏr "before".
+    M36: 'ḏr'
 };
 /* Split an MdC spelling into readable parts: [{ g: glyphs, v: value | null }].
  * Two reed leaves in a row are read together as y. One-consonant signs that
@@ -915,6 +1102,7 @@ function match(host, pairs, opts) {
     const maxMiss = opts.maxMiss ?? 2;
     const bestKey = 'hq-best-' + opts.id;
     const keyOf = (p) => p.tr || p.label;
+    if (opts.sentences) host.classList.add('sentence-match');   // whole sentences: smaller signs that wrap
     function play() {
         body.textContent = '';
         let misses = 0, left = pairs.length, sel = null;
@@ -1222,6 +1410,51 @@ function compose(host, items, opts) {
     start();
 }
 
+/* ------------------------------------------------------------- spot -- *
+ * Find the scribe's mistake. The learner sees what the scribe meant (English)
+ * and the sentence as the scribe wrote it, one button per word, and taps the
+ * word that is wrong. items: [{ en, words: [MdC per word], bad: index of the
+ * wrong word, fix: MdC of the right word, tr: the correct transliteration,
+ * why: html }]. One try per sentence; opts.pass (default .7) right.         */
+function spot(host, items, opts) {
+    const body = card(host, opts);
+    const pass = opts.pass ?? 0.7;
+    function start() {
+        const list = opts.keepOrder ? items.slice() : shuffle(items);
+        let i = 0, score = 0;
+        function show() {
+            body.textContent = '';
+            if (i >= list.length) {
+                const ok = score >= Math.ceil(pass * list.length);
+                if (ok) done(opts.id);
+                body.append(el('p', { html: `<b>${score} / ${list.length}</b> mistakes found. ${ok ? 'A scribe’s teacher would hire you.' : `You need ${Math.ceil(pass * list.length)}. Go again: the sentences come back in a new order.`}` }));
+                body.append(el('div', { class: 'row-btns' }, el('button', { class: 'btn ghost', onclick: start }, '↻ Again')));
+                return;
+            }
+            const it = list[i];
+            body.append(el('div', { class: 'qcount' }, `Sentence ${i + 1} of ${list.length} · score ${score}`));
+            body.append(el('p', { class: 'spell-target', html: `The scribe meant: <b>“${it.en}”</b>` }));
+            const row = el('div', { class: 'spot-row' });
+            const msg = el('div');
+            const btns = it.words.map((w, k) => el('button', { type: 'button', class: 'spot-word', 'aria-label': `word ${k + 1}`, onclick: () => {
+                const ok = k === it.bad;
+                if (ok) score++;
+                btns.forEach(b => b.disabled = true);
+                btns[k].classList.add(ok ? 'right' : 'wrong');
+                if (!ok) btns[it.bad].classList.add('right');
+                const fixed = el('div', { class: 'papyrus spell-out compose-out', style: 'margin-top:8px' },
+                    it.words.map((x, j) => el('span', { class: 'compose-word' + (j === it.bad ? ' spot-fixed' : '') }, hg(j === it.bad ? it.fix : x, { cls: 'hg-med' }))));
+                msg.replaceChildren(feedback(ok, `${ok ? '✓' : '✗ The slip is the word marked green.'} ${it.why} Corrected: <span class="tr">${it.tr}</span>`), fixed,
+                    el('div', { class: 'row-btns' }, el('button', { class: 'btn', onclick: () => { i++; show(); } }, i + 1 < list.length ? 'Next →' : 'See score')));
+            } }, hg(w, { cls: 'hg-med' })));
+            row.append(...btns);
+            body.append(el('div', { class: 'papyrus' }, row), el('p', { html: 'Tap the word the scribe got wrong.' }), msg);
+        }
+        show();
+    }
+    start();
+}
+
 
 /* ----------------------------------------------------------- tracking -- *
  * Anonymous usage counters: which classes are opened, which activities get
@@ -1233,7 +1466,7 @@ function track(event, data = {}) {
     if (!url) return;
     if (navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
     if (location.protocol !== 'https:' || location.hostname === 'localhost') return;   // local preview
-    const body = JSON.stringify({ e: event, c: CLASS_ID || 'home', ...data });
+    const body = JSON.stringify({ e: event, c: CLASS_ID || PAGE_ID || 'home', ...data });
     try {
         if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }));
         else fetch(url, { method: 'POST', body, keepalive: true, mode: 'no-cors' });
@@ -1637,7 +1870,8 @@ document.querySelectorAll('[data-early-access]').forEach(n => {
 });
 
 /* --------------------------------------------------------------- API -- */
-window.HQ = { store, render, hg, glyph, glyphs, allen, normTr, normKey, trMatches, initClass, done,
+window.HQ = { store, render, hg, glyph, glyphs, allen, normTr, normKey, trMatches, initClass, initPage, done,
+    classes, classStatus, dueCount, courseUrl, openSearch, searchEnabled, PREVIEW, MEMBERS_OPEN, CAT,
     quiz, classify, sprint, direction, order, decipher, rebus, flashcards, mission,
-    nameCartouche, match, transcribe, spell, worked, compose, soundParts, srsDue, EDITOR_URL, el, track, community, sayTr, ttsScript, ttsKey, egyptianWords, alphabet, ALPHABET };
+    nameCartouche, match, transcribe, spell, worked, compose, spot, soundParts, srsDue, EDITOR_URL, el, track, community, sayTr, ttsScript, ttsKey, egyptianWords, alphabet, ALPHABET };
 })();

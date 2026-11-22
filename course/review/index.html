@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Review Deck · ΙΕΡΟΓΛΥΦΩ Course</title>
+<meta name="description" content="Daily spaced-repetition review of every hieroglyphic sign and word met in the course, in one deck.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://www.hieroglyphica.org/course/review/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../course.css">
+</head>
+<body>
+<nav class="nav-tabs">
+    <a href="/about.html">ABOUT</a>
+    <a href="/tutorials.html">TUTORIALS</a>
+    <a class="active" href="../">COURSE<span class="nav-new">NEW</span></a>
+    <a class="nav-brand" href="/index.html">HOME</a>
+    <a href="/research.html">RESEARCH</a>
+    <a href="/dictionary.html">DICTIONARY</a>
+    <a class="nav-editor" href="https://www.hieroglyphica.org/ΙΕΡΟΓΛΥΦΩ/">✍ ΙΕΡΟΓΛΥΦΩ</a>
+</nav>
+
+<header class="class-hero">
+    <div class="kicker">Course reference</div>
+    <h1>Your Review Deck</h1>
+    <p>Every sign and word from the classes you've opened, in one deck. A few minutes a day brings each card back just before you'd forget it.</p>
+    <div class="hero-glyphs"><span data-m="Y1-S34-N35:Aa1" data-label="papyrus roll"></span></div>
+</header>
+
+<main>
+<div id="search-host" class="search-host"></div>
+
+<section class="step" id="deck">
+    <h2>Today's session</h2>
+    <p class="lead">Look at the front, say the sound and meaning out loud, then flip. Be honest with yourself: cards you find hard come back sooner.</p>
+    <div id="empty" class="callout tip" hidden>
+        <b>Your deck is empty.</b> Cards join it when you open a class, starting with <a href="../class-01/">Class 1</a>. Each class adds the signs and words it teaches.
+    </div>
+    <div id="act-review"></div>
+    <p class="cite" style="white-space:normal">New cards come in 20 at a time, so a long break never leaves you with a mountain. Your deck is saved in this browser only.</p>
+</section>
+
+<section class="step" id="by-class">
+    <h2>By class</h2>
+    <p class="lead">How well you know each class's cards. "Well known" means you've got a card right at least twice in a row, days apart.</p>
+    <div class="activity"><div class="tbl-scroll"><table class="review-stats" id="stats"></table></div></div>
+</section>
+
+<section class="step" id="words">
+    <h2>All your cards</h2>
+    <p class="lead">Every card in your deck, class by class, to look something up.</p>
+    <div id="wordlist"></div>
+</section>
+
+<div class="community" data-discord hidden>
+    <p><b>💬 Study with others.</b> Stuck on a card? Ask in <b>#help</b>.</p>
+    <a class="btn" data-discord-link>Join the Discord →</a>
+</div>
+</main>
+
+<footer class="site">© 2024–2026 ΙΕΡΟΓΛΥΦΩ · <a href="/TOS.html">Terms &amp; Privacy</a> · <a href="https://www.hieroglyphica.org">hieroglyphica.org</a></footer>
+
+<script src="../config.js"></script>
+<script src="../signs.js"></script>
+<script src="../classes.js"></script>
+<script src="../course.js"></script>
+<script>
+(function () {
+const H = HQ, el = H.el;
+const reg = H.store.get('hq-srs-cards', {});
+const ids = Object.keys(reg);
+const byClass = new Map();          // class-NN -> [card]
+for (const id of ids) {
+    const c = { id, ...reg[id] };
+    if (!byClass.has(c.cls)) byClass.set(c.cls, []);
+    byClass.get(c.cls).push(c);
+}
+const LIST = H.classes();
+const known = LIST.filter(c => byClass.has(c.id));
+
+// The deck: every registered card (the class decks' carryOver, without a class of its own).
+if (!ids.length) document.getElementById('empty').hidden = false;
+else H.flashcards(document.getElementById('act-review'), [], { id: 'review', classId: 'review', carryOver: true,
+    tag: 'Drill', tagClass: 'drill', title: `Review deck · ${known.length === 1 ? 'Class ' + known[0].no : known.length + ' classes'}` });
+
+// By class
+function stats() {
+    const srs = H.store.get('hq-srs', {});
+    const today = Math.floor(Date.now() / 86400000);
+    const t = document.getElementById('stats');
+    t.textContent = '';
+    t.append(el('tr', {}, el('th', {}, 'Class'), el('th', { class: 'n' }, 'Cards'), el('th', { class: 'n' }, 'Well known'), el('th', { class: 'n' }, 'Due')));
+    if (!known.length) { t.append(el('tr', {}, el('td', { colspan: 4 }, 'No cards yet.'))); return; }
+    for (const c of known) {
+        const cards = byClass.get(c.id);
+        const wk = cards.filter(x => srs[x.id] && srs[x.id].box >= 2).length;
+        const due = cards.filter(x => srs[x.id] && srs[x.id].due <= today).length;
+        const fresh = cards.filter(x => !srs[x.id]).length;
+        t.append(el('tr', {},
+            el('td', {}, c.open ? el('a', { href: c.url, html: `${c.no} · ${c.title}` }) : el('span', { html: `${c.no} · ${c.title}` })),
+            el('td', { class: 'n' }, cards.length),
+            el('td', { class: 'n' }, wk),
+            el('td', { class: 'n', title: fresh ? `${fresh} not seen yet` : null }, due + (fresh ? ` + ${fresh} new` : ''))));
+    }
+}
+stats();
+document.getElementById('act-review').addEventListener('click', e => { if (e.target.closest('button')) setTimeout(stats, 0); });
+
+// All cards, class by class (newest class open)
+const wl = document.getElementById('wordlist');
+if (!known.length) wl.append(el('p', { class: 'how' }, 'Nothing here yet.'));
+known.slice().reverse().forEach((c, i) => {
+    const d = el('details', { class: 'wl-class', open: i === 0 },
+        el('summary', { html: `Class ${c.no} · ${c.title} <span class="wl-count">${byClass.get(c.id).length} card${byClass.get(c.id).length === 1 ? '' : 's'}</span>` }),
+        el('ul', { class: 'wordlist' }, byClass.get(c.id).map(x => el('li', {},
+            el('span', { class: 'wl-g' }, H.hg(x.m)),
+            el('span', {}, el('span', { class: 'tr', html: x.tr }), ' ', el('span', { html: x.name })),
+            x.note ? el('span', { class: 'wl-n', html: x.note }) : null))));
+    wl.append(d);
+});
+
+H.initPage('review', { searchHost: document.getElementById('search-host') });
+})();
+</script>
+</body>
+</html>

@@ -30,5 +30,10 @@ window.HQ_CONFIG = {
     // membersOpen is false, the course home, the end of Class 5 and the members' page ask for an
     // email address to tell when the members' course opens. Turn on only once the Worker's
     // /course/api/early route is deployed with RESEND_API_KEY and MAIL_FROM.
-    earlyAccess: true
+    earlyAccess: true,
+
+    // Quick search (search.js; index built by tools/build-search.mjs). Built but not shown yet:
+    // keep false until it is launched. To try it in a local preview, open any course page with
+    // ?search (?search=0 turns it off again for that tab).
+    search: false
 };

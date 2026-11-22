@@ -31,6 +31,7 @@
 </header>
 
 <main>
+<div id="search-host" class="search-host"></div>
 <section class="step" id="today">
     <div class="activity" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
         <div style="flex:1;min-width:220px">
@@ -62,6 +63,13 @@
     </div>
 </section>
 
+<section class="step" id="review">
+    <div class="activity" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <span class="hg-med" data-m="Y1"></span>
+        <div style="flex:1;min-width:200px"><h3 style="margin:0">Your review deck</h3><p style="margin:2px 0 0" class="lead" id="review-text">Your cards collect here as you go through the classes.</p></div>
+        <a class="btn ghost" href="review/">Open the deck →</a>
+    </div>
+</section>
 <section class="step" id="classes">
     <h2>Classes</h2>
     <p class="lead">Module A (the script) is free. <span data-members-soon>The rest of the course is coming soon for members.</span><span data-members-open hidden>Classes 6 to 30 are for members: <a href="members/">unlock the full course</a>, or <a href="members/#signin">sign in</a> if you already have.</span></p>
@@ -94,73 +102,46 @@
 
 <script src="config.js"></script>
 <script src="signs.js"></script>
+<script src="classes.js"></script>
 <script src="course.js"></script>
 <script>
 (function () {
 const H = HQ, el = H.el;
-// [module, no, title, blurb, href or null]
-const CLASSES = [
-    ['a', 1, 'Read Like Champollion', 'How the script works · direction & groups · crack four royal cartouches', 'class-01/'],
-    ['a', 2, 'The Egyptian “Alphabet” I', 'The first twelve one-consonant signs · transliteration · reading by sound · a royal family at Saqqara', 'class-02/'],
-    ['a', 3, 'The Egyptian “Alphabet” II', 'The other thirteen one-consonant signs · the four h’s · dictionary order · phonetic complements · Khufu and Tutankhamun', 'class-03/'],
-    ['a', 4, 'Two- and Three-Consonant Signs', 'Eighteen of the most common big signs · word-sign or sound-sign · how a spelling is built · Imhotep, Memphis and Pharaoh', 'class-04/'],
-    ['a', 5, 'Kings and Gods', 'Determinatives · plurals and gods-first spellings · the five royal names · capstone: read the Abydos king list', 'class-05/'],
-    ['b', 6, 'Nouns', 'Masculine and feminine · plural and dual · no “the”, no “and” · two ways to say “of” · the titles of a queen', 'class-06/'],
-    ['b', 7, 'Pronouns', 'Suffixes that say whose · the invisible “my” · pronouns that stand alone · “this” and “that” · His Majesty and a family stela', 'class-07/'],
-    ['b', 8, 'Adjectives', 'After the noun, with its endings · “every” or “lord” · good of face, true of voice · nisbes · the great god and the great royal wife', 'class-08/'],
-    ['b', 9, 'Prepositions and the Offering Formula', 'In, to, on, with · suffixes after prepositions · “who is in”: titles and epithets · the offering formula · a prayer for Imhotep', 'class-09/'],
-    ['b', 10, 'Sentences Without Verbs I', 'No word for “is” · he is good, how good it is! · I am, you are · it is: pw · names, families and “who?” · Imhotep speaks', 'class-10/'],
-    ['b', 11, 'Sentences Without Verbs II', 'Where things are: jw, “look!” and “not” · having and not having · numerals from 1 to a million · reading a date · the steward’s report', 'class-11/'],
-    ['b', 12, 'Capstone: an Offering Stela', 'Saying no with nj … js · how a stela is laid out · the real stela of the steward Mentuwoser, read on the stone · a whole offering stela, top to bottom · Module B capstone check', 'class-12/'],
-    ['c', 13, 'Verbs and the Infinitive', 'What a verb does · roots, weak verbs and causatives · the infinitive and its t · who does it, and to what · captions, spell titles and “in order to” · Imhotep goes to Abydos', 'class-13/'], ['c', 14, 'The Pseudo-verbal Construction', 'An action where the place was: he is listening · ḥr, r and m: happening, still to come, on the way · “then” in stories · “one”, “not” and “are you?” · Imhotep at the feast of Abydos', 'class-14/'],
-    ['c', 15, 'Commands and Particles', 'Giving orders: listen!, come!, give me water! · who is told, and what · “don’t” with m · particles for perhaps, surely, but and now · Imhotep teaches his son to write', 'class-15/'], ['c', 16, 'The Stative', 'States, not actions: I have arrived, I am well, your name is written · the endings .kw and .tj · subject first · welcome! and farewell! · the royal names that are statives · Imhotep’s letter home from Abydos', 'class-16/'],
-    ['c', 17, 'The sḏm.n.f', 'Actions done: I have seen the god, then he found his son · the n after the verb · verb first, subject after · state or deed? · has done, did, had done · the gods’ gift: I have given you all life · nj sḏm.n.f “cannot” · Imhotep comes home from Abydos', 'class-17/'], ['c', 18, 'The sḏm.f I', '', null], ['c', 19, 'The sḏm.f II', '', null],
-    ['c', 20, 'Passives and Other Suffix Forms', '', null], ['c', 21, 'Checkpoint: a Narrative', '', null],
-    ['d', 22, 'Adverb Clauses', '', null], ['d', 23, 'Noun Clauses', '', null], ['d', 24, 'Relative Clauses', '', null],
-    ['d', 25, 'Active Participles', '', null], ['d', 26, 'Passive Participles', '', null], ['d', 27, 'Emphatic Sentences', '', null],
-    ['d', 28, 'Reading: The Shipwrecked Sailor', '', null], ['d', 29, 'Reading: Sinuhe', '', null], ['d', 30, 'Reading: Stelae and Hymns', '', null]
-];
-const FREE = 5;
+// The class list lives in classes.js (shared with the class bar, review page and search).
 // A members' class is linked only where it can be opened: once the paid unlock serves it at this
 // address (HQ_CONFIG.membersOpen) and in a local preview. Until then it is listed without a link,
 // because the public site does not carry the members' classes.
-const PREVIEW = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-const MEMBERS_OPEN = !!(window.HQ_CONFIG && window.HQ_CONFIG.membersOpen);
-const hrefOf = (c) => (c[1] <= FREE || MEMBERS_OPEN || PREVIEW) ? c[4] : null;
-const summary = H.store.get('hq-classes', {});
-for (const c of CLASSES) {
-    const [mod, no, title, blurb] = c, href = hrefOf(c);
-    const id = 'class-' + String(no).padStart(2, '0');
-    const s = summary[id];
-    const pct = s && s.total ? Math.round(100 * s.done / s.total) : 0;
-    const badge = no <= FREE
+const LIST = H.classes();
+for (const c of LIST) {
+    const href = c.open ? c.folder : null, pct = c.pct;
+    const badge = c.free
         ? (href ? (pct === 100 ? '✓ done' : pct ? pct + '%' : 'free') : 'free · soon')
-        : (href ? (pct === 100 ? '✓ done' : pct ? pct + '%' : MEMBERS_OPEN ? 'members' : 'members · preview') : 'members');
+        : (href ? (pct === 100 ? '✓ done' : pct ? pct + '%' : H.MEMBERS_OPEN ? 'members' : 'members · preview') : 'members');
     const li = el('li', { class: href ? '' : 'soon' },
-        el('div', { class: 'no' }, no),
-        el('div', {}, el('h3', {}, href ? el('a', { href }, title) : title), blurb ? el('p', {}, blurb) : null,
+        el('div', { class: 'no' }, c.no),
+        el('div', {}, el('h3', {}, href ? el('a', { href, html: c.title }) : el('span', { html: c.title })), c.blurb ? el('p', {}, c.blurb) : null,
             href && pct ? el('div', { class: 'mini-bar' }, el('i', { style: `width:${pct}%` })) : null),
-        el('span', { class: 'badge' + (no > FREE ? ' locked' : '') }, badge));
-    document.getElementById('list-' + mod).append(li);
+        el('span', { class: 'badge' + (c.free ? '' : ' locked') }, badge));
+    document.getElementById('list-' + c.mod).append(li);
 }
-
 // Today: cards due across all classes + next class
-const cards = H.store.get('hq-srs-cards', {});
-const due = H.srsDue(Object.keys(cards).map(id => ({ id }))).length;
-const next = CLASSES.find(c => {
-    if (!hrefOf(c)) return false;
-    const s = summary['class-' + String(c[1]).padStart(2, '0')];
-    return !s || s.done < s.total;
-});
-if (Object.keys(summary).length) {
+const due = H.dueCount();
+const next = LIST.find(c => c.open && (!c.total || c.done < c.total));
+const started = LIST.some(c => c.total);
+const review = document.getElementById('review-text');
+if (review) review.textContent = due ? `${due} card${due > 1 ? 's' : ''} due now (about ${Math.max(1, Math.round(due * 0.25))} min).` : started ? 'Nothing due right now: nice.' : 'Your cards collect here as you go through the classes.';
+if (started) {
     const parts = [];
     if (due) parts.push(`<b>${due}</b> review card${due > 1 ? 's' : ''} due (about ${Math.max(1, Math.round(due * 0.25))} min)`);
     else parts.push('No review cards due: nice.');
-    if (next) parts.push(`Continue <b>Class ${next[1]}: ${next[2]}</b>`);
+    if (next) parts.push(`Continue <b>Class ${next.no}: ${next.title}</b>`);
     document.getElementById('today-text').innerHTML = parts.join(' · ');
     const btn = document.getElementById('today-btn');
-    if (next) { btn.href = hrefOf(next) + (due ? '#s9' : ''); btn.textContent = due ? 'Review now →' : `Continue Class ${next[1]} →`; }
-    else { btn.href = 'class-01/#s9'; btn.textContent = 'Review deck →'; }
+    if (due) { btn.href = 'review/'; btn.textContent = 'Review now →'; }
+    else if (next) { btn.href = next.folder; btn.textContent = `Continue Class ${next.no} →`; }
+    else { btn.href = 'review/'; btn.textContent = 'Review deck →'; }
+    if (due && next) document.getElementById('today').querySelector('.activity').append(
+        el('a', { class: 'btn ghost', href: next.folder }, `Class ${next.no} →`));
 }
 
 // Portfolio
@@ -171,9 +152,7 @@ list.forEach(p => ul.append(el('li', {},
     el('span', {}, '📜'), el('a', { href: p.url, target: '_blank', rel: 'noopener' }, p.title),
     el('span', { class: 'cite' }, new Date(p.at).toLocaleDateString()))));
 
-H.render();
-H.community();
-H.track('open');
+H.initPage('home', { searchHost: document.getElementById('search-host') });
 })();
 </script>
 </body>

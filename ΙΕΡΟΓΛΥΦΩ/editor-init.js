@@ -497,10 +497,17 @@ updateDivWidth();
 // Update on window resize
 
 window.addEventListener('load', () => {
-    // Skip the "maximize your window" nag in drawer mode — a phone/tablet can't
-    // maximize and the message is desktop-only advice.
-    if (typeof isDrawerMode === 'function' && isDrawerMode()) return;
-    if (window.outerWidth < screen.availWidth) alert('Please maximize your window for the best experience');
+    const notMaximized = window.outerWidth < screen.availWidth;
+    if (typeof isDrawerMode === 'function' && isDrawerMode()) {
+        // A tablet can't maximize, so no nag there. But a narrow desktop window
+        // (mouse + hover) also lands in drawer mode, where the palette is hidden
+        // behind the toggle button: tell the user, or the canvas looks empty.
+        const desktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        if (desktop) alert((notMaximized ? 'Please maximize your window for the best experience.\n\n' : '') +
+            'In a narrow window the sign palette is hidden: open it with the button at the top right.');
+        return;
+    }
+    if (notMaximized) alert('Please maximize your window for the best experience');
 });
 
 // --- Off-canvas palette drawer (Track 1) -----------------------------------

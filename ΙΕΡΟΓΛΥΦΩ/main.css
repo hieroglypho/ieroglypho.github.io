@@ -523,6 +523,10 @@ a.tla-link:focus-visible {
     /* Allow it to take remaining space */
     max-width: 100%;
     /* Adjust based on the space needed for "Gardiner:" label */
+    /* At most three lines: an imported text has thousands of names, which
+       would otherwise cover the canvas. Scrolls beyond that. */
+    max-height: 4.2em;
+    overflow-y: auto;
 }
 
 #searchContainer {
@@ -1821,3 +1825,28 @@ time {
 }
 .photo-hint { transition: opacity 0.15s ease; }
 .photo-hint.faded { opacity: 0.1; }
+
+/* JSesh import report (jsesh-import.js): what was opened and what could not be shown. */
+.import-report {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 3000;
+    max-width: min(460px, calc(100vw - 32px));
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.88);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+.import-report p { margin: 0 0 8px; }
+.import-report button {
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #fff;
+    padding: 3px 12px;
+    border-radius: 4px;
+}

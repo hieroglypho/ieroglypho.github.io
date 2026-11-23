@@ -312,6 +312,7 @@
                         <li>Gardiner codes separated by <code>-</code>, space or comma — e.g. <code>A1-D21-N35</code>.</li>
                         <li>A run of raw hieroglyph characters — e.g. <code>𓂀𓏏𓊵</code> — pasted from any text.</li>
                         <li>MdC sound letters, where <strong>case matters</strong> as in JSesh: <code>A</code> = 𓄿 ꜣ, <code>a</code> = 𓂝 ꜥ; <code>h</code> = 𓉔, <code>H</code> = 𓎛 ḥ; <code>x</code> = 𓐍 ḫ, <code>X</code> = 𓄡 ẖ; <code>s</code> = 𓋴, <code>S</code> = 𓈙 š; <code>t</code> = 𓏏, <code>T</code> = 𓍿 ṯ; <code>d</code> = 𓂧, <code>D</code> = 𓆓 ḏ; also <code>i y w b p f m n r l z q k g</code>. Gardiner codes ignore case (<code>aa1</code> = <code>Aa1</code>).</li>
+                        <li>The longer MdC sound codes, as in JSesh: <code>ra</code> = 𓇳, <code>nTr</code> = 𓊹, <code>anx</code> = 𓋹, <code>Hm</code> = 𓍛 …, and JSesh's codes for variant signs (<code>M1A</code>, <code>V23A</code>), which also reach the Extended-A signs.</li>
                         <li>A mix of these.</li>
                     </ul>
                 </li>
@@ -362,12 +363,24 @@
                 </tbody>
             </table>
 
-            <h3>Enclosures</h3>
-            <p>Wrap a span in a drawn frame. <em>Royal-name <strong>cartouches</strong>
-            are made with the toolbar tool, not here.</em></p>
+            <h3>Sign modifiers</h3>
             <table class="cheat">
                 <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
                 <tbody>
+                    <tr><td class="sym"><code>\</code></td><td>Mirror the sign</td><td class="ex"><code>A1\</code></td></tr>
+                    <tr><td class="sym"><code>\R90</code></td><td>Turn it (90, 180, 270 degrees)</td><td class="ex"><code>O29\R90</code></td></tr>
+                    <tr><td class="sym"><code>\70</code></td><td>Size, in percent</td><td class="ex"><code>N35\50</code></td></tr>
+                    <tr><td class="sym"><code>.</code>&nbsp;/&nbsp;<code>..</code></td><td>Blank space: half / whole quadrat</td><td class="ex"><code>A1-..-N35</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>Enclosures</h3>
+            <p>Wrap a span in a drawn frame. (The toolbar's <strong>Cartouche</strong>
+            tool still draws a free-standing one you can resize.)</p>
+            <table class="cheat">
+                <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td class="sym"><code>&lt; … &gt;</code></td><td>Cartouche</td><td class="ex"><code>&lt;-ra-mn-xpr-&gt;</code></td></tr>
                     <tr><td class="sym"><code>&lt;S … &gt;S</code></td><td>Serekh (paneled façade)</td><td class="ex"><code>&lt;S-G5&gt;S</code></td></tr>
                     <tr><td class="sym"><code>&lt;H … &gt;H</code></td><td>Hwt (enclosure)</td><td class="ex"><code>&lt;H-O1&gt;H</code></td></tr>
                     <tr><td class="sym"><code>&lt;F … &gt;F</code></td><td>Plain frame</td><td class="ex"><code>&lt;F-A1&gt;F</code></td></tr>
@@ -539,6 +552,7 @@
                 <li><strong>Save as JSON</strong>: full workspace snapshot (canvas + Gardiner strip).</li>
                 <li><strong>Save as PDF</strong>: exports a US-Letter page. With the <strong>Page guide on</strong>, the PDF is <em>exactly the page you see</em> — glyphs keep their positions at 1:1 (turn the guide on, lay out within it, then export). With the guide <strong>off</strong>, the export crops tightly to your glyphs and centres them, scaling down only if the work is larger than the page (you'll see a "scaled to N%" note). The PDF library loads lazily on first click.</li>
                 <li><strong>Open JSON…</strong>: load a previously saved workspace.</li>
+                <li><strong>Open JSesh file (.gly)…</strong>: lay a text written in <a href="https://jsesh.qenherkhopeshef.org/" target="_blank" rel="noopener">JSesh</a> out on the canvas, below anything already there (or drop the <code>.gly</code> file on the canvas). Stacks, ligatures, cartouches, colour, shading, brackets, mirrored, turned and resized signs come across; the file's title and notes become a text block above the signs. A text written in columns or right to left is laid out in rows, left to right. Signs with no Unicode character (JSesh's own additions) show as a dashed box, and a note lists their codes. <kbd>Ctrl</kbd>+<kbd>Z</kbd> takes the whole text back off. Sign codes come from Unicode's sign database (Unikemet) and JSesh's Manuel de Codage table (Serge Rosmorduc, public domain).</li>
                 <li><strong>Gardiner signs (Wiki)</strong>: opens the Wikipedia sign list in a new tab.</li>
                 <li><strong>Right-click</strong> the canvas to use the browser's native save / copy on the rendered image.</li>
             </ul>

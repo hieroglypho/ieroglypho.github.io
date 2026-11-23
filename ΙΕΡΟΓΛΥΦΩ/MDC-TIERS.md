@@ -35,7 +35,7 @@ Issues found in that summary, worth remembering:
 |------|-------|-------------------|------------|--------|
 | **1** | Core spatial layout | `*` (side-by-side), `:` (stacked), `-` (cadrat separator), `( )` (grouping) | Easy-to-moderate | ✅ done |
 | **2** | Text structure | word end (space / `_`), sentence end (double space / `__`), line break `!`, page/section break `!!` | Easy-to-moderate | ✅ done |
-| **3** | Enclosures | serekh `<S >S`, hwt `<H >H`, frame `<F >F` (begin/middle/end parts deferred). **Cartouche `< >` excluded** — covered by the existing `addCartouche` drawing tool; bare `< >` falls back unhandled. | Moderate-to-hard | ✅ done |
+| **3** | Enclosures | serekh `<S >S`, hwt `<H >H`, frame `<F >F`, cartouche `< >` (since 2026-11-23; begin/middle/end parts deferred). | Moderate-to-hard | ✅ done |
 | **4** | Flags / toggles | colour `$r` / `$b`, shading `#b` / `#e`, `-#-`, lacuna `?` / `??` | Moderate | ✅ done |
 | **5** | Editorial brackets | `[[ ]]` erased, `[{ }]` superfluous, `[" "]` vanished, `[' ']` scribal, `[& &]` editorial | Moderate | ✅ done |
 | **6** | Ligatures & overlay | `&` ligature, true sign fusion / overlap | Hard | 🚫 won't do — superseded by Extended-A palette |
@@ -273,3 +273,16 @@ easy to find (palette UX, not an engine).
   `mdcLookupCode`: MdC sound letters case-sensitive (`MDC_PHONETIC`), then the
   exact code, then the code ignoring case. Used by both `tokenizeMdC` and
   `parseMdCInput`. `w` now gives G43 (was the coil Z7), `y` gives Z4.
+- **2026-11-23** — **JSesh import + MdC additions.** `jsesh-import.js` turns a JSesh `.gly`
+  text into this MdC (≡ → Open JSesh file, or drop the file on the canvas); tested on the
+  196 texts shipped with JSesh: all that hold signs lay out, 99.9 % of 312,556 signs resolve.
+  For typed MdC too: bare `< >` is now a **cartouche** (variant `C` in `buildEnclosureFrame`:
+  rounded loop + tie bar); the long MdC sound codes (`ra`, `nTr`, `anx`; table in
+  `jsesh-codes.js`, from JSesh's CC0 `ManuelDeCodage.java`) and JSesh sign codes (`M1A`,
+  incl. Extended-A, from Unicode's Unikemet `kEH_JSesh`) resolve in `mdcLookupCode`; sign
+  modifiers `\` mirror, `\R90` turn, `\70` size; `.` / `..` blank space. Ligatures (`&`)
+  stay side by side unless Unicode has a composite for the pair (`kEH_AltSeq`), still no
+  geometric fusion (Tier 6). Layout fixes: rows are placed by their own height (a tall row
+  used to overlap the one above), an enclosure is capped in height only (a long cartouche
+  used to shrink to nothing), and `layoutMdCRow(items, {unbounded})` lets an import run past
+  the visible canvas.

@@ -537,6 +537,7 @@ const MDC_PAGE_VGAP = 70;       // extra vertical gap added for a '!!' page brea
 const MDC_ENC_PAD = 14;         // inner padding: sides + gap below content (to panel/base)
 const MDC_ENC_PAD_TOP = 30;     // inner padding above content (generous: figure stands, sky above)
 const MDC_SEREKH_PANEL = 14;    // height of the serekh's (simplified) paneled facade strip
+const MDC_CART_TIE = 10;        // room for the tie bar at the end of a cartouche
 
 // Tier 4 — flags / toggles ----------------------------------------------------
 // Colour rubric: $r red, $g green, $b/$k back to black. Unknown letters reset to
@@ -617,12 +618,13 @@ function mdcBaselineFromTop(Hf) {
     return (Hf - (_mdcFontBox.asc + _mdcFontBox.desc)) / 2 + _mdcFontBox.asc;
 }
 
-// The whole string is one undo step.
-function handleMdCInput(mdcString) {
-    return groupUndo(() => handleMdCInputNow(mdcString));
+// The whole string is one undo step. opts.unbounded: keep laying out rows
+// below the visible canvas (a long imported text) instead of stopping there.
+function handleMdCInput(mdcString, opts = {}) {
+    return groupUndo(() => handleMdCInputNow(mdcString, opts));
 }
 
-function handleMdCInputNow(mdcString) {
+function handleMdCInputNow(mdcString, opts = {}) {
     mdcString = unicodeLayoutToMdC(mdcString);   // Unicode format controls → MdC operators
     let tree = null;
     try {
@@ -636,7 +638,7 @@ function handleMdCInputNow(mdcString) {
         return handleMdCInputFlat(mdcString);
     }
 
-    layoutMdCRow(tree.children);
+    layoutMdCRow(tree.children, opts);
 }
 
 // MdC single-letter sound codes. Case matters: a capital is a different sound
@@ -652,11 +654,61 @@ const MDC_PHONETIC = {
 // Gardiner codes ignoring case (a1 → A1, aa1 → Aa1, g7a → G7a). Built once;
 // no two codes in the table differ only by case.
 let _mdcCodesNoCase = null;
+// JSesh codes (jsesh-codes.js), exact and ignoring case. Built once.
+let _jseshSigns = null, _jseshNoCase = null;
+
+function jseshSignMap() {
+    if (!_jseshSigns) {
+        _jseshSigns = new Map();
+        _jseshNoCase = new Map();
+        if (typeof JSESH_SIGNS_RAW === 'string') {
+            for (const pair of JSESH_SIGNS_RAW.split(',')) {
+                const i = pair.lastIndexOf(':');
+                const ch = String.fromCodePoint(parseInt(pair.slice(i + 1), 16));
+                const code = pair.slice(0, i);
+                _jseshSigns.set(code, ch);
+                if (!_jseshNoCase.has(code.toUpperCase())) _jseshNoCase.set(code.toUpperCase(), ch);
+            }
+        }
+    }
+    return _jseshSigns;
+}
+
+// The palette entry for a sign character. A sign the palette doesn't list
+// (about 220 base-block signs; the font still draws them) gets an entry made
+// on the spot, named by its JSesh code when there is one.
+let _jseshNameOf = null;
+function signEntryForChar(ch, name) {
+    const e = charsByGlyph.get(ch);
+    if (e) return e;
+    const cp = ch.codePointAt(0);
+    if (!(cp >= 0x13000 && cp <= 0x1342F) && !(cp >= 0x13460 && cp <= 0x143FF)) return undefined;
+    if (!name) {
+        if (!_jseshNameOf) {
+            _jseshNameOf = new Map();
+            for (const [code, c] of jseshSignMap()) if (!_jseshNameOf.has(c)) _jseshNameOf.set(c, code);
+        }
+        name = _jseshNameOf.get(ch) || numeralSignName(cp) || 'U+' + cp.toString(16).toUpperCase();
+    }
+    return [name, ch];
+}
+
+// Gardiner name of a Unicode numeral sign (Z15–Z15H, V20–V20H, V1–V1H,
+// M12–M12H: one to nine units, tens, hundreds, thousands), or ''.
+function numeralSignName(cp) {
+    for (const [base, name] of [[0x133FA, 'Z15'], [0x13386, 'V20'], [0x13362, 'V1'], [0x131BC, 'M12']]) {
+        const k = cp - base;
+        if (k >= 0 && k <= 8) return name + (k ? 'ABCDEFGH'[k - 1] : '');
+    }
+    return '';
+}
 
 // Resolve one typed code to its sign entry, or undefined. Order: an MdC sound
-// letter (case-sensitive), the exact code, then the code ignoring case. The old
-// lookup upper-cased everything, so `a` gave the vulture and the 66 codes with
-// a small letter (Aa1…, A5a, G7a, N35a…) could not be typed at all.
+// letter (case-sensitive), the exact code, a JSesh code (M1A, V23A: also the
+// Extended-A signs), a multi-letter MdC sound code (ra, nTr, anx), then the
+// codes ignoring case. The old lookup upper-cased everything, so `a` gave the
+// vulture and the 66 codes with a small letter (Aa1…, A5a, G7a…) could not be
+// typed at all.
 function mdcLookupCode(word) {
     if (word.length === 1 && MDC_PHONETIC[word]) {
         const e = charsByCode.get(MDC_PHONETIC[word]);
@@ -664,11 +716,20 @@ function mdcLookupCode(word) {
     }
     const exact = charsByCode.get(word);
     if (exact) return exact;
+    const js = jseshSignMap().get(word);
+    if (js) return signEntryForChar(js, word);
+    if (typeof MDC_PHONETIC_CODES === 'object' && word.length > 1 && MDC_PHONETIC_CODES[word]) {
+        const target = MDC_PHONETIC_CODES[word];
+        return charsByCode.get(target) || (jseshSignMap().get(target) && signEntryForChar(jseshSignMap().get(target), target));
+    }
     if (!_mdcCodesNoCase) {
         _mdcCodesNoCase = new Map();
         for (const [k, e] of charsByCode) _mdcCodesNoCase.set(k.toUpperCase(), e);
     }
-    return _mdcCodesNoCase.get(word.toUpperCase());
+    const nc = _mdcCodesNoCase.get(word.toUpperCase());
+    if (nc) return nc;
+    const jnc = _jseshNoCase.get(word.toUpperCase());
+    return jnc ? signEntryForChar(jnc) : undefined;
 }
 
 // Split the raw string into glyph leaves and operator tokens.
@@ -683,18 +744,32 @@ function tokenizeMdC(input) {
 
     const flushWord = () => {
         if (!word) return;
+        // Sign modifiers (MdC / JSesh): a trailing '\\' mirrors the sign,
+        // '\\R90' turns it (degrees, clockwise), '\\70' sets its size (70 %).
+        // Other modifiers are ignored.
+        let mirror = false, rot = 0, size = 1;
+        const m = word.match(/^(.*?)((?:\\[A-Za-z]*-?\d*)+)$/);
+        if (m && m[1]) {
+            word = m[1];
+            for (const [, name, val] of m[2].matchAll(/\\([A-Za-z]*)(-?\d*)/g)) {
+                if (!name && !val) mirror = !mirror;
+                else if (!name && val) { const pc = parseInt(val, 10); if (pc >= 10 && pc <= 400) size = pc / 100; }
+                else if (name === 'R' && val) rot = ((parseInt(val, 10) % 360) + 360) % 360;
+            }
+        }
+        const glyph = entry => ({ type: 'glyph', entry, color: curColor, shade: curShade, mirror, rot, size });
         const code = mdcLookupCode(word);
         if (code) {
-            tokens.push({ type: 'glyph', entry: code, color: curColor, shade: curShade });
+            tokens.push(glyph(code));
         } else {
             const leaves = [];
             for (const ch of word) {
-                const g = charsByGlyph.get(ch);
+                const g = signEntryForChar(ch);
                 if (g) leaves.push(g);
             }
             leaves.forEach((g, i) => {
                 if (i > 0) tokens.push({ type: 'op', op: '-' });
-                tokens.push({ type: 'glyph', entry: g, color: curColor, shade: curShade });
+                tokens.push(glyph(g));
             });
         }
         word = '';
@@ -725,17 +800,18 @@ function tokenizeMdC(input) {
             while (i < chars.length && /\s/.test(chars[i])) { n++; i++; }
             tokens.push({ type: 'op', op: n >= 2 ? 'sgap' : 'wgap' });
         } else if (ch === '<' || ch === '>') {
+            // Enclosures: '<S' serekh, '<H' hwt, '<F' fortified wall, closed by
+            // '>S' / '>H' / '>F'; a bare '<' … '>' (or '<C' … '>C') is a cartouche.
             flushWord();
-            const v = 'SHFshf'.includes(chars[i + 1] || '') ? chars[i + 1].toUpperCase() : null;
-            if (v) {
-                tokens.push({ type: 'op', op: ch === '<' ? 'encOpen' : 'encClose', variant: v });
-                i += 2;
-            } else {
-                // Bare '<'/'>' (cartouche) is out of scope — treat as a cadrat
-                // break so it doesn't swallow the adjacent code.
-                tokens.push({ type: 'op', op: '-' });
-                i++;
-            }
+            const nx = chars[i + 1];
+            const v = nx && 'SHFCshfc'.includes(nx) ? nx.toUpperCase() : null;
+            tokens.push({ type: 'op', op: ch === '<' ? 'encOpen' : 'encClose', variant: v || 'C' });
+            i += v ? 2 : 1;
+        } else if (ch === '.') {
+            // Blank space: '.' half a quadrat, '..' a whole one.
+            flushWord();
+            if (chars[i + 1] === '.') { tokens.push({ type: 'space', size: 'full' }); i += 2; }
+            else { tokens.push({ type: 'space', size: 'half' }); i++; }
         } else if (ch === '$') {
             // Colour rubric: '$r'/'$g' set red/green, '$b'/'$k' (or anything
             // else, incl. bare '$') reset to black. Persists as stream state.
@@ -848,7 +924,11 @@ function parseMdCTree(tokens) {
         }
         if (t && t.type === 'lacuna') { eat(); return { type: 'lacuna', size: t.size }; }
         if (t && t.type === 'shadebox') { eat(); return { type: 'shadebox' }; }
-        if (t && t.type === 'glyph') { eat(); return { type: 'glyph', entry: t.entry, color: t.color, shade: t.shade }; }
+        if (t && t.type === 'space') { eat(); return { type: 'space', size: t.size }; }
+        if (t && t.type === 'glyph') {
+            eat();
+            return { type: 'glyph', entry: t.entry, color: t.color, shade: t.shade, mirror: t.mirror, rot: t.rot, size: t.size };
+        }
         throw new Error('unexpected token');
     }
 
@@ -914,9 +994,15 @@ function mdcNodeAscent(node) {
 function measureMdCNode(node) {
     if (node.type === 'glyph') {
         const ink = measureGlyphInk(node.entry[1]);
-        node.w = ink.w;
-        node.h = ink.h;
+        const turned = node.rot === 90 || node.rot === 270;
+        const sz = node.size || 1;
+        node.w = (turned ? ink.h : ink.w) * sz;
+        node.h = (turned ? ink.w : ink.h) * sz;
         node.ink = ink;
+        return node;
+    }
+    if (node.type === 'space') {
+        node.w = node.h = node.size === 'full' ? MDC_BASE : MDC_BASE / 2;
         return node;
     }
     if (node.type === 'lacuna') {
@@ -954,8 +1040,9 @@ function measureMdCNode(node) {
         const n = node.children.length;
         node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_GAP * Math.max(0, n - 1);
         node.innerH = n ? Math.max(...node.children.map(c => c.h)) : MDC_BASE;
-        node.w = node.innerW + 2 * MDC_ENC_PAD;
-        node.h = MDC_ENC_PAD_TOP + node.innerH + MDC_ENC_PAD + (node.variant === 'S' ? MDC_SEREKH_PANEL : 0);
+        node.padTop = node.variant === 'C' ? MDC_ENC_PAD : MDC_ENC_PAD_TOP;
+        node.w = node.innerW + 2 * MDC_ENC_PAD + (node.variant === 'C' ? MDC_CART_TIE : 0);
+        node.h = node.padTop + node.innerH + MDC_ENC_PAD + (node.variant === 'S' ? MDC_SEREKH_PANEL : 0);
         return node;
     }
     node.children.forEach(measureMdCNode);
@@ -987,22 +1074,32 @@ function placeMdCNode(node, x, y, scale) {
         return;
     }
 
+    if (node.type === 'space') return;   // blank: takes room, draws nothing
+
     if (node.type === 'glyph') {
         const ink = node.ink;
+        const sc = scale * (node.size || 1);   // a sized sign (\70) draws smaller
         const obj = addCharacterToCanvas(node.entry[1], node.entry[0], 0, 0);
         const Wf = obj.width || ink.w;     // fabric line-box width/height (unscaled)
         const Hf = obj.height || ink.h;
         // (x, y) is the ink box's top-left. Position the fabric object (centre
         // origin) so the glyph's ink lands exactly there.
-        const fabricLeftEdge = x + scale * ink.left;
-        const baselineY = y + scale * ink.ascent;
+        const fabricLeftEdge = x + sc * ink.left;
+        const baselineY = y + sc * ink.ascent;
         obj.set({
-            scaleX: scale,
-            scaleY: scale,
-            left: fabricLeftEdge + scale * Wf / 2,
-            top: baselineY - scale * mdcBaselineFromTop(Hf) + scale * Hf / 2,
+            scaleX: sc,
+            scaleY: sc,
+            left: fabricLeftEdge + sc * Wf / 2,
+            top: baselineY - sc * mdcBaselineFromTop(Hf) + sc * Hf / 2,
         });
         if (node.color) obj.set({ fill: node.color });
+        // Mirrored: the ink sits at the other end of the line box, so the
+        // centre moves for the ink to still start at x.
+        if (node.mirror) obj.set({ flipX: true, left: x + sc * (ink.w - ink.left - Wf / 2) });
+        if (node.rot) {
+            // A turned sign: centre it in its (turned) box.
+            obj.set({ angle: node.rot, left: x + boxW / 2, top: y + boxH / 2 });
+        }
         obj.setCoords();
         // Damaged-sign shading: a translucent wash over the glyph's ink box
         // (added after the glyph so it reads as overlaid damage).
@@ -1014,7 +1111,7 @@ function placeMdCNode(node, x, y, scale) {
         // Frame first so the glyphs (added afterwards) render on top of it.
         const startIdx = canvas.getObjects().length;
         addEnclosureFrame(buildEnclosureFrame(node.variant, x, y, boxW, boxH));
-        const contentTop = y + MDC_ENC_PAD_TOP * scale;
+        const contentTop = y + node.padTop * scale;
         const contentH = node.innerH * scale;
         let cx = x + MDC_ENC_PAD * scale;
         for (const c of node.children) {
@@ -1081,6 +1178,16 @@ function buildEnclosureFrame(variant, x, y, w, h) {
     if (variant === 'F') {
         rect.set({ left: cx, top: cy, selectable: true });
         return rect;
+    }
+
+    if (variant === 'C') {
+        // Cartouche: a rounded loop, with the tie bar across its end.
+        const loopW = w - MDC_CART_TIE;
+        const r = Math.min(h / 2, 24);
+        const loop = new fabric.Rect({ left: -w / 2 + loopW / 2, top: 0, width: loopW, height: h, rx: r, ry: r,
+            fill: 'transparent', stroke, strokeWidth: sw, ...half });
+        const tie = new fabric.Line([w / 2 - 3, -h / 2 + 2, w / 2 - 3, h / 2 - 2], { stroke, strokeWidth: 4, ...half });
+        return new fabric.Group([loop, tie], { left: cx, top: cy, originX: 'center', originY: 'center', selectable: true });
     }
 
     const parts = [rect];
@@ -1187,7 +1294,7 @@ function addEnclosureFrame(obj) {
 // separated by a gap whose width reflects the cadrat / word / sentence boundary,
 // with '!' / '!!' break items forcing a new row (plus extra space for a page
 // break). Placed below any existing canvas content.
-function layoutMdCRow(items) {
+function layoutMdCRow(items, opts = {}) {
     const margin = 50, startX = 100;
     const rightEdge = canvas.width - margin;
     const usableBottom = canvas.height - margin;
@@ -1196,66 +1303,76 @@ function layoutMdCRow(items) {
         : strength === 'word' ? MDC_WORD_GAP
             : MDC_CADRAT_GAP;   // 'cadrat' / null default
 
-    // Measure each cadrat once, attaching its placed (capped) block size.
+    // Measure each cadrat once, attaching its placed (capped) block size. An
+    // enclosure or bracketed span is capped in height only: a cartouche of
+    // eight signs is wide, and capping its width shrank its signs to nothing.
     for (const item of items) {
         if (item.kind !== 'cadrat') continue;
         measureMdCNode(item.node);
-        const scale = Math.min(1, MDC_MAX_CADRAT / item.node.w, MDC_MAX_CADRAT / item.node.h);
+        const long = item.node.type === 'enclosure' || item.node.type === 'brackets';
+        const scale = Math.min(1, MDC_MAX_CADRAT / item.node.h, long ? 1 : MDC_MAX_CADRAT / item.node.w);
         item.block = { w: item.node.w * scale, h: item.node.h * scale, scale };
     }
 
-    // Tallest block — reserve vertical room so the first row clears any existing
-    // content (and the canvas top) even for tall stacks/enclosures.
-    const blockHeights = items.filter(it => it.kind === 'cadrat').map(it => it.block.h);
-    const maxBlockH = blockHeights.length ? Math.max(...blockHeights) : MDC_BASE;
+    // Split into rows first (wrapping at the right edge, '!' / '!!' breaks), so
+    // each row can sit below the previous one by ITS OWN height: placing rows
+    // by the previous row's height let a tall row overlap the one above.
+    const rows = [];
+    let row = { cells: [], h: 0, extra: 0 };
+    let cursorX = startX;
+    const newRow = extra => {
+        rows.push(row);
+        row = { cells: [], h: 0, extra };
+        cursorX = startX;
+    };
+    for (const item of items) {
+        if (item.kind === 'break') {
+            newRow(item.level === 'page' ? MDC_PAGE_VGAP : 0);
+            continue;
+        }
+        const b = item.block;
+        let gap = cursorX === startX ? 0 : gapFor(item.gap);
+        if (cursorX > startX && cursorX + gap + b.w > rightEdge) {
+            newRow(0);
+            gap = 0;
+        }
+        cursorX += gap;
+        row.cells.push({ item, x: cursorX });
+        row.h = Math.max(row.h, b.h);
+        cursorX += b.w;
+    }
+    rows.push(row);
 
-    let baselineY = 100 + maxBlockH;
-    const existing = canvas.getObjects();
+    // Start below any existing canvas content (true bottom edge regardless of
+    // origin: glyphs use centre origin, enclosure frames top origin).
+    let top = 100;
+    const existing = canvas.getObjects().filter(o => !o._pageGuide);
     if (existing.length > 0) {
-        // True bottom edge regardless of origin: glyphs use centre origin, but
-        // enclosure frames use top origin — the old centre-only math placed a
-        // new paste too high and overlapped existing frames.
         const bottomOf = o => {
             const h = o.getScaledHeight();
             return o.originY === 'top' ? o.top + h
                 : o.originY === 'bottom' ? o.top
                     : o.top + h / 2;
         };
-        const lowestBottom = existing.reduce((m, o) => Math.max(m, bottomOf(o)), 0);
-        baselineY = Math.max(baselineY, lowestBottom + MDC_LINE_VGAP + maxBlockH);
+        top = Math.max(top, existing.reduce((m, o) => Math.max(m, bottomOf(o)), 0) + MDC_LINE_VGAP);
     }
 
-    let cursorX = startX;
-    let rowMaxH = 0;
-    const advanceRow = extra => {
-        cursorX = startX;
-        baselineY += rowMaxH + MDC_LINE_VGAP + extra;  // advance by the row's tallest cadrat
-        rowMaxH = 0;
-    };
-
-    for (const item of items) {
-        if (item.kind === 'break') {
-            advanceRow(item.level === 'page' ? MDC_PAGE_VGAP : 0);
+    let first = true;
+    for (const r of rows) {
+        if (!r.cells.length) {                       // an empty row: just the break's space
+            if (!first) top += r.extra;
             continue;
         }
-
-        const b = item.block;
-        let gap = cursorX === startX ? 0 : gapFor(item.gap);
-
-        // Wrap if this cadrat (plus its leading gap) would spill past the edge.
-        if (cursorX > startX && cursorX + gap + b.w > rightEdge) {
-            advanceRow(0);
-            gap = 0;
-        }
-        if (baselineY > usableBottom) {
+        const baselineY = top + (first ? 0 : r.extra) + r.h;
+        if (!opts.unbounded && baselineY > usableBottom) {
             alert('Canvas is full. Some glyphs were not placed.');
             break;
         }
-
-        cursorX += gap;
-        placeMdCNode(item.node, cursorX, baselineY - b.h, b.scale);  // bottom edge on baseline
-        cursorX += b.w;
-        rowMaxH = Math.max(rowMaxH, b.h);
+        for (const { item, x } of r.cells) {
+            placeMdCNode(item.node, x, baselineY - item.block.h, item.block.scale);   // bottom edge on baseline
+        }
+        top = baselineY + MDC_LINE_VGAP;
+        first = false;
     }
 
     canvas.requestRenderAll();

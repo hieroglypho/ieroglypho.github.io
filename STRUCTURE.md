@@ -73,6 +73,10 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
    6b. `photo-trace.js` — photo tracing (BG photo panel): lock, rotate, straighten,
       fit, hide, replace, "include photo in exports" (`hidePhotosForExport`, used by
       `export.js`). Its `initPhotoTrace()` is called from editor-init's dispatcher.
+   6c. `jsesh-codes.js` (data: JSesh sign codes → Unicode from Unikemet, MdC sound codes,
+      composite signs) and `jsesh-import.js` (`jseshToMdC`, `importJSeshText`; ≡ → Open
+      JSesh file, or a `.gly` dropped on the canvas). `initJSeshImport()` is called from
+      editor-init's dispatcher.
    7. `editor-init.js` — `initMainMenu`, DOM event wiring, background image,
       the single `DOMContentLoaded` dispatcher, color popup, layout/resize/keydown
       lifecycle. Runs last because it wires everything defined above.
@@ -187,3 +191,5 @@ here.** The source lives in the private repo `ieroglypho-courseware` (sibling fo
   cleared by Save as JSON / opening a file. Removed unused globals, the dead "Alph" filter,
   `deleteSelectedObjects`, `clearExistingGrid`, `srcToDataUrl`, the `#saveAsPDF` listener
   and load-time console logging.
+- **2026-11-23** — Added `ΙΕΡΟΓΛΥΦΩ/jsesh-codes.js` + `jsesh-import.js` (JSesh `.gly` import),
+  loaded after `photo-trace.js`. See MDC-TIERS.md changelog.

@@ -27,6 +27,7 @@
 //   glyph-input.js .......... keyboard, glyph-text dialog, three-line blocks,
 //                              MdC input, MdC / Unicode export
 //   photo-trace.js .......... photo tracing panel
+//   jsesh-codes.js, jsesh-import.js .. JSesh (.gly) import, sign-code data
 //   editor-init.js .......... main menu, DOM wiring, DOMContentLoaded dispatcher
 //   dictionary-search.js, word-finder.js .. dictionary search, "What does this say?"
 //
@@ -538,8 +539,9 @@ function addCharacterToCanvas(text, characterKey, x, y) {
         nameSpanId: `name-${textObj.id}`
     });
 
-    // Call renderAll to ensure the canvas is updated
-    canvas.renderAll();
+    // One repaint per frame, not per sign: laying out a long text adds
+    // hundreds of signs in one go.
+    canvas.requestRenderAll();
     return textObj;
 }
 displayCharactersInRows(characters);

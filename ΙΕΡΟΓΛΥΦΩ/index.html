@@ -90,7 +90,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=9471819f">
+    <link rel="stylesheet" href="main.css?v=be9e03bb">
 
     <!-- 3rd party Scripts -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
@@ -166,6 +166,7 @@
                 <!-- Workspace (native, round-trippable JSON) -->
                 <button id="saveAsJsonBtn" data-icon="💾">Save as JSON</button>
                 <button id="loadWorkspaceBtn" data-icon="📂">Open JSON…</button>
+                <button id="openJSeshBtn" data-icon="𓏞" title="Open a JSesh text (.gly). You can also drop the file on the canvas.">Open JSesh file (.gly)…</button>
                 <button id="shareLinkBtn" data-icon="🔗">Copy share link</button>
                 <hr class="save-menu-sep">
                 <!-- Export (flattened image / document formats) -->
@@ -488,14 +489,16 @@
              links. See share-worker/README.md. -->
         <script>window.SHARE_API = 'https://hieroglyphica-share.linguaaegypta.workers.dev';</script>
         <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
-        <script defer src="editor-core.js?v=d3dea880"></script>
+        <script defer src="editor-core.js?v=01afd1f1"></script>
         <script defer src="canvas-interactions.js?v=89db2be5"></script>
         <script defer src="workspace.js?v=a30e1e79"></script>
         <script defer src="export.js?v=2ea7ad54"></script>
         <script defer src="drawing-tools.js?v=ab324a5d"></script>
-        <script defer src="glyph-input.js?v=4114df1d"></script>
+        <script defer src="glyph-input.js?v=fb2df85c"></script>
         <script defer src="photo-trace.js?v=2d26e813"></script>
-        <script defer src="editor-init.js?v=a532ffe1"></script>
+        <script defer src="jsesh-codes.js?v=4cbe549b"></script>
+        <script defer src="jsesh-import.js?v=7e5f2a8f"></script>
+        <script defer src="editor-init.js?v=a2c5e4ae"></script>
         <script defer src="dictionary-search.js?v=53a81900"></script>
         <script defer src="word-finder.js?v=7bd21140"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->

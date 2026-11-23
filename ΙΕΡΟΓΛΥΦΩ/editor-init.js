@@ -244,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharDragstart();
     initBackgroundImage();
     if (typeof initPhotoTrace === 'function') initPhotoTrace();   // photo-trace.js
+    if (typeof initJSeshImport === 'function') initJSeshImport(); // jsesh-import.js
     initColorPopup();
     initPaletteResizer();
     initResultsResizer();

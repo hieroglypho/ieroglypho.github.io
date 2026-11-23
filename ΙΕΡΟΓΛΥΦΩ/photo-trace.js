@@ -162,8 +162,7 @@ function startStraighten() {
     canvas.on('mouse:down', straightenDown);
     canvas.on('mouse:move', straightenMove);
     document.addEventListener('keydown', straightenKey, true);
-    showPhotoHint('Straighten: click two points along a line that should be level or upright ' +
-                  '(a register line, a column edge). Esc cancels.');
+    showPhotoHint('📐 Click two points on a line that should be level or upright · Esc cancels');
     canvas.requestRenderAll();
 }
 
@@ -214,7 +213,9 @@ function straightenDown(opt) {
 }
 
 function straightenMove(opt) {
-    if (!straighten || !straighten.line) return;
+    if (!straighten) return;
+    fadeHintNear(opt.e);
+    if (!straighten.line) return;
     const p = canvas.getPointer(opt.e);
     straighten.line.set({ x2: p.x, y2: p.y });
     canvas.requestRenderAll();
@@ -415,10 +416,32 @@ function showPhotoHint(msg) {
         document.body.appendChild(hint);
     }
     hint.textContent = msg;
-    // Centre it over the canvas, not the window (the palette is on the right).
-    const r = canvas.upperCanvasEl && canvas.upperCanvasEl.getBoundingClientRect();
-    if (r && r.width) hint.style.left = `${Math.round(r.left + r.width / 2)}px`;
+    hint.classList.remove('faded');
+    // Sit exactly on the "Gardiner:" bar, which already covers the top of the
+    // canvas, so the hint hides nothing new. Fallback: centred over the canvas.
+    const bar = document.getElementById('pastedNamesContainer');
+    const b = bar && bar.getBoundingClientRect();
+    if (b && b.width && b.height) {
+        hint.classList.add('on-bar');
+        Object.assign(hint.style, { left: `${Math.round(b.left)}px`, top: `${Math.round(b.top)}px`,
+                                    width: `${Math.round(b.width)}px`, height: `${Math.round(b.height)}px` });
+    } else {
+        hint.classList.remove('on-bar');
+        const r = canvas.upperCanvasEl && canvas.upperCanvasEl.getBoundingClientRect();
+        if (r && r.width) hint.style.left = `${Math.round(r.left + r.width / 2)}px`;
+    }
     hint.hidden = false;
+}
+
+// Whatever its place, the hint fades almost away while the pointer is near it,
+// so a line at the very top of the photo can still be seen and clicked
+// (the hint never takes clicks: pointer-events none).
+function fadeHintNear(e) {
+    const hint = document.getElementById('photoHint');
+    if (!hint || hint.hidden || !e) return;
+    const r = hint.getBoundingClientRect(), m = 40;
+    const near = e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - m && e.clientY < r.bottom + m;
+    hint.classList.toggle('faded', near);
 }
 function hidePhotoHint() {
     const hint = document.getElementById('photoHint');

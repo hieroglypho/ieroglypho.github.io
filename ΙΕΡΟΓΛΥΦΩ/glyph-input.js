@@ -483,7 +483,7 @@ function parseMdCInput(input) {
     // token or a run of raw glyph characters.
     const tokens = input.split(/[-\s,;:*]+/).filter(Boolean);
     for (const token of tokens) {
-        const codeMatch = charsByCode.get(token.toUpperCase());
+        const codeMatch = mdcLookupCode(token);   // case rules: see MDC_PHONETIC
         if (codeMatch) {
             matches.push(codeMatch);
             continue;
@@ -633,6 +633,38 @@ function handleMdCInput(mdcString) {
     layoutMdCRow(tree.children);
 }
 
+// MdC single-letter sound codes. Case matters: a capital is a different sound
+// (A = ꜣ vulture, a = ꜥ arm; H = ḥ, h = h; x = ḫ, X = ẖ; S = š; T = ṯ; D = ḏ).
+// Letters not listed (B, F, G, …) fall through to the sign table as before.
+const MDC_PHONETIC = {
+    A: 'G1', a: 'D36', i: 'M17', y: 'Z4', w: 'G43', b: 'D58', p: 'Q3', f: 'I9',
+    m: 'G17', n: 'N35', r: 'D21', l: 'E23', h: 'O4', H: 'V28', x: 'Aa1', X: 'F32',
+    z: 'O34', s: 'S29', S: 'N37', q: 'N29', k: 'V31', g: 'W11', t: 'X1', T: 'V13',
+    d: 'D46', D: 'I10'
+};
+
+// Gardiner codes ignoring case (a1 → A1, aa1 → Aa1, g7a → G7a). Built once;
+// no two codes in the table differ only by case.
+let _mdcCodesNoCase = null;
+
+// Resolve one typed code to its sign entry, or undefined. Order: an MdC sound
+// letter (case-sensitive), the exact code, then the code ignoring case. The old
+// lookup upper-cased everything, so `a` gave the vulture and the 66 codes with
+// a small letter (Aa1…, A5a, G7a, N35a…) could not be typed at all.
+function mdcLookupCode(word) {
+    if (word.length === 1 && MDC_PHONETIC[word]) {
+        const e = charsByCode.get(MDC_PHONETIC[word]);
+        if (e) return e;
+    }
+    const exact = charsByCode.get(word);
+    if (exact) return exact;
+    if (!_mdcCodesNoCase) {
+        _mdcCodesNoCase = new Map();
+        for (const [k, e] of charsByCode) _mdcCodesNoCase.set(k.toUpperCase(), e);
+    }
+    return _mdcCodesNoCase.get(word.toUpperCase());
+}
+
 // Split the raw string into glyph leaves and operator tokens.
 // A "word" is resolved as a whole Gardiner code first; failing that it is
 // treated as a run of raw Unicode glyphs (each becomes its own leaf, joined by
@@ -645,7 +677,7 @@ function tokenizeMdC(input) {
 
     const flushWord = () => {
         if (!word) return;
-        const code = charsByCode.get(word.toUpperCase());
+        const code = mdcLookupCode(word);
         if (code) {
             tokens.push({ type: 'glyph', entry: code, color: curColor, shade: curShade });
         } else {

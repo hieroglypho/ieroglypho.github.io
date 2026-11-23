@@ -267,6 +267,9 @@ easy to find (palette UX, not an engine).
   key `u`, the right-click menu and the Inspect window (preview in the bundled
   Egyptian Text font, SIL OFL, `fonts/EgyptianText-OFL.txt`). (3) Pasting
   Unicode with format controls into the 𓂀… dialog goes through
-  `unicodeLayoutToMdC` first. Known, not fixed: the importer upper-cases MdC
-  codes, so lowercase phonetic codes resolve to the uppercase ones (`a` gives
-  G1 instead of D36).
+  `unicodeLayoutToMdC` first. Same day, fixed: the importer upper-cased every
+  code, so `a` gave G1 instead of D36 (likewise H, D, S, T, x, X) and the 66
+  codes with a small letter (Aa1…, A5a, G7a, N35a) could not be typed.
+  `mdcLookupCode`: MdC sound letters case-sensitive (`MDC_PHONETIC`), then the
+  exact code, then the code ignoring case. Used by both `tokenizeMdC` and
+  `parseMdCInput`. `w` now gives G43 (was the coil Z7), `y` gives Z4.

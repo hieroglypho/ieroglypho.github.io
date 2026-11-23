@@ -644,18 +644,21 @@ function stampClone(clone, off) {
     canvas.discardActiveObject();
     clone.set({ left: clone.left + off, top: clone.top + off, evented: true });
 
-    const added = [];
+    let added = [];
+    let selection = clone;
     if (clone.type === 'activeSelection') {
-        // A multi-sign clone: the children carry group-relative coords, so
-        // adding them through the cloned selection (with its canvas set) lets
-        // Fabric resolve them to absolute positions.
-        clone.canvas = canvas;
-        clone.forEachObject((o) => {
+        // A multi-sign clone: the children carry coords relative to the
+        // selection. Turn them into canvas coords before adding them, so the
+        // undo snapshots below (and so redo) put them back in the right place.
+        // They are selected again only after the snapshots: a selection makes
+        // its members' coords relative once more.
+        added = clone.getObjects().slice();
+        clone._restoreObjectsState();
+        added.forEach((o) => {
             o.id = generateUniqueId();
             canvas.add(o);
-            added.push(o);
+            o.setCoords();
         });
-        clone.setCoords();
     } else {
         clone.id = generateUniqueId();
         canvas.add(clone);
@@ -672,7 +675,8 @@ function stampClone(clone, off) {
     });
     recordBatch(actions);
 
-    canvas.setActiveObject(clone);
+    if (added.length > 1) selection = new fabric.ActiveSelection(added, { canvas });
+    canvas.setActiveObject(selection);
     canvas.requestRenderAll();
     canvasModified = true;
     return added.length;

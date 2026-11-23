@@ -7,30 +7,28 @@
  * @author   Massimo Mazzon
  * @version  1.5.0
  * @license  NONE
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 // =============================================================================
-// EDITOR MODULE MAP  (this is part 1 of 7 — see STRUCTURE.md)
+// EDITOR MODULE MAP  (this file comes first — see STRUCTURE.md)
 // =============================================================================
-// The editor was one 3174-line script.js; it is now split into 7 classic
-// <script defer> files that share one global scope. Load order is load-bearing
-// and is fixed in index.html. Do NOT convert to type="module" (inline onclick=
-// handlers require these functions to stay global).
+// The editor is a set of classic <script defer> files that share one global
+// scope. Load order is load-bearing and is fixed in index.html. Do NOT convert
+// to type="module" (inline onclick= handlers require these functions to stay
+// global), and never declare the same top-level name in two files.
 //
-//   1. editor-core.js .......... state, canvas + grid, glyph table/catalog,
-//                                 add-character-to-canvas              ← THIS FILE
-//   2. canvas-interactions.js .. mouse (drag/marquee/pan/zoom), undo,
-//                                 delete/cleanup, mirror, alignment
-//   3. workspace.js ............ save / load workspace
-//   4. export.js ............... SVG / PDF / PNG / copy, watermark, font embed
-//   5. drawing-tools.js ........ search-filter dropdown + shape tools
-//                                 (cartouche, circle, line, arrow, bracket,
-//                                 rect, pencil, bubble)
-//   6. glyph-input.js .......... on-screen keyboard, glyph-text dialog,
-//                                 three-line linked blocks, MdC paste handler
-//   7. editor-init.js .......... main menu, DOM event wiring, background image,
-//                                 DOM-ready dispatcher, color popup, lifecycle
+//   editor-core.js .......... state, canvas + grid, glyph table/catalog,
+//                              add-character-to-canvas              ← THIS FILE
+//   canvas-interactions.js .. mouse (pan/zoom), undo, delete, mirror, alignment
+//   workspace.js ............ save / load workspace, autosave, share links
+//   export.js ............... SVG / PDF / PNG / copy, watermark, font embed
+//   drawing-tools.js ........ search-filter dropdown + shape tools
+//   glyph-input.js .......... keyboard, glyph-text dialog, three-line blocks,
+//                              MdC input, MdC / Unicode export
+//   photo-trace.js .......... photo tracing panel
+//   editor-init.js .......... main menu, DOM wiring, DOMContentLoaded dispatcher
+//   dictionary-search.js, word-finder.js .. dictionary search, "What does this say?"
 //
 // Sections within this file:
 //   1. State (globals + constants)
@@ -44,47 +42,30 @@
 // State (module-global mutable state and constants)
 // =============================================================================
 
-// Canvas / 2D context
-var ctx = c.getContext('2d');
-let backgroundImage = null;
-
 // Constants
 const gridSize = 10;                 // Grid size in pixels
-const scaleSensitivity = 0.1;        // Mouse-wheel zoom sensitivity
-const threshold = 5;                 // Minimum angle change for history save
-const rotationThreshold = 15;        // Rotation snap threshold (degrees)
 
-// Mouse / drag / pan
-var mousePos = { x: 0, y: 0 };
-let isDragging = false;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
+// Alt-drag pan
 let isPanning = false;
 let lastPosX, lastPosY;
 
-// Marquee selection
-let marqueeStart = { x: 0, y: 0 };
-let marqueeEnd = { x: 0, y: 0 };
-let isDrawingMarquee = false;
-
-// Text objects + active editing
-var texts = [];                      // Array of text objects
-let selectedTextIndex = -1;
-let currentId = 0;
+// Text editing
 let activeTextObject = null;         // Text object currently being edited
-let textPosition = { x: 100, y: 100 };
+let textPosition = { x: 100, y: 100 };   // last click, in scene coords
 
 // Transform state (captured at gesture start for undo)
-let scale = 1;
-var initialPosition = null;
 let initialRotationState = null;
 let initialMoveState = null;
 let initialScaleState = null;
 
 // History
-let updateHistory = [];
 const undoHistory = [];
 const redoHistory = [];
+
+// Properties an undo snapshot keeps besides Fabric's own, so an undone delete
+// comes back still linked (three-line block, enclosure), named and locked.
+const UNDO_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow', 'enclosureId',
+                    'photoLocked', 'photoExport'];
 
 // Record a new user action. Any fresh action invalidates the redo stack —
 // you can't redo past a branch you just diverged from. This is the single
@@ -94,8 +75,7 @@ function pushUndo(action) {
     redoHistory.length = 0;
 }
 
-// Grid + canvas flags
-let currentGrid = null;
+// Canvas flags
 let canvasModified = false;
 let resizeTimeout;
 
@@ -449,9 +429,6 @@ const sentences = [
     { letter: "Sm", text: "Small Signs" },
     { letter: "Lg", text: "Large/composite Signs" }
 ];
-// Add alphabet
-// sentences.unshift({ letter: "Alph", text: "Alphabet (A-Z representation)" });
-// Add your new horizontal category at the beginning or end
 
 function displayCharactersInRows(charList) {
     let content = '';
@@ -478,12 +455,6 @@ function displayCharactersInRows(charList) {
 }
 // filters hieros as search happens
 function filterAndDisplayCharacters(charList, query) {
-    // If the query is "Alph", only show alphabet characters (A-Z)
-    if (query === "Alph") {
-        displayCharactersInRows(alphabetChars);
-        return;
-    }
-
     // If the query is "Horiz", show horizontal characters
     if (query === "Hrz") {
         const horizontalChars = charList.filter(([code]) => horizontalGlyphs.includes(code));
@@ -562,7 +533,7 @@ function addCharacterToCanvas(text, characterKey, x, y) {
     // Record the addition for undo functionality
     pushUndo({
         type: 'add',
-        object: textObj.toJSON(['id', 'characterKey', 'left', 'top', 'angle']), // Store necessary properties
+        object: textObj.toJSON(UNDO_PROPS),
         id: textObj.id,
         nameSpanId: `name-${textObj.id}`
     });
@@ -572,9 +543,4 @@ function addCharacterToCanvas(text, characterKey, x, y) {
     return textObj;
 }
 displayCharactersInRows(characters);
-// Helper function to clear existing grid
-function clearExistingGrid() {
-    if (currentGrid) {
-        canvas.remove(currentGrid);
-    }
-}
+

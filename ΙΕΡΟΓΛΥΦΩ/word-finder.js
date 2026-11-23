@@ -16,7 +16,7 @@
 //
 // No network call and no AI: it reuses the same dictionary the search box already
 // loads (the global `processedDictionary` array of raw lines, populated by
-// dictionary-search.js from the user's uploaded / IndexedDB-cached file). An
+// dictionary-search.js from the bundled dictionary files). An
 // optional `lines` argument lets the standalone harness page feed its own copy.
 //
 // Dictionary line format (tab-separated):
@@ -24,7 +24,7 @@
 // e.g.  𓀀𓆑\tit father <i>noun</i>\tA1-I9
 
 // Parsed-entry cache, keyed by the lines-array identity so we parse the 46k-line
-// dictionary at most once per uploaded file rather than on every lookup.
+// dictionary at most once per load rather than on every lookup.
 let _wfParsedFor = null;
 let _wfParsedEntries = null;
 
@@ -131,8 +131,8 @@ function wfCoverage(result) {
 // Reads the current composition (the active selection, or the whole canvas if
 // nothing is selected), linearises it into a reading-order glyph run, and shows
 // the dictionary-grounded readings in the existing results panel. Reuses the
-// layout engine's ordering (mdcSplitRows / mdcWidestGap from glyph-input.js) so
-// stacked cadrats come out in the same order MdC export uses. Inert outside the
+// export's layout reading (signInkBox / mdcSplitRows / mdcLayoutTree in
+// glyph-input.js) so stacked cadrats come out in the same order MdC export uses. Inert outside the
 // editor — the harness page and Node never call these.
 
 const WF_CAP = 40;   // max rows shown per section before a "+N more" note
@@ -152,22 +152,11 @@ function _wfIsGlyphObj(o) {
     return o && !o._pageGuide && (o.type === 'text' || o.type === 'i-text') && _wfHieros(o.text).length > 0;
 }
 
-// Reading order within a set of sign-boxes: mirror mdcFromBoxes' recursion but
-// emit the glyphs themselves instead of MdC codes.
-function _wfRunFromBoxes(boxes, avgW, avgH) {
-    if (boxes.length === 1) return _wfHieros(boxes[0].obj.text);
-    const xGap = mdcWidestGap(boxes, 'x');
-    const yGap = mdcWidestGap(boxes, 'y');
-    const axis = (xGap.gap >= yGap.gap) ? 'x' : 'y';
-    const cut = axis === 'x' ? xGap : yGap;
-    if (cut.gap < -(axis === 'x' ? avgW : avgH) * 0.5) {
-        return [...boxes].sort((a, b) => (a.top - b.top) || (a.left - b.left))
-            .map(b => _wfHieros(b.obj.text)).join('');
-    }
-    const center = axis === 'x' ? b => b.left + b.width / 2 : b => b.top + b.height / 2;
-    const first = boxes.filter(b => center(b) < cut.pos);
-    const second = boxes.filter(b => center(b) >= cut.pos);
-    return _wfRunFromBoxes(first, avgW, avgH) + _wfRunFromBoxes(second, avgW, avgH);
+// Signs of a layout tree (glyph-input.js mdcLayoutTree) in reading order.
+function _wfTreeObjs(t) {
+    if (t.leaf) return [t.leaf];
+    if (t.seq) return t.seq;
+    return _wfTreeObjs(t.a).concat(_wfTreeObjs(t.b));
 }
 
 // The glyph run to identify. With an explicit `objs` list (e.g. the right-clicked
@@ -186,17 +175,14 @@ function compositionGlyphRun(objs) {
     }
     if (!src.length) return { run: '', scope: 'none' };
 
-    const boxes = src.map(o => {
-        o.setCoords();
-        const r = o.getBoundingRect(true);   // canvas-plane box, zoom-independent
-        return { obj: o, left: r.left, top: r.top, width: r.width, height: r.height };
-    });
+    // Same reading order as MdC / Unicode export: ink boxes, rows, then the
+    // layout tree of each row (so a stack reads top sign first).
+    const boxes = src.map(signInkBox);
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
     const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
-
-    const run = (typeof mdcSplitRows === 'function')
-        ? mdcSplitRows(boxes, avgH).reduce((acc, row) => acc + _wfRunFromBoxes(row, avgW, avgH), '')
-        : [...boxes].sort((a, b) => (a.top - b.top) || (a.left - b.left)).map(b => _wfHieros(b.obj.text)).join('');
+    const run = mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
+        .map(row => _wfTreeObjs(mdcLayoutTree(row, avgW, avgH)).map(o => _wfHieros(o.text)).join(''))
+        .join('');
     return { run, scope };
 }
 

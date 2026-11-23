@@ -76,8 +76,8 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
    7. `editor-init.js` — `initMainMenu`, DOM event wiring, background image,
       the single `DOMContentLoaded` dispatcher, color popup, layout/resize/keydown
       lifecycle. Runs last because it wires everything defined above.
-4. `dictionary-search.js` — dictionary upload + search + IndexedDB caching
-   (formerly `fjgus.js`; renamed this session).
+4. `dictionary-search.js` — loads the bundled dictionary files and searches them
+   (formerly `fjgus.js`). `word-finder.js` — "What does this say?".
 
 `jsPDF` is **lazy-loaded from cdnjs** on the first "Save as PDF" click
 (`ensureJsPDFLoaded()` in `script.js`) — it is not in the page `<head>`.
@@ -98,7 +98,7 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 - `pdf.js` — was a dead standalone PDF snippet; the real export is `saveToPDF()` in `export.js`.
 - `keyboard-styles.css` — was unlinked; keyboard styles live in `main.css`.
 
-> The editor's major sections now live in the 7 files listed under **Load order** above.
+> The editor's major sections now live in the files listed under **Load order** above.
 > `editor-core.js` opens with a module map in its header comment. There is no longer a
 > single `script.js`.
 
@@ -176,3 +176,14 @@ here.** The source lives in the private repo `ieroglypho-courseware` (sibling fo
   home; copied from the private `ieroglypho-courseware` repo by its `tools/deploy-free.sh`),
   `COURSE` tab added to the nav of the six content pages, seven course URLs added to
   `sitemap.xml`. See §3: the folder is a copy, and paid classes never go in this repo.
+- **2026-11-23** — Editor clean-up after a code review. Clicking now uses Fabric's own
+  target (the old manual hit-test picked the bottom object and broke when zoomed). The
+  old `#bgImage` photo overlay is gone: tracing photos are Fabric images
+  (`photo-trace.js`), and a workspace saved with the old overlay is turned into a locked
+  photo on load (`addLegacyBackground` in `workspace.js`). Undo: `groupUndo(fn)`
+  (canvas-interactions) makes one step of an MdC layout; `UNDO_PROPS` (editor-core) is the
+  one list of custom properties kept by undo snapshots and saved workspaces.
+  `canvasModified` is set by any canvas change (workspace.js, `initAutosaveRestore`) and
+  cleared by Save as JSON / opening a file. Removed unused globals, the dead "Alph" filter,
+  `deleteSelectedObjects`, `clearExistingGrid`, `srcToDataUrl`, the `#saveAsPDF` listener
+  and load-time console logging.

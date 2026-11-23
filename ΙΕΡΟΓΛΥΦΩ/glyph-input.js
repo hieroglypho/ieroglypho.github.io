@@ -1,12 +1,12 @@
 /*!
- * ΙΕΡΟΓΛΥΦΩ editor — glyph-input (part 6 of 7)
+ * ΙΕΡΟΓΛΥΦΩ editor — glyph-input
  *
  * Classic <script defer>; shares globals with the other editor scripts via the
  * global lexical environment. Do NOT convert to type="module" (inline onclick=
- * handlers need these functions global). Load order:
- *   editor-core → canvas-interactions → workspace → export → drawing-tools → glyph-input → editor-init
+ * handlers need these functions global). Load order is fixed in index.html
+ * (see STRUCTURE.md).
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 // =============================================================================
@@ -212,7 +212,7 @@ async function addGlyphsFromDialog() {
 //   blockRow — 'glyphs' | 'translit' | 'translation'
 // Linkage:
 //   - object:moving propagates the delta to all siblings with the same blockId
-//   - storeAndRemoveCharacter sweeps siblings before removing the target
+//   - collectDeletion sweeps siblings before removing the target
 // Persistence:
 //   - saveWorkspace toJSON include list contains blockId + blockRow so reload
 //     reconstitutes the linkage automatically (Fabric copies through unknowns).
@@ -297,6 +297,7 @@ async function addThreeLineBlock(glyphsRaw, translit, translation, glyphSize) {
     }
 
     rows.forEach(r => canvas.add(r));
+    recordBatch(rows.map(r => ({ type: 'add', id: r.id, object: r.toObject(UNDO_PROPS) })));
     if (rows.length) canvas.setActiveObject(rows[0]);
     canvasModified = true;
     canvas.requestRenderAll();
@@ -616,7 +617,12 @@ function mdcBaselineFromTop(Hf) {
     return (Hf - (_mdcFontBox.asc + _mdcFontBox.desc)) / 2 + _mdcFontBox.asc;
 }
 
+// The whole string is one undo step.
 function handleMdCInput(mdcString) {
+    return groupUndo(() => handleMdCInputNow(mdcString));
+}
+
+function handleMdCInputNow(mdcString) {
     mdcString = unicodeLayoutToMdC(mdcString);   // Unicode format controls → MdC operators
     let tree = null;
     try {

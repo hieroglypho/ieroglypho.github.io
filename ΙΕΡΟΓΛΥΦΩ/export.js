@@ -1,12 +1,12 @@
 /*!
- * ΙΕΡΟΓΛΥΦΩ editor — export (part 4 of 7)
+ * ΙΕΡΟΓΛΥΦΩ editor — export
  *
  * Classic <script defer>; shares globals with the other editor scripts via the
  * global lexical environment. Do NOT convert to type="module" (inline onclick=
- * handlers need these functions global). Load order:
- *   editor-core → canvas-interactions → workspace → export → drawing-tools → glyph-input → editor-init
+ * handlers need these functions global). Load order is fixed in index.html
+ * (see STRUCTURE.md).
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 // =============================================================================
@@ -40,24 +40,6 @@ function ensureHieroFontDataUrl() {
     return hieroFontDataUrlPromise;
 }
 
-async function srcToDataUrl(src) {
-    if (!src) return null;
-    if (src.startsWith('data:')) return src;
-    try {
-        const resp = await fetch(src, { mode: 'cors' });
-        if (!resp.ok) return null;
-        const blob = await resp.blob();
-        return await new Promise((resolve) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result);
-            r.onerror = () => resolve(null);
-            r.readAsDataURL(blob);
-        });
-    } catch (_) {
-        return null;
-    }
-}
-
 function triggerDownload(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -84,20 +66,8 @@ async function buildSVGString() {
         ? `<style type="text/css"><![CDATA[${fontFaces.join('')}]]></style>`
         : '';
 
-    // Optional background image — embed as base64 <image> so the SVG is
-    // self-contained even when the user uploaded a local file.
-    const bgImage = document.getElementById('bgImage');
-    let bgEl = '';
-    if (bgImage && bgImage.style.display !== 'none' && bgImage.src) {
-        const dataUrl = await srcToDataUrl(bgImage.src);
-        if (dataUrl) {
-            const opacity = parseFloat(bgImage.style.opacity) || 0.5;
-            bgEl = `<image href="${dataUrl}" x="0" y="0" width="${canvas.width}" height="${canvas.height}" opacity="${opacity}" preserveAspectRatio="xMidYMid meet"/>`;
-        }
-    }
-
-    // Inject style + background right after fabric's <defs></defs>.
-    const injection = `${styleBlock}${bgEl}`;
+    // Inject the font styles right after fabric's <defs></defs>.
+    const injection = styleBlock;
     if (injection) {
         if (svg.includes('</defs>')) {
             svg = svg.replace('</defs>', `</defs>${injection}`);
@@ -206,7 +176,7 @@ function exportBgColor() {
 // (near photo-print quality). Raise for sharper output at the cost of file size.
 const EXPORT_SUPERSAMPLE = 3;
 
-// Render the background image (if visible) and the Fabric canvas pixels onto
+// Render the Fabric canvas (tracing photos included unless excluded) onto
 // a fresh canvas, so callers get a single flat raster matching what the user
 // sees — minus the editing grid. Used by Save-as-PNG, Save-as-PDF, Copy-image.
 async function compositeCanvasWithBg() {
@@ -225,21 +195,6 @@ async function compositeCanvasWithBg() {
         ctx.fillStyle = exportBgColor();
         ctx.fillRect(0, 0, w, h);
 
-        const bgImage = document.getElementById('bgImage');
-        if (bgImage && bgImage.style.display !== 'none' && bgImage.src) {
-            await new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    ctx.globalAlpha = parseFloat(bgImage.style.opacity) || 0.5;
-                    ctx.drawImage(img, 0, 0, w, h);
-                    ctx.globalAlpha = 1;
-                    resolve();
-                };
-                img.onerror = resolve;  // best-effort; skip bg if it fails
-                img.src = bgImage.src;
-            });
-        }
         // Re-render the vector objects at SS× (respecting the current viewport,
         // so pan/zoom is preserved as before) rather than blitting the backing
         // store — keeps glyph edges crisp at print DPI. fab is already w·SS×h·SS,
@@ -469,24 +424,6 @@ async function compositeCropForPDF(bounds) {
         ctx.fillStyle = exportBgColor();
         ctx.fillRect(0, 0, w, h);
 
-        // Legacy DOM background image (kept for parity with PNG/SVG); offset so
-        // the full-canvas placement lines up under the cropped region.
-        const bgImage = document.getElementById('bgImage');
-        if (bgImage && bgImage.style.display !== 'none' && bgImage.src) {
-            await new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    ctx.globalAlpha = parseFloat(bgImage.style.opacity) || 0.5;
-                    ctx.drawImage(img, -left, -top, canvas.width, canvas.height);
-                    ctx.globalAlpha = 1;
-                    resolve();
-                };
-                img.onerror = resolve;  // best-effort; skip bg if it fails
-                img.src = bgImage.src;
-            });
-        }
-
         // Fabric objects, re-rendered as vectors at SS× over the crop region —
         // not a blit of the screen-resolution backing store — so glyph edges
         // stay crisp at print DPI. Re-rendering (vs. the old getElement() blit) is
@@ -662,7 +599,3 @@ async function saveToPDF() {
         alert('Error saving PDF: ' + (error.message || error));
     }
 }
-
-// Add click handler
-document.getElementById('saveAsPDF')?.addEventListener('click', saveToPDF);
-

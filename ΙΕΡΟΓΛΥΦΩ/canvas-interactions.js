@@ -1,21 +1,17 @@
 /*!
- * ΙΕΡΟΓΛΥΦΩ editor — canvas-interactions (part 2 of 7)
+ * ΙΕΡΟΓΛΥΦΩ editor — canvas-interactions
  *
  * Classic <script defer>; shares globals with the other editor scripts via the
  * global lexical environment. Do NOT convert to type="module" (inline onclick=
- * handlers need these functions global). Load order:
- *   editor-core → canvas-interactions → workspace → export → drawing-tools → glyph-input → editor-init
+ * handlers need these functions global). Load order is fixed in index.html
+ * (see STRUCTURE.md).
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 // =============================================================================
 // Mouse handlers (drag, marquee, pan, zoom)
 // =============================================================================
-// Add these variables to your global variables section
-let bgOffsetX = 0;
-let bgOffsetY = 0;
-
 // Update mouse:down event handler
 canvas.on('mouse:down', function (options) {
     // Save the clicked position
@@ -32,26 +28,9 @@ canvas.on('mouse:down', function (options) {
         canvas.selection = false;
         return;
     }
-    // Manual hit-test, but only over INTERACTIVE objects. Skip non-selectable /
-    // non-evented overlays (the page guide, the grid): the guide sits at the back
-    // and spans the whole page, so `containsPoint` is true for it on every
-    // interior click — without this filter `find` returns the guide first (it's
-    // first in the back-to-front array) and selects the whole "page" instead of
-    // the glyph under the cursor.
-    const clickedObject = canvas.getObjects().find(obj =>
-        obj.selectable && obj.evented !== false && !obj._pageGuide && obj.containsPoint(pointer));
-    const activeObject = canvas.getActiveObject();
-
-    if (clickedObject) {
-        canvas.setActiveObject(clickedObject);
-        initialPosition = { left: clickedObject.left, top: clickedObject.top };
-    } else {
-        if (activeObject && activeObject.type === 'activeSelection') {
-            canvas.setActiveObject(activeObject);
-        } else {
-            canvas.discardActiveObject().requestRenderAll();
-        }
-    }
+    // Selection is left to Fabric: its target is already the TOP-most object
+    // under the pointer (pixel-accurate with perPixelTargetFind) and correct at
+    // any zoom; the page guide and grid are evented:false so it skips them.
 });
 
 // Update mouse:move event handler
@@ -64,9 +43,6 @@ canvas.on('mouse:move', function (options) {
         // Update canvas viewport transform
         vpt[4] += deltaX;
         vpt[5] += deltaY;
-
-        // Keep the background image gliding along with the pan.
-        panBackgroundImage(deltaX, deltaY);
 
         lastPosX = options.e.clientX;
         lastPosY = options.e.clientY;
@@ -117,8 +93,7 @@ canvas.on('mouse:wheel', function (opt) {
 
 // Fit every object (all signs/text, ignoring the page-guide overlay) into the
 // visible canvas with a small margin, then centre it. Bound to the "F" shortcut.
-// Resets to 1:1 when the canvas is empty. Like wheel/pinch zoom, this doesn't
-// move the background tracing layer (it tracks pans, not absolute viewport).
+// Resets to 1:1 when the canvas is empty.
 function fitCanvasToContent() {
     const objs = canvas.getObjects().filter(o => !o._pageGuide);
     const vw = canvas.getWidth();
@@ -126,7 +101,7 @@ function fitCanvasToContent() {
 
     if (objs.length === 0) {
         canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-        try { clearExistingGrid(); drawGrid(); } catch (_) { }
+        try { drawGrid(); } catch (_) { }
         canvas.requestRenderAll();
         return;
     }
@@ -151,22 +126,8 @@ function fitCanvasToContent() {
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     canvas.setViewportTransform([zoom, 0, 0, zoom, vw / 2 - zoom * cx, vh / 2 - zoom * cy]);
-    try { clearExistingGrid(); drawGrid(); } catch (_) { }
+    try { drawGrid(); } catch (_) { }
     canvas.requestRenderAll();
-}
-
-// Slide the background-image DOM layer by (dx, dy) screen px so it tracks a
-// viewport pan. Shared by the Alt-drag pan and the two-finger touch pan; reads
-// the current scale out of the inline transform so a zoomed bg stays put.
-function panBackgroundImage(dx, dy) {
-    const bgImage = document.getElementById('bgImage');
-    if (!bgImage || bgImage.style.display === 'none') return;
-    bgOffsetX += dx;
-    bgOffsetY += dy;
-    const matches = bgImage.style.transform.match(/scale\(([\d.]+)\)/);
-    const scale = matches ? parseFloat(matches[1]) : 1;
-    bgImage.style.transform =
-        `translate(calc(-50% + ${bgOffsetX}px), calc(-50% + ${bgOffsetY}px)) scale(${scale})`;
 }
 
 // =============================================================================
@@ -230,7 +191,6 @@ function panBackgroundImage(dx, dy) {
             const vpt = canvas.viewportTransform;
             vpt[4] += dx;
             vpt[5] += dy;
-            panBackgroundImage(dx, dy);
         }
 
         lastDist = dist;
@@ -466,6 +426,7 @@ function undoLastAction() {
     if (undoHistory.length === 0) return;
     const inverse = revertAction(undoHistory.pop());
     if (inverse) redoHistory.push(inverse);   // raw push: do NOT clear redo here
+    canvasModified = true;
     canvas.requestRenderAll();
 }
 
@@ -473,6 +434,7 @@ function redoLastAction() {
     if (redoHistory.length === 0) return;
     const inverse = revertAction(redoHistory.pop());
     if (inverse) undoHistory.push(inverse);   // raw push: a replay is not a new action
+    canvasModified = true;
     canvas.requestRenderAll();
 }
 
@@ -532,12 +494,13 @@ function restoreObject(serialized, id) {
         restored.id = id;
         if (serialized.characterKey) restored.characterKey = serialized.characterKey;
         canvas.add(restored);
+        if (restored.type === 'image' && typeof applyPhotoLock === 'function') applyPhotoLock(restored);
 
         const pastedNamesDiv = document.getElementById('pastedNames');
         if (pastedNamesDiv && serialized.characterKey) {
             const nameSpan = document.createElement('span');
             nameSpan.id = `name-${id}`;
-            nameSpan.textContent = serialized.characterKey + ', ';
+            nameSpan.textContent = `${serialized.characterKey} - `;
             pastedNamesDiv.appendChild(nameSpan);
         }
         canvas.requestRenderAll();
@@ -631,38 +594,11 @@ function applyLegacyModify(state) {
     }
 }
 
-function deleteSelectedObjects() {
-    const selectedObjects = canvas.getActiveObjects();
-    if (selectedObjects.length > 0) {
-        selectedObjects.forEach(obj => {
-            // Store the complete object state before deletion
-            const objectState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
-            objectState.characterKey = obj.characterKey; // Preserve the character key if it exists
-
-            pushUndo({
-                type: 'delete',
-                id: obj.id,
-                object: objectState
-            });
-
-            canvas.remove(obj);
-            const nameSpan = document.getElementById(`name-${obj.id}`);
-            if (nameSpan) {
-                nameSpan.remove();
-            }
-        });
-
-        canvas.discardActiveObject();
-        canvas.renderAll();
-    }
-}
-
 // Function to snap values to the nearest grid point
 function snapToGrid(value) {
     return Math.round(value / gridSize) * gridSize;
 }
 
-let lastSavedFilename = null; // Store the last used filename
 // Clear references when removing objects
 function cleanupObject(obj) {
     if (obj.canvas) {
@@ -687,6 +623,25 @@ function recordBatch(actions) {
     pushUndo(actions.length === 1 ? actions[0] : { type: 'batch', actions });
 }
 
+// Run fn and turn every undo entry it records into ONE undo step (laying out an
+// MdC string adds many signs; Ctrl+Z should take them all back at once). The
+// 'add' entries are re-read from the canvas afterwards, so redo brings the
+// signs back where the layout put them, not where they were first created.
+function groupUndo(fn) {
+    const start = undoHistory.length;
+    try {
+        return fn();
+    } finally {
+        const added = undoHistory.splice(start);
+        added.forEach(a => {
+            if (a.type !== 'add') return;
+            const o = canvas.getObjects().find(x => x.id === a.id);
+            if (o) a.object = o.toObject(UNDO_PROPS);
+        });
+        recordBatch(added);
+    }
+}
+
 // Remove an object (sweeping any three-line block siblings) and append the
 // resulting 'delete' sub-actions to `actions`. Does NOT touch the undo stack —
 // the caller coalesces everything into one step via recordBatch, so a
@@ -708,8 +663,7 @@ function collectDeletion(obj, actions) {
     }
 
     // Store the object state before deletion
-    const objectState = obj.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
-    objectState.characterKey = obj.characterKey; // Preserve the character key
+    const objectState = obj.toObject(UNDO_PROPS);
 
     actions.push({ type: 'delete', id: obj.id, object: objectState });
     removeCharacterFromCanvas(obj);

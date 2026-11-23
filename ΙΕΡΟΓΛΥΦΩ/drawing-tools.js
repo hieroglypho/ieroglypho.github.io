@@ -1,12 +1,12 @@
 /*!
- * ΙΕΡΟΓΛΥΦΩ editor — drawing-tools (part 5 of 7)
+ * ΙΕΡΟΓΛΥΦΩ editor — drawing-tools
  *
  * Classic <script defer>; shares globals with the other editor scripts via the
  * global lexical environment. Do NOT convert to type="module" (inline onclick=
- * handlers need these functions global). Load order:
- *   editor-core → canvas-interactions → workspace → export → drawing-tools → glyph-input → editor-init
+ * handlers need these functions global). Load order is fixed in index.html
+ * (see STRUCTURE.md).
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 // =============================================================================
@@ -313,38 +313,41 @@ function addCustomRect(options = {}) {
     canvas.renderAll();
     return rect;
 }
+// Freehand pencil: one stroke, then back to normal editing. Clicking the pencil
+// button again or pressing Esc cancels before drawing. Only one stroke handler
+// is ever attached, so a double click can't record the stroke twice.
+let pencilStop = null;   // ends the pencil mode while it is on
+
 function addPencilLine() {
-    const originalIsDrawingMode = canvas.isDrawingMode;
+    if (pencilStop) { pencilStop(); return; }   // second click = cancel
 
+    canvas.discardActiveObject();
     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-
-    // Customize the brush
-    canvas.freeDrawingBrush.width = 2;          // Make lines thicker/thinner
-    canvas.freeDrawingBrush.color = 'black';    // Change color
-    canvas.freeDrawingBrush.strokeLineCap = 'round';    // round end caps
-    canvas.freeDrawingBrush.strokeLineJoin = 'round';   // smooth line joins
-
+    canvas.freeDrawingBrush.width = 2;
+    canvas.freeDrawingBrush.color = 'black';
+    canvas.freeDrawingBrush.strokeLineCap = 'round';
+    canvas.freeDrawingBrush.strokeLineJoin = 'round';
     canvas.isDrawingMode = true;
+    canvas.requestRenderAll();
 
-    const originalPathCreated = canvas.onPathCreated;
-
-    canvas.on('path:created', function pathCreatedHandler(e) {
+    function onPath(e) {
         const path = e.path;
         path.id = generateUniqueId();
-
-        pushUndo({
-            type: 'add',
-            object: path.toJSON(['id']),
-            id: path.id
-        });
-
-        canvas.isDrawingMode = originalIsDrawingMode;
-        canvas.off('path:created', pathCreatedHandler);
-
-        if (originalPathCreated) {
-            canvas.on('path:created', originalPathCreated);
-        }
-    });
+        pushUndo({ type: 'add', object: path.toJSON(UNDO_PROPS), id: path.id });
+        pencilStop();
+    }
+    function onKey(e) {
+        if (e.key === 'Escape') pencilStop();
+    }
+    pencilStop = () => {
+        canvas.isDrawingMode = false;
+        canvas.off('path:created', onPath);
+        document.removeEventListener('keydown', onKey, true);
+        pencilStop = null;
+    };
+    canvas.on('path:created', onPath);
+    document.addEventListener('keydown', onKey, true);
+    if (typeof showToast === 'function') showToast('Draw a line on the canvas. Esc cancels.');
 }
 function addSpeechBubble() {
     // Define the path with origin at center (0,0) for better scaling

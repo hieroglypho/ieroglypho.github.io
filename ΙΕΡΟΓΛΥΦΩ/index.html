@@ -102,10 +102,6 @@
     <div class="container">
         <!-- Workspace container with background and canvas -->
         <div id="workspaceContainer" style="position: relative;">
-            <div id="backgroundContainer"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
-                <img id="bgImage" style="opacity: 0.5; max-width: 100%; max-height: 100%; display: none;">
-            </div>
             <canvas id="c" tabindex="0" style="position: relative; z-index: 1;"></canvas>
             <!-- Gardiner's code section -->
             <div id="pastedNamesContainer">
@@ -305,7 +301,7 @@
                 <li><a href="/TOS.html" target="_blank" rel="noopener">𓎟 Terms of service</a></li>
                 <li><a href="https://www.paypal.com/ncp/payment/PMWMHAY55RZSE" target="_blank" rel="noopener">𓋹 Support the project</a></li>
             </ul>
-            <p class="about-credit">Created by Massimo Mazzon · © 2024</p>
+            <p class="about-credit">Created by Massimo Mazzon · © 2024–2026</p>
         </div>
     </div>
 
@@ -492,16 +488,16 @@
              links. See share-worker/README.md. -->
         <script>window.SHARE_API = 'https://hieroglyphica-share.linguaaegypta.workers.dev';</script>
         <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
-        <script defer src="editor-core.js?v=313882b6"></script>
-        <script defer src="canvas-interactions.js?v=0044dc49"></script>
-        <script defer src="workspace.js?v=632cd382"></script>
-        <script defer src="export.js?v=c450e3fd"></script>
-        <script defer src="drawing-tools.js?v=5a24babd"></script>
-        <script defer src="glyph-input.js?v=07914ade"></script>
-        <script defer src="photo-trace.js?v=e1933a64"></script>
-        <script defer src="editor-init.js?v=689abe9f"></script>
-        <script defer src="dictionary-search.js?v=c80da1bd"></script>
-        <script defer src="word-finder.js?v=568253e4"></script>
+        <script defer src="editor-core.js?v=d3dea880"></script>
+        <script defer src="canvas-interactions.js?v=89db2be5"></script>
+        <script defer src="workspace.js?v=a30e1e79"></script>
+        <script defer src="export.js?v=2ea7ad54"></script>
+        <script defer src="drawing-tools.js?v=ab324a5d"></script>
+        <script defer src="glyph-input.js?v=4114df1d"></script>
+        <script defer src="photo-trace.js?v=2d26e813"></script>
+        <script defer src="editor-init.js?v=40af58ef"></script>
+        <script defer src="dictionary-search.js?v=53a81900"></script>
+        <script defer src="word-finder.js?v=7bd21140"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->
         <script defer src="dict-author.js?v=65018cb5"></script>
 

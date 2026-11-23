@@ -1,12 +1,12 @@
 /*!
- * ΙΕΡΟΓΛΥΦΩ editor — editor-init (part 7 of 7)
+ * ΙΕΡΟΓΛΥΦΩ editor — editor-init
  *
  * Classic <script defer>; shares globals with the other editor scripts via the
  * global lexical environment. Do NOT convert to type="module" (inline onclick=
- * handlers need these functions global). Load order:
- *   editor-core → canvas-interactions → workspace → export → drawing-tools → glyph-input → editor-init
+ * handlers need these functions global). Load order is fixed in index.html
+ * (see STRUCTURE.md).
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 // =============================================================================
@@ -363,7 +363,7 @@ function initPaletteResizer() {
         if (typeof canvas !== 'undefined' && canvas && canvas.setDimensions) {
             const d = getCanvasDimensions();
             canvas.setDimensions({ width: d.width, height: d.height }, { cssOnly: false });
-            try { clearExistingGrid(); drawGrid(); } catch (_) { }
+            try { drawGrid(); } catch (_) { }
             const zoom = canvas.getZoom();
             const vpt = canvas.viewportTransform;
             canvas.setViewportTransform([zoom, 0, 0, zoom, vpt[4], vpt[5]]);
@@ -507,18 +507,15 @@ updateDivWidth();
 
 // Update on window resize
 
+// A small window: one quiet tip, once per browser (it used to be a blocking
+// alert on every load). Narrow windows need no tip: the palette button there
+// carries its own arrow hint (main.css).
 window.addEventListener('load', () => {
-    const notMaximized = window.outerWidth < screen.availWidth;
-    if (typeof isDrawerMode === 'function' && isDrawerMode()) {
-        // A tablet can't maximize, so no nag there. But a narrow desktop window
-        // (mouse + hover) also lands in drawer mode, where the palette is hidden
-        // behind the toggle button: tell the user, or the canvas looks empty.
-        const desktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-        if (desktop) alert((notMaximized ? 'Please maximize your window for the best experience.\n\n' : '') +
-            'In a narrow window the sign palette is hidden: open it with the button at the top right.');
-        return;
-    }
-    if (notMaximized) alert('Please maximize your window for the best experience');
+    if (typeof isDrawerMode === 'function' && isDrawerMode()) return;
+    if (window.outerWidth >= screen.availWidth * 0.9) return;
+    const KEY = 'hq_maximize_tip';
+    try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch (_) { return; }
+    showToast('Tip: the editor has more room in a maximized window.');
 });
 
 // --- Off-canvas palette drawer (Track 1) -----------------------------------
@@ -568,7 +565,6 @@ window.addEventListener('resize', function () {
         });
 
         // Recalculate the grid
-        clearExistingGrid();
         drawGrid();
 
         // Keep the page-size guide centred in the resized canvas
@@ -671,8 +667,7 @@ function stampClone(clone, off) {
     const actions = [];
     added.forEach((o) => {
         addPastedNameSpan(o);
-        const state = o.toObject(['left', 'top', 'angle', 'scaleX', 'scaleY', 'width', 'height', 'flipX', 'flipY']);
-        state.characterKey = o.characterKey;
+        const state = o.toObject(UNDO_PROPS);
         actions.push({ type: 'add', id: o.id, object: state, nameSpanId: `name-${o.id}` });
     });
     recordBatch(actions);

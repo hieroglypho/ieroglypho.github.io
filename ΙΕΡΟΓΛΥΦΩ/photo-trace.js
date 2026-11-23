@@ -26,7 +26,7 @@
  * globals (canvas, pushUndo, undoLastAction, showCanvasToast); export.js and
  * workspace.js call hidePhotosForExport() / photoLoaded() only behind typeof checks.
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 const PHOTO_PROPS = ['photoLocked', 'photoExport'];

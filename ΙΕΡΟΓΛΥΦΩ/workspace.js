@@ -1,39 +1,25 @@
 /*!
- * ΙΕΡΟΓΛΥΦΩ editor — workspace (part 3 of 7)
+ * ΙΕΡΟΓΛΥΦΩ editor — workspace
  *
  * Classic <script defer>; shares globals with the other editor scripts via the
  * global lexical environment. Do NOT convert to type="module" (inline onclick=
- * handlers need these functions global). Load order:
- *   editor-core → canvas-interactions → workspace → export → drawing-tools → glyph-input → editor-init
+ * handlers need these functions global). Load order is fixed in index.html
+ * (see STRUCTURE.md).
  *
- * @copyright Copyright (c) 2024 Massimo Mazzon. All rights reserved.
+ * @copyright Copyright (c) 2024–2026 Massimo Mazzon. All rights reserved.
  */
 
 
 // Build a plain serializable snapshot of the whole workspace (canvas content +
-// pasted names + background image). Shared by the JSON download (saveWorkspace)
+// pasted names; tracing photos are ordinary Fabric image objects). Shared by the JSON download (saveWorkspace)
 // and the localStorage autosave so the two can never drift.
 function serializeWorkspace() {
     // Get canvas objects excluding grid and the (non-content) page guide
     const objects = canvas.getObjects().filter(obj => !obj.isGridGroup && !obj.grid && !obj._pageGuide);
 
-    // Get background image state if it exists
-    const bgImage = document.getElementById('bgImage');
-    const bgImageState = bgImage && bgImage.src ? {
-        src: bgImage.src,
-        opacity: bgImage.style.opacity || 0.5,
-        transform: bgImage.style.transform,
-        display: bgImage.style.display,
-        offsetX: bgImage.offsetLeft || 0,
-        offsetY: bgImage.offsetTop || 0,
-        // Extract scale from transform string
-        scale: (bgImage.style.transform.match(/scale\(([\d.]+)\)/) || [null, 1])[1]
-    } : null;
-
-    // Preserve app-level custom properties on each object so reload
-    // reconstitutes link state, glyph-run marker, etc.
-    const CUSTOM_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow', 'enclosureId',
-                          'photoLocked', 'photoExport'];   // photo tracing (photo-trace.js)
+    // App-level custom properties (link state, glyph-run marker, photo lock…)
+    // travel with each object; the same list the undo snapshots use.
+    const CUSTOM_PROPS = UNDO_PROPS;
 
     return {
         canvas: {
@@ -44,8 +30,7 @@ function serializeWorkspace() {
             .map(span => ({
                 id: span.id.replace('name-', ''),
                 text: span.textContent.replace(', ', '')
-            })),
-        backgroundImage: bgImageState
+            }))
     };
 }
 
@@ -62,7 +47,8 @@ function saveWorkspace() {
         link.href = URL.createObjectURL(blob);
         link.download = 'workspace.json';
         link.click();
-        URL.revokeObjectURL(link.href);
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        canvasModified = false;
 
         // Show success message
         const indicator = document.createElement('div');
@@ -94,8 +80,6 @@ function syncPastedNamesWithCanvas() {
     }
 
     const canvasObjects = canvas.getObjects();
-    console.log('Canvas objects:', canvasObjects);
-    console.log('Canvas objects with characterKey:', canvasObjects.filter(obj => obj.characterKey));
 
     pastedNames.innerHTML = '';
 
@@ -105,13 +89,13 @@ function syncPastedNamesWithCanvas() {
             span.id = `name-${obj.id}`;
             span.textContent = `${obj.characterKey} - `;
             pastedNames.appendChild(span);
-            console.log('Added span for:', obj.characterKey);
         }
     });
 }
 // Apply a parsed workspace snapshot to the live canvas. Shared by file-open
-// (loadWorkspace) and the autosave restore path.
-function applyWorkspace(workspace) {
+// (loadWorkspace), share links and the autosave restore path. `unsaved` says
+// whether the result counts as unsaved work (true only for a restored autosave).
+function applyWorkspace(workspace, unsaved = false) {
     const canvasData = workspace.canvas || workspace;
 
     // Clear existing content
@@ -150,33 +134,11 @@ function applyWorkspace(workspace) {
                     setPageGuide(pageGuideState);
                 }
 
-                // Restore background image if it exists
-                if (workspace.backgroundImage) {
-                    const bgImage = document.getElementById('bgImage');
-                    if (bgImage) {
-                        bgImage.src = workspace.backgroundImage.src;
-                        bgImage.style.opacity = workspace.backgroundImage.opacity;
-                        bgImage.style.transform = workspace.backgroundImage.transform;
-                        bgImage.style.display = workspace.backgroundImage.display;
-
-                        // Restore global offset variables
-                        bgOffsetX = workspace.backgroundImage.offsetX || 0;
-                        bgOffsetY = workspace.backgroundImage.offsetY || 0;
-
-                        // // Update zoom slider if it exists
-                        // const zoomSlider = document.getElementById('bgZoom');
-                        // if (zoomSlider) {
-                        //     const scale = parseFloat(workspace.backgroundImage.scale) || 1;
-                        //     zoomSlider.value = scale * 100;
-                        // }
-
-                        // Update opacity slider if it exists
-                        const opacitySlider = document.getElementById('bgOpacity');
-                        if (opacitySlider) {
-                            const opacity = parseFloat(workspace.backgroundImage.opacity) || 0.5;
-                            opacitySlider.value = opacity * 100;
-                        }
-                    }
+                // Workspaces saved before photo tracing kept the photo in a
+                // separate overlay (workspace.backgroundImage); bring it back
+                // as a tracing photo on the canvas.
+                if (workspace.backgroundImage?.src && workspace.backgroundImage.display !== 'none') {
+                    addLegacyBackground(workspace.backgroundImage);
                 }
 
                 // Restore pasted names
@@ -197,15 +159,35 @@ function applyWorkspace(workspace) {
                     .forEach(obj => obj.setCoords());
 
                 drawGrid();
-                canvas.requestRenderAll();
-                console.log('Final canvas objects:', canvas.getObjects());
-                console.log('PastedNames content:', pastedNames?.innerHTML);
                 syncPastedNamesWithCanvas();
-                if (pastedNames && canvas.getObjects().length !== pastedNames.children.length) {
-                    console.warn('Mismatch between canvas objects and pasted names');
-                }
                 canvas.requestRenderAll();
+                canvasModified = unsaved;
             });
+}
+
+// Old-format tracing photo -> a locked photo at the back of the canvas, sized
+// to fit the window as the overlay was.
+function addLegacyBackground(bg) {
+    fabric.Image.fromURL(bg.src, img => {
+        if (!img || !img.width) return;
+        const vpt = canvas.viewportTransform;
+        const z = canvas.getZoom();
+        const scale = Math.min(canvas.width / img.width, canvas.height / img.height) * (parseFloat(bg.scale) || 1);
+        img.set({
+            originX: 'center', originY: 'center',
+            left: (canvas.width / 2 + (bg.offsetX || 0) - vpt[4]) / z,
+            top: (canvas.height / 2 + (bg.offsetY || 0) - vpt[5]) / z,
+            scaleX: scale / z, scaleY: scale / z,
+            opacity: parseFloat(bg.opacity) || 0.5,
+            id: generateUniqueId(), photoLocked: true, photoExport: true
+        });
+        const wasModified = canvasModified;   // loading isn't an edit
+        canvas.add(img);
+        canvas.sendToBack(img);
+        applyPhotoLock(img);
+        canvas.requestRenderAll();
+        canvasModified = wasModified;
+    });
 }
 
 function loadWorkspace() {
@@ -252,7 +234,7 @@ function scheduleAutosave() {
 }
 
 // Serialize + persist. localStorage has a ~5MB cap, and an image (a big
-// data-URL, whether the legacy #bgImage overlay or a Fabric image object)
+// data-URL, a Fabric image object)
 // can blow it. On QuotaExceededError we retry with every image stripped — the
 // actual hieroglyph work is the irreplaceable part and easily fits. If even
 // that won't fit, we give up silently: autosave can never break the editor.
@@ -276,7 +258,6 @@ function writeAutosave() {
     }
 
     // Over quota — drop all image payloads and retry the glyph work alone.
-    snapshot.workspace.backgroundImage = null;
     if (snapshot.workspace.canvas?.objects) {
         snapshot.workspace.canvas.objects =
             snapshot.workspace.canvas.objects.filter(obj => obj.type !== 'image');
@@ -467,8 +448,7 @@ function loadFromShareLink() {
     if (!m) return false;
     unpackString(decodeURIComponent(m[1]))
         .then(json => {
-            applyWorkspace(JSON.parse(json));
-            canvasModified = false;     // a freshly opened share is clean until edited
+            applyWorkspace(JSON.parse(json));     // a freshly opened share is clean until edited
             history.replaceState(null, '', location.pathname);
             showToast('Opened a shared composition — edit away.');
         })
@@ -480,10 +460,17 @@ function loadFromShareLink() {
 // banner. Non-destructive — restore only happens if the user clicks Restore, so
 // a deliberate fresh start is never silently overwritten.
 function initAutosaveRestore() {
-    // Stream every canvas mutation into the debounced writer.
-    canvas.on('object:added', scheduleAutosave);
-    canvas.on('object:modified', scheduleAutosave);
-    canvas.on('object:removed', scheduleAutosave);
+    // Every real canvas change (not the page guide or the straighten line) marks
+    // the work unsaved and streams into the debounced writer.
+    const onChange = e => {
+        const t = e && e.target;
+        if (t && (t._pageGuide || t._straightenAid || t.isGridGroup || t.grid)) return;
+        canvasModified = true;
+        scheduleAutosave();
+    };
+    canvas.on('object:added', onChange);
+    canvas.on('object:modified', onChange);
+    canvas.on('object:removed', onChange);
 
     if (loadFromShareLink()) return;    // opened a shared link → don't also nag with restore
 
@@ -537,10 +524,13 @@ function showRestoreBanner(snapshot) {
     restoreBtn.style.background = '#2e7d32';
     restoreBtn.style.borderColor = '#2e7d32';
 
+    // Autosave keeps running while the banner is up, so new work is protected;
+    // Restore uses the snapshot held here, so it still works after new edits.
     restoreBtn.addEventListener('click', () => {
+        const hasWork = canvas.getObjects().some(o => !o._pageGuide);
+        if (hasWork && !confirm('Replace what is on the canvas now with the recovered work?')) return;
         try {
-            applyWorkspace(snapshot.workspace);
-            canvasModified = true; // restored work is unsaved until exported
+            applyWorkspace(snapshot.workspace, true);   // restored work is unsaved until saved
         } catch (err) {
             console.error('Restore failed', err);
             alert('Could not restore the recovered session.');
@@ -553,6 +543,7 @@ function showRestoreBanner(snapshot) {
         // write a new snapshot as they work.)
         clearAutosave();
         banner.remove();
+        if (canvasModified) scheduleAutosave();   // keep what was made meanwhile
     });
 
     banner.append(msg, restoreBtn, dismissBtn);

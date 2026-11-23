@@ -208,6 +208,9 @@ function getSearchRegex(searchInput) {
     return cachedRegex;
 }
 
+const TAG_RE = /<[^>]*>/g;
+const TAG_SPLIT_RE = /(<[^>]*>)/;
+
 // Process line segments
 function processLineSegments(line) {
     return line.split(/(<time>[^<]+<\/time>|<i>[^<]+<\/i>)/)
@@ -265,15 +268,22 @@ async function searchDictionary() {
         await new Promise(resolve => {
             requestAnimationFrame(() => {
                 for (const line of processedDictionary) {
-                    if (regex.exact.test(line) || regex.loose.test(line)) {
+                    // Match on the visible text only: the entries carry <i> and
+                    // <time> markup, so "i" or "time" would otherwise hit
+                    // every line.
+                    const plain = line.replace(TAG_RE, '');
+                    if (regex.exact.test(plain) || regex.loose.test(plain)) {
                         // Keep a TLA credit column out of the highlighting so it
                         // can become a link to the lemma page (tlaCreditHtml).
                         const tab = line.lastIndexOf('\t');
                         const tla = tab !== -1 && TLA_CREDIT_RE.test(line.slice(tab + 1).trim());
                         const body = tla ? line.slice(0, tab) : line;
-                        let highlightedLine = body.replace(regex.highlight,
-                            '<span class="highlight">$1</span>'
-                        );
+                        // Highlight text between tags only, never inside a tag
+                        // (the query "i noun" used to break <i> into "<<span…>i</span>>").
+                        const highlightedLine = body.split(TAG_SPLIT_RE)
+                            .map(part => part.startsWith('<') ? part
+                                : part.replace(regex.highlight, '<span class="highlight">$1</span>'))
+                            .join('');
                         matches.push(processLineSegments(highlightedLine) +
                             (tla ? '\t<span class="tla-credit">' + tlaCreditHtml(line.slice(tab + 1)) + '</span>' : ''));
                     }

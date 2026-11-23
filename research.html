@@ -475,14 +475,14 @@
             <div class="paper-header">
                 <p class="paper-title">Hieroglyphica · ΙΕΡΟΓΛΥΦΩ</p>
                 <p class="paper-subtitle">A Browser-Native Composition Environment for Egyptian Epigraphy</p>
-                <p class="paper-meta">M. Mazzon · hieroglyphica.org · Draft v0.3 — 4 June 2026</p>
+                <p class="paper-meta">M. Mazzon · hieroglyphica.org · Draft v0.4 — 22 November 2026</p>
             </div>
 
             <div class="dictionary-download" style="margin-bottom: 25px;">
                 <div>
                     <strong>Download the paper</strong>
                     <br>
-                    <small>Format: .docx | Draft v0.3</small>
+                    <small>Format: .docx | Draft v0.4</small>
                 </div>
                 <a href="Hieroglyphica-paper.docx" class="download-button" download>Download (.docx)</a>
             </div>
@@ -553,7 +553,7 @@
             <p>PNG and SVG export are also supported, with the editing grid programmatically hidden from all exports via a withGridHidden(fn) wrapper that temporarily nulls the canvas background image during rendering. Copy-to-clipboard (PNG via ClipboardItem) is wired into a custom right-click context menu, replacing the default browser handler that would otherwise capture only the transparent upper canvas.</p>
 
             <h3>4. Feature Comparison</h3>
-            <p>Table 1 summarises the feature space along the axes most relevant to current epigraphic workflows. The table is not a claim of general superiority — JSesh's MdC parser, glyph-repertoire fidelity, and long-tested print pipeline remain reference quality, and the Hieroglyphica roadmap acknowledges those gaps in §6. The intent of the table is rather to make the comparison legible and to identify where Hieroglyphica offers a substantively different model: zero installation, complete Unicode coverage including Extended-A, a linked editorial block, and PDFs that carry a real text layer.</p>
+            <p>Table 1 summarises the feature space along the axes most relevant to current epigraphic workflows. The table is not a claim of general superiority, and §6 lists where Hieroglyphica still falls short. Its purpose is to make the comparison legible and to show where Hieroglyphica offers a substantively different model: zero installation, complete Unicode coverage including Extended-A, a linked editorial block, PDFs that carry a real text layer, share links, and tracing over a photograph. Several JSesh entries were corrected in this draft against JSesh's online documentation (version 8.0.8, October 2026); “not documented” marks a feature not found there.</p>
             <p class="table-caption"><strong>Table 1.</strong> Feature comparison: JSesh and Hieroglyphica.</p>
             <div class="table-wrap">
                 <table class="compare-table">
@@ -563,41 +563,46 @@
                     <tbody>
                         <tr><td>Installation required</td><td>Yes (Java runtime + font setup)</td><td>None — opens in any modern browser</td></tr>
                         <tr><td>Supported platforms</td><td>macOS, Windows, Linux desktop</td><td>Any device with a modern browser</td></tr>
-                        <tr><td>MdC input</td><td>Yes</td><td>Yes, with mixed Unicode in the same stream</td></tr>
-                        <tr><td>Drag-and-drop palette</td><td>Limited</td><td>Reflowing, resizable, click-or-drag</td></tr>
+                        <tr><td>MdC input</td><td>Yes</td><td>Yes: spatial layout, enclosures, colour, shading, lacunae and editorial brackets; Unicode allowed in the same stream</td></tr>
+                        <tr><td>Drag-and-drop palette</td><td>Limited</td><td>Reflowing, resizable, click-or-drag; Gardiner code under each sign</td></tr>
                         <tr><td>Unicode base block (U+13000–U+1342F)</td><td>Yes (proprietary glyphs)</td><td>Yes, via Noto Sans Egyptian Hieroglyphs</td></tr>
                         <tr><td>Egyptian Hieroglyphs Extended-A (U+13460–U+143FF)</td><td>Partial</td><td>Full (~4,897 signs)</td></tr>
-                        <tr><td>Transliteration keyboard</td><td>External tool required</td><td>Built-in (lower, upper, H̱)</td></tr>
+                        <tr><td>Transliteration</td><td>Typed in the document in MdC-style codes; the Unicode transliteration system is not supported</td><td>Built-in keyboard (lower, upper, H̱), Unicode output</td></tr>
                         <tr><td>Leiden conventions palette</td><td>External tool required</td><td>Built-in</td></tr>
                         <tr><td>Linked three-line editorial block</td><td>No</td><td>Yes — glyph row, transliteration, translation</td></tr>
-                        <tr><td>PDF export</td><td>Vector, no text layer</td><td>Hybrid: rasterised visual + invisible Unicode text layer</td></tr>
+                        <tr><td>PDF export</td><td>Vector; the MdC code is embedded for re-import into JSesh</td><td>Hybrid: rasterised visual + invisible Unicode text layer</td></tr>
                         <tr><td>Searchable PDF output</td><td>No</td><td>Yes — Unicode codepoints retained</td></tr>
-                        <tr><td>SVG export</td><td>Yes</td><td>Yes, with fonts embedded</td></tr>
+                        <tr><td>SVG export</td><td>Yes</td><td>Yes, with the Extended-A font embedded</td></tr>
                         <tr><td>PNG export</td><td>Yes</td><td>Yes, with grid suppressed at render time</td></tr>
-                        <tr><td>Copy image to clipboard</td><td>Manual workaround</td><td>Built-in</td></tr>
-                        <tr><td>JSON workspace persistence</td><td>Native binary format</td><td>Open JSON with custom-property persistence</td></tr>
-                        <tr><td>Dictionary integration</td><td>No</td><td>Searchable, drag-to-canvas</td></tr>
+                        <tr><td>Copy to clipboard</td><td>Yes — as PDF, RTF, bitmap or MdC text</td><td>PNG image</td></tr>
+                        <tr><td>Workspace file</td><td>JSesh's own format (.gly)</td><td>Open JSON, including the background photo</td></tr>
+                        <tr><td>Share links</td><td>Not documented</td><td>Yes — the whole composition in one URL</td></tr>
+                        <tr><td>Photo background for tracing</td><td>Not documented</td><td>Yes — a photo behind the canvas at adjustable opacity</td></tr>
+                        <tr><td>Dictionary integration</td><td>No</td><td>Searchable; results drop onto the canvas; signs on the canvas can be read back as words</td></tr>
                         <tr><td>Coptic support</td><td>No</td><td>Yes</td></tr>
-                        <tr><td>Deployment model</td><td>Source-available desktop (GPL)</td><td>Client-side web application</td></tr>
+                        <tr><td>Deployment model</td><td>Desktop application, open source (CeCILL-C licence)</td><td>Client-side web application</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <h3>5. Use Cases for Epigraphers</h3>
-            <p><strong>Teaching.</strong> Instructors can direct students to a URL rather than walking them through installation. Worksheets become JSON files exchanged by email or learning-management system; students open them in-browser, on any device, with no licensing or runtime constraints.</p>
-            <p><strong>Collaborative editing and peer review.</strong> Reviewers can open a colleague's JSON workspace, make changes, and return it without version-matching, licensing, or platform concerns. This contrasts sharply with the desktop model, where every collaborator must run a compatible installation.</p>
-            <p><strong>Web publication.</strong> Compositions can be exported as SVG (with fonts embedded) for inclusion in HTML publications, or as PNG for blogs and figures, with the editing grid programmatically suppressed at render time.</p>
-            <p><strong>Print and archival publication.</strong> PDFs carry both the visual rendering and a Unicode text layer, supporting faithful reproduction in print and downstream digital indexing — a combination not currently available in any other hieroglyphic editor.</p>
+            <p><strong>Teaching.</strong> Instructors can direct students to a URL rather than walking them through installation. Worksheets become JSON files or share links, exchanged by email or a learning-management system; students open them in the browser, on any device, with no licensing or runtime constraints. The same site hosts a free introductory course, Learn to Read Hieroglyphs.</p>
+            <p><strong>Collaborative editing and peer review.</strong> Reviewers can open a colleague's JSON workspace or share link, make changes, and return it without version-matching, licensing, or platform concerns. This contrasts sharply with the desktop model, where every collaborator must run a compatible installation.</p>
+            <p><strong>Epigraphic facsimile.</strong> A photograph of the monument can be loaded behind the canvas at adjustable opacity and the signs placed and sized over it, so that the arrangement and proportions of the encoded text follow the original surface.</p>
+            <p><strong>Web publication.</strong> Compositions can be exported as SVG (with the Extended-A font embedded) for inclusion in HTML publications, or as PNG for blogs and figures, with the editing grid programmatically suppressed at render time.</p>
+            <p><strong>Print and archival publication.</strong> PDFs carry both the visual rendering and a Unicode text layer, supporting faithful reproduction in print and downstream digital indexing — to the author's knowledge, a combination not available in any other hieroglyphic editor.</p>
             <p><strong>Research workflows.</strong> Because the PDF text layer carries real Unicode, exported PDFs become first-class citizens in tools such as Zotero, in text-analysis pipelines, and in university repository indexers.</p>
 
             <h3>6. Limitations and Roadmap</h3>
             <p>Hieroglyphica is not feature-complete relative to JSesh on every axis, and honesty about the current gaps is essential to a fair comparison. The most significant present limitations are:</p>
             <ul>
-                <li><strong>MdC parser depth.</strong> Hieroglyphica accepts MdC input but does not yet implement the full grammar (complex insertions, ligatures, and shading conventions) at JSesh's level.</li>
+                <li><strong>MdC coverage.</strong> Spatial layout, enclosures, colour, shading, lacunae and editorial brackets are implemented. Ligatures and true sign overlap (&amp;) are deliberately left out: the Extended-A palette supplies many combined signs as single characters.</li>
                 <li><strong>Print typography.</strong> Fine-grained kerning, baseline shifting, and quadrat geometry adjustments are coarser than JSesh's mature typesetting model.</li>
                 <li><strong>Sign-list browsing.</strong> Gardiner-category navigation is functional but less polished than JSesh's category browser.</li>
+                <li><strong>Plain-text layout.</strong> Copying signs as Unicode text does not yet insert the Unicode layout controls (U+13430 onward), so stacked and grouped signs lose their arrangement when pasted as plain text.</li>
+                <li><strong>Clipboard.</strong> Images copy to the clipboard as PNG only.</li>
             </ul>
-            <p>Planned work includes a deeper MdC parser pass; quadrat-aware spacing; expanded sign metadata (Gardiner number, MdC code, transliteration shown on hover); a citation export module producing BibTeX and CSL entries directly from workspace files; and integration with external sign-list lookup services. The aim is to close the typography gap while preserving the architectural advantages — web deployment, full Unicode, the linked block primitive, and the hybrid PDF — that Hieroglyphica introduces.</p>
+            <p>Planned work includes Unicode export with the layout controls, so that the arrangement survives in plain text; finer quadrat spacing; further photo-tracing controls; expanded sign metadata (transliteration shown on hover); a citation export module producing BibTeX and CSL entries directly from workspace files; and integration with external sign-list lookup services. The aim is to close the typography gap while preserving the architectural advantages — web deployment, full Unicode, the linked block primitive, and the hybrid PDF — that Hieroglyphica introduces.</p>
 
             <h3>7. Conclusion</h3>
             <p>Hieroglyphica does not seek to displace JSesh but to move the toolkit forward in the directions that contemporary digital epigraphy actually requires. Zero-install access removes a structural barrier to teaching and peer review. Complete Unicode coverage, including the Extended-A block, brings the editor into alignment with the standards that the rest of the digital humanities ecosystem already assumes. The linked three-line block makes the conventional publication layout a first-class object rather than an emergent arrangement. And the hybrid PDF, with its embedded Unicode text layer, produces artefacts that are simultaneously print-faithful and machine-readable — a property no comparable tool currently offers.</p>

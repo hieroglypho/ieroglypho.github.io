@@ -14,7 +14,36 @@ _(none)_
 
 ## TODO
 
-_No open items. TODO-1 (cache-bust the editor's JS/CSS) shipped in 3d7ef6b:
+### TODO-7 — autosave quietly stops for very large canvases (e.g. an imported Sinuhe)
+**Noted:** 2026-11-23
+
+Symptom: after importing a long JSesh text (Sinuhe, ~10,000 signs) the crash-recovery
+autosave no longer saves, and nothing tells the user.
+
+Cause: `writeAutosave` (workspace.js) stores the full Fabric JSON of every object in
+localStorage, which holds about 5 MB per site. Each sign is several hundred bytes of
+JSON, so ~10,000 signs run past the limit. The fallback (drop photos, retry) doesn't help
+when the signs themselves are too big, so it gives up with only a console warning.
+Serializing 10,000 objects after every 1 s pause is also slow.
+
+Suggested fix, in order:
+1. Write the snapshot to IndexedDB instead of localStorage (quota is a share of free
+   disk, typically hundreds of MB; async, so it doesn't freeze the page). Keep the
+   localStorage key only as a fallback, and read either on load.
+2. Make snapshots smaller: serialize with `includeDefaultValues = false` (Fabric then
+   omits every property left at its default, typically halving the size or better),
+   and/or compress with the gzip `CompressionStream` the share links already use
+   (`packString` / `unpackString`).
+3. If a write still fails, say so once: a small "Autosave is off for this canvas, use
+   Save as JSON" notice, instead of only a console warning.
+4. For big canvases, autosave less often (e.g. every 10 s instead of 1 s after
+   the last change once the canvas has more than ~2,000 objects).
+
+Test: import Sinuhe, wait, reload, and the restore banner should offer all ~10,000 signs.
+
+---
+
+_TODO-1 (cache-bust the editor's JS/CSS) shipped in 3d7ef6b:
 `tools/cache-bust.mjs` stamps every local script and stylesheet with `?v=<hash>`;
 re-run it after editing editor assets, before committing._
 

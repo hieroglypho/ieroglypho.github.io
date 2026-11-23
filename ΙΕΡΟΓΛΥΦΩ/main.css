@@ -1601,8 +1601,8 @@ time {
     /* "There is a hidden pane here" hint: a chevron left of the button that
        nudges toward the screen edge, plus a soft pulse on the button. Shown
        until the palette has been opened once (body.palette-seen, remembered in
-       localStorage by editor-init.js). Still, no motion, if the user prefers
-       reduced motion. */
+       localStorage by editor-init.js). With reduced motion it fades instead
+       of moving (see palette-fade below). */
     .palette-toggle::before {
         content: '‹';
         position: absolute;
@@ -1632,9 +1632,19 @@ time {
     0%, 55%, 100% { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); border-color: #8a5c2b; }
     20%           { box-shadow: 0 0 0 4px rgba(232, 133, 26, 0.35), 0 2px 10px rgba(0, 0, 0, 0.4); border-color: #e8851a; }
 }
+/* Reduced motion (e.g. GNOME with animations off): no movement, but the arrow
+   and the button's glow fade in and out, so the hint still catches the eye. */
+@keyframes palette-fade {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 1; }
+}
+@keyframes palette-glow {
+    0%, 100% { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); border-color: #8a5c2b; }
+    50%      { box-shadow: 0 0 0 4px rgba(232, 133, 26, 0.35), 0 2px 10px rgba(0, 0, 0, 0.4); border-color: #e8851a; }
+}
 @media (prefers-reduced-motion: reduce) {
-    .palette-toggle::before,
-    body:not(.palette-seen):not(.palette-open) .palette-toggle { animation: none; }
+    .palette-toggle::before { animation: palette-fade 2.4s ease-in-out infinite; }
+    body:not(.palette-seen):not(.palette-open) .palette-toggle { animation: palette-glow 2.4s ease-in-out infinite; }
 }
 
 @media screen and (max-width: 899px) {

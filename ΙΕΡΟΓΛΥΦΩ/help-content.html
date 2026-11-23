@@ -484,6 +484,7 @@
                     <tr><td class="keys"><kbd>C</kbd></td><td>Center horizontally &mdash; lines up rows on a shared vertical axis (multi-glyph rows move as a unit)</td></tr>
                     <tr><td class="keys"><kbd>R</kbd></td><td>Mirror / reverse selected glyph(s)</td></tr>
                     <tr><td class="keys"><kbd>M</kbd></td><td>Copy selection as MdC code (also the <strong>→MdC</strong> toolbar button)</td></tr>
+                    <tr><td class="keys"><kbd>U</kbd></td><td>Copy selection as Unicode text with layout (also in the right-click menu)</td></tr>
                     <tr><td class="keys"><kbd>F</kbd></td><td>Fit all content in the window (zoom to show every sign)</td></tr>
                     <tr><td class="keys"><kbd>Alt</kbd> + drag</td><td>Pan canvas</td></tr>
                 </tbody>
@@ -517,9 +518,10 @@
 
             <h3>𓏞 Inspect / Convert — every form of the selection</h3>
             <ul>
-                <li><strong>Select</strong> signs on the canvas, then <strong>right-click</strong> and choose <strong>𓏞 Inspect / Convert</strong>. A small panel shows the selection in four forms, each with a <strong>📋 copy</strong> button:</li>
+                <li><strong>Select</strong> signs on the canvas, then <strong>right-click</strong> and choose <strong>𓏞 Inspect / Convert</strong>. A small panel shows the selection in five forms, each with a <strong>📋 copy</strong> button:</li>
                 <li><strong>Glyphs</strong> — the signs themselves in reading order.</li>
-                <li><strong>Unicode</strong> — the code points, e.g. <code>U+131CB U+13429</code>.</li>
+                <li><strong>Unicode with layout</strong> — the signs as Unicode text that keeps the stacking, previewed as it will look (see below).</li>
+                <li><strong>Code points</strong> — e.g. <code>U+131CB U+13429</code>.</li>
                 <li><strong>MdC</strong> — Manuel de Codage, the same string the <strong>→MdC</strong> button copies.</li>
                 <li><strong>Reading</strong> — judged on <em>all</em> the selected signs together. If they spell a word in the dictionary, that reading is shown. Otherwise you get a per-sign breakdown (<code>·</code> separates signs, <code>?</code> marks a sign with no entry) and a note that the combination <em>may still be a valid word that simply isn't in the dictionary yet</em>.</li>
             </ul>
@@ -538,6 +540,16 @@
                 <li><strong>Open JSON…</strong>: load a previously saved workspace.</li>
                 <li><strong>Gardiner signs (Wiki)</strong>: opens the Wikipedia sign list in a new tab.</li>
                 <li><strong>Right-click</strong> the canvas to use the browser's native save / copy on the rendered image.</li>
+            </ul>
+
+            <h3>Copy as Unicode text (with layout)</h3>
+            <ul>
+                <li>Select signs (or nothing, for the whole canvas), then press <kbd>U</kbd> or right-click → <strong>𓐰 Copy as Unicode (with layout)</strong>. You get real text you can paste into a document, a web page, an email or a database.</li>
+                <li>The stacking is kept with Unicode's hieroglyph layout characters (U+13430 onward): one sign <em>over</em> another, <em>side by side</em> inside a group, and brackets for groups inside groups. Lines stay lines.</li>
+                <li><strong>Fonts:</strong> the text shows stacked only in apps using a font that supports these characters, such as the free <a href="https://github.com/microsoft/font-tools/tree/main/EgyptianOpenType" target="_blank" rel="noopener">Egyptian Text</a> (install it on your computer). With other fonts the signs appear in a row, some with small boxes between them; the text itself is still correct. When pasted into a word processor, the text arrives already set in Egyptian Text.</li>
+                <li><strong>Check first:</strong> right-click → <strong>𓏞 Inspect / Convert</strong> shows the result in that font. The editor works out the groups from where the signs sit, so very tight or overlapping placements may group differently than you meant; nudge a sign and look again.</li>
+                <li><strong>Pasting it back:</strong> text with these layout characters can be pasted into the <strong>𓂀…</strong> dialog and is laid out again. Insertions (a small sign tucked into a corner) are placed side by side, and cartouche or mirroring marks are dropped.</li>
+                <li><strong>Copy image</strong> now also puts an SVG (vector) copy on the clipboard in browsers that allow it, so vector apps get a sharp image; other apps keep pasting the PNG.</li>
             </ul>
 
             <div class="tip">

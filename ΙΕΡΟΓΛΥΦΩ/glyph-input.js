@@ -178,7 +178,7 @@ async function addGlyphsFromDialog() {
     // individual-sign layout engine whenever the user picks that mode OR the
     // input contains any such markup — so e.g. "(M17:X1)*N35" or "[[A1-B1]]"
     // lays out correctly even if "Single text run" happens to be selected.
-    const hasSpatialMdC = /[:*()!<>$#?[\]{}&"']/.test(raw);
+    const hasSpatialMdC = /[:*()!<>$#?[\]{}&"']/.test(raw) || /[\u{13430}-\u{1345F}]/u.test(raw);
     if (mode === 'individual' || hasSpatialMdC) {
         // Ensure the hieroglyph font is ready before layout: the engine measures
         // glyph ink boxes with the Canvas API, which silently uses a fallback
@@ -617,6 +617,7 @@ function mdcBaselineFromTop(Hf) {
 }
 
 function handleMdCInput(mdcString) {
+    mdcString = unicodeLayoutToMdC(mdcString);   // Unicode format controls → MdC operators
     let tree = null;
     try {
         tree = parseMdCTree(tokenizeMdC(mdcString));
@@ -1346,24 +1347,32 @@ function mdcWidestGap(boxes, axis) {
     return best;
 }
 
-// Recursively turn a set of sign-boxes into { str, rank }. We split on whichever
-// axis is the more separated (its widest gap is larger), so a row decomposes
-// into cadrats before a cadrat decomposes into stacks. `avgW`/`avgH` only set
-// thresholds: a horizontal gap wide enough is a cadrat separator (`-`) else tight
-// juxtaposition (`*`); a vertical split is always a stack (`:`).
-function mdcFromBoxes(boxes, avgW, avgH) {
-    if (boxes.length === 1) return { str: mdcCodeFor(boxes[0].obj), rank: MDC_LEAF_RANK };
+// Recursively turn a set of sign-boxes into a layout tree:
+//   { leaf: obj }                 one canvas object (a sign, or a run of signs)
+//   { op: '*'|':'|'-', a, b }     a guillotine cut (side by side / stack / next cadrat)
+//   { seq: [obj, …] }             overlapping signs with no clean cut, in reading order
+// We split on whichever axis is the more separated (its widest gap is larger),
+// so a row decomposes into cadrats before a cadrat decomposes into stacks.
+// `avgW`/`avgH` only set thresholds: a horizontal gap wide enough is a cadrat
+// separator (`-`) else tight juxtaposition (`*`); a vertical split is a stack.
+// Shared by the MdC and Unicode exports (mdcFromTree / uniFromTree).
+function mdcLayoutTree(boxes, avgW, avgH) {
+    if (boxes.length === 1) return { leaf: boxes[0].obj };
 
     const xGap = mdcWidestGap(boxes, 'x');
     const yGap = mdcWidestGap(boxes, 'y');
-    const axis = (xGap.gap >= yGap.gap) ? 'x' : 'y';
+    // Any clean left–right gap wins: quadrats follow each other along the
+    // row, while the signs of a stack always overlap horizontally. (Comparing
+    // gap sizes alone failed with ink boxes: r:a next to the sun has a bigger
+    // vertical gap under r than horizontal gap before the sun.)
+    const axis = (xGap.gap > 1 || xGap.gap >= yGap.gap) ? 'x' : 'y';
     const cut = axis === 'x' ? xGap : yGap;
 
     // Both axes overlap heavily (e.g. fused/ligatured signs): no sensible
-    // guillotine, so just emit in reading order joined by `-`.
+    // guillotine, so keep them in reading order.
     if (cut.gap < -(axis === 'x' ? avgW : avgH) * 0.5) {
         const ordered = [...boxes].sort((a, b) => (a.top - b.top) || (a.left - b.left));
-        return { str: ordered.map(b => mdcCodeFor(b.obj)).join('-'), rank: MDC_OP_RANK['-'] };
+        return { seq: ordered.map(b => b.obj) };
     }
 
     const op = axis === 'x' ? (cut.gap >= avgW * 0.4 ? '-' : '*') : ':';
@@ -1372,54 +1381,239 @@ function mdcFromBoxes(boxes, avgW, avgH) {
         : b => b.top + b.height / 2;
     const first = boxes.filter(b => center(b) < cut.pos);
     const second = boxes.filter(b => center(b) >= cut.pos);
+    return { op, a: mdcLayoutTree(first, avgW, avgH), b: mdcLayoutTree(second, avgW, avgH) };
+}
 
-    const rank = MDC_OP_RANK[op];
-    const a = mdcFromBoxes(first, avgW, avgH);
-    const c = mdcFromBoxes(second, avgW, avgH);
+// Layout tree → { str, rank } in MdC.
+function mdcFromTree(t) {
+    if (t.leaf) return { str: mdcCodeFor(t.leaf), rank: MDC_LEAF_RANK };
+    if (t.seq) return { str: t.seq.map(mdcCodeFor).join('-'), rank: MDC_OP_RANK['-'] };
+    const rank = MDC_OP_RANK[t.op];
+    const a = mdcFromTree(t.a), c = mdcFromTree(t.b);
     // Parenthesize an operand only when it binds looser than the joining
     // operator (e.g. a stack inside a juxtaposition: A*(B:C)).
     const wrap = part => part.rank < rank ? `(${part.str})` : part.str;
-    return { str: wrap(a) + op + wrap(c), rank };
+    return { str: wrap(a) + t.op + wrap(c), rank };
+}
+
+function mdcFromBoxes(boxes, avgW, avgH) {
+    return mdcFromTree(mdcLayoutTree(boxes, avgW, avgH));
 }
 
 // Group boxes top-to-bottom into rows, breaking only on a clean vertical gap
 // wider than a sign (genuine line spacing). A stack's internal gap is smaller,
 // so aligned cadrats stay in one row instead of being mistaken for two lines.
-function mdcSplitRows(boxes, avgH) {
+//
+// With INK boxes (signInkBox) gaps are real, so a stack's gap (up to ~0.4 of
+// the sign size) can be as large as the gap between two lines of flat signs.
+// Pass `signSize` (the typical font size on the canvas) for the ink rule: a
+// break needs a gap of 0.5·size, or of 0.3·size under a row wider than any
+// single cadrat can be (2.3·size). Measured on the layout engine's output:
+// stack gaps 5–25 px, line gaps 23 (flat signs) to 35 px, at size 60. Two
+// one-sign "lines" closer than that read as a stack, which looks the same. Without `signSize`, the
+// original line-box rule (gap ≥ 0.9·avgH) applies — word-finder.js uses that.
+function mdcSplitRows(boxes, avgH, signSize) {
     const sorted = [...boxes].sort((a, b) => a.top - b.top);
     const rows = [];
     let cur = [];
-    let runMax = -Infinity;
+    let runMax = -Infinity, rowL = Infinity, rowR = -Infinity;
+    const isBreak = (gap) => {
+        if (!signSize) return gap >= avgH * 0.9;
+        if (gap < signSize * 0.3) return false;
+        return gap >= signSize * 0.5 || (rowR - rowL) > signSize * 2.3;
+    };
     for (const b of sorted) {
-        if (cur.length && b.top - runMax >= avgH * 0.9) { rows.push(cur); cur = []; runMax = -Infinity; }
+        if (cur.length && isBreak(b.top - runMax)) {
+            rows.push(cur); cur = []; runMax = -Infinity; rowL = Infinity; rowR = -Infinity;
+        }
         cur.push(b);
         runMax = Math.max(runMax, b.top + b.height);
+        rowL = Math.min(rowL, b.left); rowR = Math.max(rowR, b.left + b.width);
     }
     if (cur.length) rows.push(cur);
     return rows;
 }
 
-// Copy the current selection to the clipboard as MdC code. Bound to the toolbar
-// "→MdC" button and the `m` shortcut.
+// The typical sign size on screen-independent canvas units: the median of
+// fontSize × scale over the signs (robust against one huge or tiny sign).
+function mdcSignSize(boxes) {
+    const sizes = boxes.map(b => (b.obj.fontSize || MDC_BASE) * Math.abs(b.obj.scaleY || 1)
+        * (b.obj.group ? Math.abs(b.obj.group.scaleY || 1) : 1)).sort((x, y) => x - y);
+    return sizes[Math.floor(sizes.length / 2)] || MDC_BASE;
+}
+
+// Sign boxes for layout detection. Each box is the sign's INK in canvas-plane
+// coords (objInkExtent for top/bottom, measureText for left/right), not
+// fabric's line box: a flat sign such as N35 sits in a tall box of empty
+// space, and those boxes overlapped when stacked, so stacks were read as rows.
+let _signInkCtx = null;
+function signInkBox(o) {
+    o.setCoords();
+    const r = o.getBoundingRect(true, true);    // canvas-plane, zoom-independent
+    let box = { obj: o, left: r.left, top: r.top, width: r.width, height: r.height };
+    if (o.angle) return box;                    // rotated sign: keep its bounding box
+    if (typeof objInkExtent === 'function') {
+        const e = objInkExtent(o);
+        box.top = e.top; box.height = Math.max(1, e.bottom - e.top);
+    }
+    const text = o.text || '';
+    if (text && text.indexOf('\n') === -1) {
+        if (!_signInkCtx) _signInkCtx = document.createElement('canvas').getContext('2d');
+        _signInkCtx.font = `100px ${o.fontFamily || 'sans-serif'}`;
+        const m = _signInkCtx.measureText(text);
+        if (typeof m.actualBoundingBoxLeft === 'number' && m.width > 0) {
+            let l = -m.actualBoundingBoxLeft / m.width, rt = m.actualBoundingBoxRight / m.width;
+            if (o.flipX) [l, rt] = [1 - rt, 1 - l];
+            l = Math.max(0, Math.min(1, l)); rt = Math.max(l, Math.min(1, rt));
+            box.left = r.left + l * r.width;
+            box.width = Math.max(1, (rt - l) * r.width);
+        }
+    }
+    return box;
+}
+
 // Pure: build the MdC string for a list of sign objects (no clipboard, no toast).
 // Returns '' when the list has no glyph signs. Shared by exportSelectionToMdC and
 // the Inspect modal so the two never drift.
 function mdcStringForObjs(objs) {
     const signs = (objs || []).filter(o => o.type === 'text' && !o._pageGuide);
     if (signs.length === 0) return '';
-
-    const boxes = signs.map(o => {
-        o.setCoords();
-        const r = o.getBoundingRect(true);   // canvas-plane box, zoom-independent
-        return { obj: o, left: r.left, top: r.top, width: r.width, height: r.height };
-    });
+    const boxes = signs.map(signInkBox);
     const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
 
     // Rows first (line breaks), then guillotine each row into cadrats.
-    return mdcSplitRows(boxes, avgH)
+    return mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
         .map(row => mdcFromBoxes(row, avgW, avgH).str)
         .join(' ! ');
+}
+
+// =============================================================================
+// Unicode with layout: the Egyptian Hieroglyph Format Controls (U+13430…)
+// =============================================================================
+// The same layout tree, written as Unicode text that keeps the arrangement:
+//   ':' stack        → U+13430 VERTICAL JOINER
+//   '*' side by side → U+13431 HORIZONTAL JOINER
+//   '( )' grouping   → U+13437 BEGIN SEGMENT / U+13438 END SEGMENT
+//   '-' next cadrat  → nothing (quadrats simply follow each other)
+//   line break       → newline;  mirrored sign → sign + U+13440 MIRROR HORIZONTALLY
+// Precedence matches MdC: the horizontal joiner binds tighter than the vertical
+// one, so a stack inside a side-by-side group is bracketed: A 𓐱 𓐷 B 𓐰 C 𓐸.
+// Renders as quadrats only with a font that implements the controls (e.g. the
+// free "Egyptian Text"); other fonts show the signs in a row.
+const UNI_VJ = '\u{13430}', UNI_HJ = '\u{13431}';
+const UNI_BEGIN = '\u{13437}', UNI_END = '\u{13438}', UNI_MIRROR = '\u{13440}';
+const UNI_SIGN_RE = /[\u{13000}-\u{1342F}\u{13460}-\u{143FF}]/gu;   // for match()
+const UNI_HAS_SIGN = /[\u{13000}-\u{1342F}\u{13460}-\u{143FF}]/u;   // for test(): no lastIndex state
+
+function uniSignsOf(obj) {
+    let signs = (obj.text || '').match(UNI_SIGN_RE) || [];
+    // A mirrored run reads in the other direction, each sign mirrored.
+    if (obj.flipX) signs = signs.reverse().map(g => g + UNI_MIRROR);
+    return signs;
+}
+
+// Layout tree → { str, rank }. `nested`: inside a joiner, where a run of
+// several quadrats is not allowed, so a run becomes a horizontal group.
+function uniFromTree(t, nested) {
+    const run = (signs) => {
+        if (signs.length === 1) return { str: signs[0], rank: MDC_LEAF_RANK };
+        return nested ? { str: signs.join(UNI_HJ), rank: MDC_OP_RANK['*'] }
+                      : { str: signs.join(''), rank: MDC_OP_RANK['-'] };
+    };
+    if (t.leaf) return run(uniSignsOf(t.leaf));
+    if (t.seq) return run(t.seq.flatMap(uniSignsOf));
+    // Inside a joiner a cadrat break can't exist, so it becomes side by side.
+    // At the top of a line, side by side is written as separate quadrats:
+    // it looks the same, and a whole line joined into ONE quadrat would be
+    // squeezed by the font (the editor's '*' and '-' spacing is 6 vs 10 px,
+    // too close to tell apart reliably).
+    const op = nested ? (t.op === '-' ? '*' : t.op) : (t.op === '*' ? '-' : t.op);
+    if (op === '-') {
+        return { str: uniFromTree(t.a, false).str + uniFromTree(t.b, false).str, rank: MDC_OP_RANK['-'] };
+    }
+    const rank = MDC_OP_RANK[op];
+    const a = uniFromTree(t.a, true), c = uniFromTree(t.b, true);
+    const wrap = part => part.rank < rank ? UNI_BEGIN + part.str + UNI_END : part.str;
+    return { str: wrap(a) + (op === ':' ? UNI_VJ : UNI_HJ) + wrap(c), rank };
+}
+
+// Pure: the Unicode-with-layout text for a list of objects ('' if no signs).
+// Only objects holding hieroglyphs count (transliteration lines are skipped).
+function unicodeStringForObjs(objs) {
+    const signs = (objs || []).filter(o => o && (o.type === 'text' || o.type === 'i-text')
+        && !o._pageGuide && UNI_HAS_SIGN.test(o.text || ''));
+    if (signs.length === 0) return '';
+    const boxes = signs.map(signInkBox);
+    const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
+    const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
+    return mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
+        .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH), false).str)
+        .filter(Boolean)
+        .join('\n');
+}
+
+// Copy the selection (or, with nothing selected, the whole canvas) as Unicode
+// text with layout. Puts plain text plus an HTML version naming the Egyptian
+// Text font, so word processors that have it installed show the quadrats.
+// Bound to the `u` shortcut and the canvas right-click menu.
+function copySelectionAsUnicode(objs) {
+    let src = objs && objs.length ? objs : canvas.getActiveObjects();
+    if (!src.length) src = canvas.getObjects();
+    const text = unicodeStringForObjs(src);
+    if (!text) {
+        showCanvasToast('No hieroglyphs to copy');
+        return Promise.resolve('');
+    }
+    const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const html = `<span style="font-family:'Egyptian Text','Noto Sans Egyptian Hieroglyphs'">` +
+        esc(text).replace(/\n/g, '<br>') + '</span>';
+    const done = () => showCanvasToast('Unicode copied, with layout (needs a font such as Egyptian Text to show stacked)');
+    const plainOnly = () => navigator.clipboard.writeText(text).then(done);
+    let p;
+    if (navigator.clipboard && window.ClipboardItem && navigator.clipboard.write) {
+        p = navigator.clipboard.write([new ClipboardItem({
+            'text/plain': new Blob([text], { type: 'text/plain' }),
+            'text/html': new Blob([html], { type: 'text/html' })
+        })]).then(done).catch(plainOnly);
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        p = plainOnly();
+    } else {
+        p = Promise.reject(new Error('no clipboard'));
+    }
+    return p.catch(() => { window.prompt('Unicode with layout (copy):', text); }).then(() => text);
+}
+
+// Unicode with layout controls → MdC, so text copied from elsewhere (or from
+// this editor) can be pasted back and laid out. Joiners and segments map 1:1;
+// the insertion and overlay controls have no MdC operator in this editor and
+// become side by side; enclosure, mirror, blank and damage marks are dropped.
+// Text without format controls is returned unchanged.
+function unicodeLayoutToMdC(str) {
+    if (!/[\u{13430}-\u{1345F}]/u.test(str || '')) return str;
+    let out = '', prev = null;       // prev: 'sign' | 'close' | 'op' | 'open' | null
+    for (const ch of str) {
+        const cp = ch.codePointAt(0);
+        const isSign = (cp >= 0x13000 && cp <= 0x1342F) || (cp >= 0x13460 && cp <= 0x143FF);
+        if (isSign || cp === 0x13437) {
+            if (prev === 'sign' || prev === 'close') out += '-';   // a new quadrat starts
+            out += isSign ? ch : '(';
+            prev = isSign ? 'sign' : 'open';
+        } else if (cp === 0x13438) { out += ')'; prev = 'close'; }
+        else if (cp === 0x13430) { out += ':'; prev = 'op'; }
+        else if (cp === 0x13431 || (cp >= 0x13432 && cp <= 0x13436) || (cp >= 0x13439 && cp <= 0x1343B)) {
+            out += '*'; prev = 'op';
+        } else if (cp >= 0x1343C && cp <= 0x1345F) {
+            // enclosures, mirror, blanks, damage: not representable here
+        } else if (ch === '\n' || ch === '\r') {
+            if (prev !== null) out += ' ! ';
+            prev = null;
+        } else {
+            out += ch;
+            if (/\s/.test(ch)) prev = null;
+        }
+    }
+    return out;
 }
 
 function exportSelectionToMdC() {

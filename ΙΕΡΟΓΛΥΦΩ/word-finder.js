@@ -321,6 +321,15 @@ function openInspectModal(objs) {
         ? compositionGlyphRun(objs) : { run: '' };
 
     const mdc = (typeof mdcStringForObjs === 'function') ? mdcStringForObjs(objs) : '';
+    // Unicode with layout controls (glyph-input.js), previewed in Egyptian Text.
+    const uni = (typeof unicodeStringForObjs === 'function')
+        ? unicodeStringForObjs(objs && objs.length ? objs
+            : (canvas.getActiveObjects().length ? canvas.getActiveObjects() : canvas.getObjects()))
+        : '';
+    const uniNote = uni ? 'Unicode text that keeps the stacking. It shows like this only in apps using a font ' +
+        'that supports Unicode hieroglyph layout, such as the free ' +
+        '<a href="https://github.com/microsoft/font-tools/tree/main/EgyptianOpenType" target="_blank" rel="noopener">Egyptian Text</a>; ' +
+        'other fonts show the signs in a row. Shortcut: <kbd>u</kbd> copies it.' : '';
     const reading = run ? _wfReadingForRun(run) : null;
 
     // Reading is judged on all the selected signs *together*. Only an exact
@@ -343,7 +352,8 @@ function openInspectModal(objs) {
     // is disabled.
     const rows = [
         { label: 'Glyphs',  cls: 'glyphs',  copy: run,                 html: _wfEsc(run) },
-        { label: 'Unicode', cls: 'unicode', copy: run ? _wfUnicodePoints(run) : '', html: _wfEsc(_wfUnicodePoints(run)) },
+        { label: 'Unicode with layout', cls: 'layout', copy: uni, html: `<span class="uni-preview">${_wfEsc(uni)}</span>`, note: uniNote },
+        { label: 'Code points', cls: 'unicode', copy: run ? _wfUnicodePoints(run) : '', html: _wfEsc(_wfUnicodePoints(run)) },
         { label: 'MdC',     cls: 'mdc',     copy: mdc,                 html: _wfEsc(mdc) },
         { label: 'Reading', cls: 'reading', copy: readingCopy,        html: readingHtml, note: readingNote },
     ];

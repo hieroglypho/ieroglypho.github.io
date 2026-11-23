@@ -66,6 +66,10 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
    6. `glyph-input.js` — on-screen keyboard dialog, glyph-text dialog, three-line
       linked blocks, transliteration palette, MdC paste handler (`parseMdCInput`,
       `handleMdCInput`).
+      Also the export side: `mdcLayoutTree` (layout detection on ink boxes,
+      `signInkBox`) → `mdcStringForObjs` (MdC) and `unicodeStringForObjs`
+      (Unicode with format controls U+13430…, `copySelectionAsUnicode`, key `u`);
+      `unicodeLayoutToMdC` turns pasted Unicode-with-layout back into MdC.
    6b. `photo-trace.js` — photo tracing (BG photo panel): lock, rotate, straighten,
       fit, hide, replace, "include photo in exports" (`hidePhotosForExport`, used by
       `export.js`). Its `initPhotoTrace()` is called from editor-init's dispatcher.

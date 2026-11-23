@@ -255,3 +255,18 @@ easy to find (palette UX, not an engine).
   gappy vertical stacks (short signs like sun/water now pack tight) and aligns
   all non-stacked cadrats on a true ink baseline. NOT yet full proportional
   cadrat fitting (scaling sub-glyphs to fill a square quadrat) — still pending.
+- **2026-11-23** — Export side. (1) `mdcStringForObjs` now detects layout on
+  each sign's INK box (`signInkBox`) instead of fabric's line box: flat signs'
+  tall empty boxes overlapped, so stacks were exported as rows
+  (`N35:N35:N35` came out `N35-N35-N35`, `Q3*X1:N35` as `Q3-X1-N35`). A clean
+  left–right gap now takes priority over a vertical one, and line breaks need a
+  gap of 0.5·sign size (or 0.3· under a row wider than one cadrat). (2) The
+  layout tree (`mdcLayoutTree`) is shared by a new **Unicode with layout**
+  export (`unicodeStringForObjs`: `:`→U+13430, `*`→U+13431, `( )`→U+13437/8,
+  top-level `*`/`-` → separate quadrats, flipped sign → +U+13440), offered via
+  key `u`, the right-click menu and the Inspect window (preview in the bundled
+  Egyptian Text font, SIL OFL, `fonts/EgyptianText-OFL.txt`). (3) Pasting
+  Unicode with format controls into the 𓂀… dialog goes through
+  `unicodeLayoutToMdC` first. Known, not fixed: the importer upper-cases MdC
+  codes, so lowercase phonetic codes resolve to the uppercase ones (`a` gives
+  G1 instead of D36).

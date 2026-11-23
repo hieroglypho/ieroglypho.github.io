@@ -69,7 +69,9 @@ function triggerDownload(blob, filename) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-async function saveToSVG() {
+// The canvas as a self-contained SVG string (fonts and background embedded).
+// Used by Save as SVG and by Copy image (as the clipboard's vector version).
+async function buildSVGString() {
     let svg = await withGridHidden(() => canvas.toSVG());
 
     // Build an @font-face block to embed the local woff2.
@@ -104,6 +106,11 @@ async function saveToSVG() {
         }
     }
 
+    return svg;
+}
+
+async function saveToSVG() {
+    const svg = await buildSVGString();
     const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.svg`;
     triggerDownload(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), filename);
 }
@@ -302,8 +309,25 @@ async function copyCanvasImage() {
         if (!navigator.clipboard || !window.ClipboardItem) {
             throw new Error('Clipboard image write not supported in this browser');
         }
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        showCanvasToast('Image copied to clipboard');
+        // Also offer an SVG (vector) version where the browser can put one on
+        // the clipboard (ClipboardItem.supports, Chrome 121+), so vector apps
+        // can paste it; other apps keep taking the PNG. If the two-format write
+        // fails for any reason, fall back to the PNG alone.
+        let wroteSvg = false;
+        if (typeof ClipboardItem.supports === 'function' && ClipboardItem.supports('image/svg+xml')) {
+            try {
+                const svg = await buildSVGString();
+                await navigator.clipboard.write([new ClipboardItem({
+                    'image/png': blob,
+                    'image/svg+xml': new Blob([svg], { type: 'image/svg+xml' })
+                })]);
+                wroteSvg = true;
+            } catch (e) {
+                console.warn('SVG clipboard copy failed; copying PNG only', e);
+            }
+        }
+        if (!wroteSvg) await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        showCanvasToast(wroteSvg ? 'Image copied to clipboard (PNG + SVG)' : 'Image copied to clipboard');
     } catch (err) {
         console.error('Error copying image:', err);
         alert('Could not copy image: ' + (err.message || err) + '\nFalling back to download.');

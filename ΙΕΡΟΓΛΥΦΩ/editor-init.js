@@ -321,6 +321,12 @@ function initCanvasContextMenu() {
                 if (typeof setSelectionSize === 'function') setSelectionSize(objs);
                 break;
             }
+            case 'unicode': {
+                // The selection, else the whole canvas (not just the clicked sign).
+                const active = canvas.getActiveObjects ? canvas.getActiveObjects() : [];
+                if (typeof copySelectionAsUnicode === 'function') copySelectionAsUnicode(active.length ? active : null);
+                break;
+            }
             case 'copy': copyCanvasImage(); break;
             case 'png':  saveToPNG();       break;
             case 'svg':  saveToSVG();       break;
@@ -971,6 +977,11 @@ window.addEventListener('keydown', function (e) {
         // Copy the selection as MdC code.
         if (e.key.toLowerCase() === 'm') {
             exportSelectionToMdC();
+            return;
+        }
+        // Copy the selection as Unicode text with layout controls.
+        if (e.key.toLowerCase() === 'u' && typeof copySelectionAsUnicode === 'function') {
+            copySelectionAsUnicode();
             return;
         }
     }

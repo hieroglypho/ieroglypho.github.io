@@ -7,6 +7,18 @@
     unicode-range: U+13460-143FF;
 }
 
+/* Egyptian Text (Microsoft, SIL OFL; fonts/EgyptianText-OFL.txt): implements the
+   Unicode hieroglyph layout controls (U+13430…), so it can show the quadrats
+   of "Unicode with layout" text. Used only by the Inspect preview; browsers
+   fetch a web font only when something on the page uses it. */
+@font-face {
+    font-family: 'Egyptian Text Preview';
+    src: url('fonts/EgyptianText.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 .noto-sans-egyptian-hieroglyphs-regular {
     font-family: "Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif;
     font-weight: 400;
@@ -754,6 +766,14 @@ a.tla-link:focus-visible {
     line-height: 1.2;
 }
 
+.inspect-value.layout .uni-preview {
+    display: block;
+    font-family: 'Egyptian Text Preview', 'Hieroglyphica Extended', sans-serif;
+    font-size: 40px;
+    line-height: 1.25;
+    white-space: pre-line;
+}
+
 .inspect-value.unicode,
 .inspect-value.mdc {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -787,6 +807,15 @@ a.tla-link:focus-visible {
     line-height: 1.45;
     font-style: italic;
     color: #9a9a9a;
+}
+
+.inspect-note a { color: #8fd3f4; }
+.inspect-note kbd {
+    font-style: normal;
+    padding: 0 4px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background: #2e2e2e;
 }
 
 .inspect-copy {

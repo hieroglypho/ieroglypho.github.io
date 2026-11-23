@@ -531,7 +531,17 @@ window.addEventListener('load', () => {
     const scrim = document.getElementById('paletteScrim');
     if (!toggle) return;
     const close = () => document.body.classList.remove('palette-open');
-    toggle.addEventListener('click', () => document.body.classList.toggle('palette-open'));
+    // The toggle wears a "hidden pane" hint (main.css) until the palette has
+    // been opened once; remembered per browser, never fatal if storage is off.
+    const SEEN_KEY = 'hq_palette_seen';
+    try { if (localStorage.getItem(SEEN_KEY)) document.body.classList.add('palette-seen'); } catch (_) {}
+    toggle.addEventListener('click', () => {
+        document.body.classList.toggle('palette-open');
+        if (!document.body.classList.contains('palette-seen')) {
+            document.body.classList.add('palette-seen');
+            try { localStorage.setItem(SEEN_KEY, '1'); } catch (_) {}
+        }
+    });
     if (scrim) scrim.addEventListener('click', close);
     // Leaving drawer mode (e.g. rotate to wide / desktop) clears the open state
     // so the palette returns to its normal in-flow column.

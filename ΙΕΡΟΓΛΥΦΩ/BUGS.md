@@ -14,14 +14,9 @@ _(none)_
 
 ## TODO
 
-### TODO-1 — Cache-bust the editor's JS/CSS so deploys take effect
-**Filed:** 2026-06-04
-
-`index.html` loads `export.js`, `editor-core.js`, … with bare `src="export.js"`
-(no version query), so browsers/GitHub-Pages happily serve stale copies after a
-deploy. This is what made BUG-1 look unfixed (see Fixed below). Add a version/
-hash query string (`?v=…`) to the script + stylesheet tags, or some other
-cache-bust, so a new commit reliably reaches users without a manual hard refresh.
+_No open items. TODO-1 (cache-bust the editor's JS/CSS) shipped in 3d7ef6b:
+`tools/cache-bust.mjs` stamps every local script and stylesheet with `?v=<hash>`;
+re-run it after editing editor assets, before committing._
 
 ---
 

@@ -432,6 +432,23 @@ canvas {
     font-size: 11px;
     font-style: italic;
 }
+/* TLA lemma number in a result: links to the lemma's page on the TLA site. */
+.tla-credit {
+    color: #b388e6;
+    font-size: 11px;
+    font-style: italic;
+    white-space: nowrap;
+}
+a.tla-link {
+    color: #9cc4ff;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+}
+a.tla-link:hover,
+a.tla-link:focus-visible {
+    color: #cfe2ff;
+    text-decoration-style: solid;
+}
 
 .wf-more {
     color: #9aa7b0;

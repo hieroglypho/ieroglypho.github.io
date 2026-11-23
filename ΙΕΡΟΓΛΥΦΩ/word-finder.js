@@ -209,7 +209,7 @@ function _wfEntryRows(list) {
         `<div class="wf-entry"><span class="large-text" title="Click to add these signs to the canvas">${m.glyphs}</span>` +
         `<span class="wf-gloss">${_wfGloss(m.gloss)}` +
         (m.gardiner ? ` <span class="wf-gard">${_wfEsc(m.gardiner)}</span>` : '') +
-        (m.credit ? ` <span class="wf-credit">— ${_wfEsc(m.credit)}</span>` : '') +
+        (m.credit ? ` <span class="wf-credit">— ${typeof tlaCreditHtml === 'function' ? tlaCreditHtml(m.credit) : _wfEsc(m.credit)}</span>` : '') +
         `</span></div>`).join('');
     const more = list.length > WF_CAP ? `<div class="wf-more">+${list.length - WF_CAP} more…</div>` : '';
     return rows + more;

@@ -16,6 +16,22 @@ const ADDITIONS_URL = '../dict-additions.txt';
 // searchable too. Also optional — a missing file is never fatal.
 const TLA_URL = '../dictionary-tla.txt';
 
+// TLA entries end with a credit column "TLA <lemma id> CC BY-SA 4.0". The id is
+// the TLA's stable lemma number, so it can open that lemma's page directly.
+const TLA_LEMMA_URL = 'https://thesaurus-linguae-aegyptiae.de/lemma/';
+const TLA_CREDIT_RE = /^TLA (\d{1,9})\b(.*)$/;
+
+// HTML for a credit string: "TLA 10030 CC BY-SA 4.0" becomes a link to the
+// lemma page plus the licence; anything else is returned escaped, unchanged.
+// Also used by word-finder.js.
+function tlaCreditHtml(credit) {
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const m = TLA_CREDIT_RE.exec(String(credit || '').trim());
+    if (!m) return esc(credit || '');
+    return `<a class="tla-link" href="${TLA_LEMMA_URL}${m[1]}" target="_blank" rel="noopener"` +
+        ` title="Open this lemma in the Thesaurus Linguae Aegyptiae">TLA ${m[1]}</a>${esc(m[2])}`;
+}
+
 // Initialize the application
 function initializeApp() {
     initializeSearchListeners();
@@ -250,10 +266,16 @@ async function searchDictionary() {
             requestAnimationFrame(() => {
                 for (const line of processedDictionary) {
                     if (regex.exact.test(line) || regex.loose.test(line)) {
-                        let highlightedLine = line.replace(regex.highlight,
+                        // Keep a TLA credit column out of the highlighting so it
+                        // can become a link to the lemma page (tlaCreditHtml).
+                        const tab = line.lastIndexOf('\t');
+                        const tla = tab !== -1 && TLA_CREDIT_RE.test(line.slice(tab + 1).trim());
+                        const body = tla ? line.slice(0, tab) : line;
+                        let highlightedLine = body.replace(regex.highlight,
                             '<span class="highlight">$1</span>'
                         );
-                        matches.push(processLineSegments(highlightedLine));
+                        matches.push(processLineSegments(highlightedLine) +
+                            (tla ? '\t<span class="tla-credit">' + tlaCreditHtml(line.slice(tab + 1)) + '</span>' : ''));
                     }
                 }
                 resolve();

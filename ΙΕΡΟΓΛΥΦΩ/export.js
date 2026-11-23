@@ -169,10 +169,13 @@ async function withGridHidden(fn) {
     if (gridBg) canvas.backgroundImage = null;
     guides.forEach(o => { o.visible = false; });
     if (active) canvas.discardActiveObject();
-    if (gridBg || guides.length || active) canvas.renderAll();
+    // Photos that are hidden or set to stay out of exports (photo-trace.js).
+    const restorePhotos = typeof hidePhotosForExport === 'function' ? hidePhotosForExport() : () => {};
+    canvas.renderAll();
     try {
         return await fn();
     } finally {
+        restorePhotos();
         if (gridBg) canvas.backgroundImage = gridBg;
         guides.forEach(o => { o.visible = true; });
         if (active) canvas.setActiveObject(active);
@@ -350,6 +353,7 @@ function _scanInkBounds() {
     if (gridBg) canvas.backgroundImage = null;
     guides.forEach(o => { o.visible = false; });
     if (active) canvas.discardActiveObject();
+    const restorePhotos = typeof hidePhotosForExport === 'function' ? hidePhotosForExport() : () => {};
     canvas.renderAll();
     try {
         const el = canvas.getElement();
@@ -374,6 +378,7 @@ function _scanInkBounds() {
             maxX: (maxX + 1) / retina, maxY: (maxY + 1) / retina
         };
     } finally {
+        restorePhotos();
         if (gridBg) canvas.backgroundImage = gridBg;
         guides.forEach(o => { o.visible = true; });
         if (active) canvas.setActiveObject(active);
@@ -385,7 +390,8 @@ function _scanInkBounds() {
 // Returns null when empty. Call inside an identity viewport so the rect lines
 // up with rendered pixels.
 function getContentBounds(padding = 8) {
-    const objs = canvas.getObjects().filter(o => o && !o._pageGuide);
+    const objs = canvas.getObjects().filter(o => o && !o._pageGuide
+        && !(o.type === 'image' && (!o.visible || o.photoExport === false)));
     if (!objs.length) return null;
 
     // Prefer the true visible-ink extent; fall back to the metric union of

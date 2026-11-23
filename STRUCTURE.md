@@ -66,6 +66,9 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
    6. `glyph-input.js` — on-screen keyboard dialog, glyph-text dialog, three-line
       linked blocks, transliteration palette, MdC paste handler (`parseMdCInput`,
       `handleMdCInput`).
+   6b. `photo-trace.js` — photo tracing (BG photo panel): lock, rotate, straighten,
+      fit, hide, replace, "include photo in exports" (`hidePhotosForExport`, used by
+      `export.js`). Its `initPhotoTrace()` is called from editor-init's dispatcher.
    7. `editor-init.js` — `initMainMenu`, DOM event wiring, background image,
       the single `DOMContentLoaded` dispatcher, color popup, layout/resize/keydown
       lifecycle. Runs last because it wires everything defined above.

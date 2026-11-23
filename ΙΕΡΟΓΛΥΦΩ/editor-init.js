@@ -156,6 +156,10 @@ function initBackgroundImage() {
             id: img.id
         });
 
+        // Photo tracing (photo-trace.js): replace an old photo if asked,
+        // apply the lock, open the photo panel.
+        if (typeof photoLoaded === 'function') photoLoaded(img);
+
         canvas.requestRenderAll();
     });
 }
@@ -239,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMainMenu();
     initCharDragstart();
     initBackgroundImage();
+    if (typeof initPhotoTrace === 'function') initPhotoTrace();   // photo-trace.js
     initColorPopup();
     initPaletteResizer();
     initResultsResizer();

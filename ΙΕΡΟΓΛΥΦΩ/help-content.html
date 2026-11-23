@@ -433,7 +433,7 @@
                 <div><span class="icon">Page</span><strong>Page guide</strong> — cycles off → portrait → landscape. Draws a US-Letter frame: solid line = paper edge, dotted line = printable area</div>
                 <div><span class="icon">⌨</span>Text input (incl. transliteration &amp; Coptic)</div>
                 <div><span class="icon glyph-icon">𓂀</span><strong>Hieroglyph input</strong> (highlighted button) — opens the dialog for a text run, individual signs (MdC spatial layout), or a three-line block</div>
-                <div><span class="icon">BG</span>Upload a background image</div>
+                <div><span class="icon">BG</span>Load a photo to trace; then opens the photo tools</div>
                 <div><span class="icon">BG&nbsp;α</span>Background opacity slider</div>
                 <div><span class="icon">🎨</span>Set the canvas color</div>
             </div>
@@ -556,11 +556,15 @@
                 never appears in the export.
             </div>
 
-            <h3>Background image</h3>
+            <h3>Tracing a photo</h3>
             <ul>
-                <li><strong>BG</strong> uploads a reference image behind the canvas.</li>
-                <li><strong>BG α</strong> sets its opacity (0–100%).</li>
-                <li>Pan offsets reset when the background is hidden or replaced.</li>
+                <li><strong>BG</strong> loads a photo behind the canvas (a stela, a papyrus, a tomb wall). Once a photo is loaded, <strong>BG</strong> opens the <strong>Photo</strong> tools.</li>
+                <li><strong>Place it:</strong> drag the photo and its corner handles to move and size it, or use <strong>⤢ Fit to view</strong>.</li>
+                <li><strong>Straighten it:</strong> <strong>📐 Straighten…</strong>, then click two points along a line that should be level or upright, such as a register line or the edge of a column. The photo turns so that line lies on the grid, without moving the part you clicked. For fine turns use the slider or <strong>−</strong> / <strong>+</strong> (half a degree); <strong>⟲ 90°</strong> / <strong>⟳ 90°</strong> fix a sideways photo; <strong>↺ 0°</strong> undoes all turning. Ctrl+Z undoes each step.</li>
+                <li><strong>Lock it:</strong> <strong>🔒 Lock</strong> makes the photo ignore the mouse, so you can place, move and drag-select signs on top of it without grabbing the photo. Unlock to move it again.</li>
+                <li><strong>BG α</strong> sets its opacity; <strong>👁 Hide</strong> hides it to check your tracing.</li>
+                <li><strong>Exports:</strong> untick <strong>Include photo…</strong> to save PNG, PDF, SVG and copied images with your signs only. A hidden photo is never exported. Share links never carry the photo; <em>Save workspace</em> files always do.</li>
+                <li><strong>Replace…</strong> loads another photo in the same place, size and angle; <strong>Remove</strong> takes it away (Ctrl+Z brings it back).</li>
             </ul>
 
             <h3>Learn more</h3>

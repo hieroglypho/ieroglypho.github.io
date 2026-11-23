@@ -90,7 +90,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=c90c3250">
+    <link rel="stylesheet" href="main.css?v=f96a034c">
 
     <!-- 3rd party Scripts -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
@@ -198,8 +198,38 @@
             <button title="Enter text" onclick="openKeyboard()">⌨</button>
             <button id="glyphWidgetBtn" title="Add hieroglyphs (text run, individual signs, or three-line block)" onclick="openGlyphTextDialog()">𓂀…</button>
             <button title="Copy the selected signs as Manuel de Codage (MdC) code (shortcut: m)" onclick="exportSelectionToMdC()">→MdC</button>
-            <button onclick="document.getElementById('bgImageInput').click()"
-                title="Upload background image">BG</button>
+            <button id="bgBtn" onclick="onBgButton(event)"
+                title="Background photo: load one to trace over it; once loaded, opens the photo tools">BG</button>
+            <!-- Photo tracing tools (photo-trace.js); opened by BG once a photo is loaded. -->
+            <div id="photoPanel" class="photo-panel" hidden role="dialog" aria-label="Photo tools">
+                <div class="photo-panel-head">
+                    <strong>Photo</strong>
+                    <button data-photo="close" class="photo-close" title="Close">×</button>
+                </div>
+                <div class="photo-row">
+                    <button data-photo="lock">🔓 Lock</button>
+                    <button data-photo="hide" title="Hide or show the photo (a hidden photo is never exported)">👁 Hide</button>
+                </div>
+                <div class="photo-row">
+                    <button data-photo="ccw90" title="Turn 90° anticlockwise">⟲ 90°</button>
+                    <button data-photo="minus" title="Turn 0.5° anticlockwise">−</button>
+                    <input type="range" id="photoAngle" min="-180" max="180" step="0.1" value="0" title="Rotate the photo" aria-label="Photo angle">
+                    <button data-photo="plus" title="Turn 0.5° clockwise">+</button>
+                    <button data-photo="cw90" title="Turn 90° clockwise">⟳ 90°</button>
+                    <span id="photoAngleValue" class="photo-angle">0.0°</span>
+                </div>
+                <div class="photo-row">
+                    <button data-photo="straighten" title="Click two points along a line that should be level or upright; the photo turns to match the grid">📐 Straighten…</button>
+                    <button data-photo="fit" title="Scale and centre the photo in the visible area">⤢ Fit to view</button>
+                    <button data-photo="reset" title="Set the angle back to 0°">↺ 0°</button>
+                </div>
+                <label class="photo-check"><input type="checkbox" id="photoExport" checked> Include photo in PNG, PDF, SVG and copied images</label>
+                <div class="photo-row">
+                    <button data-photo="replace" title="Load another photo in the same place, size and angle">Replace…</button>
+                    <button data-photo="remove" title="Remove the photo (undo brings it back)">Remove</button>
+                </div>
+                <p class="photo-tip">Place and size the photo, straighten it, then lock it and trace. Opacity: the BG α slider. Share links never include the photo.</p>
+            </div>
         </div>
         <!-- Background Controls -->
         <div class="slider-controls">
@@ -463,11 +493,12 @@
         <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
         <script defer src="editor-core.js?v=313882b6"></script>
         <script defer src="canvas-interactions.js?v=0044dc49"></script>
-        <script defer src="workspace.js?v=0c80f926"></script>
-        <script defer src="export.js?v=7f9d177a"></script>
+        <script defer src="workspace.js?v=632cd382"></script>
+        <script defer src="export.js?v=f5d017fc"></script>
         <script defer src="drawing-tools.js?v=5a24babd"></script>
         <script defer src="glyph-input.js?v=6da0e0f0"></script>
-        <script defer src="editor-init.js?v=1921d13d"></script>
+        <script defer src="photo-trace.js?v=4714948b"></script>
+        <script defer src="editor-init.js?v=8b6f33da"></script>
         <script defer src="dictionary-search.js?v=c80da1bd"></script>
         <script defer src="word-finder.js?v=a6a7e946"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->

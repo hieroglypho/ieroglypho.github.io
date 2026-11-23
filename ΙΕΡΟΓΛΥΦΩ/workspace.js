@@ -32,7 +32,8 @@ function serializeWorkspace() {
 
     // Preserve app-level custom properties on each object so reload
     // reconstitutes link state, glyph-run marker, etc.
-    const CUSTOM_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow', 'enclosureId'];
+    const CUSTOM_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow', 'enclosureId',
+                          'photoLocked', 'photoExport'];   // photo tracing (photo-trace.js)
 
     return {
         canvas: {
@@ -129,8 +130,12 @@ function applyWorkspace(workspace) {
     canvas.loadFromJSON(canvasData, () => {
                 // Restore viewport transform
                 // Restore characterKey for each object
+                // characterKey is saved on each object (CUSTOM_PROPS), so the
+                // pasted-names list is only a fallback for objects that lack one.
+                // Matching by index used to shift every key by one when the
+                // canvas also held a photo or a shape (they have no name entry).
                 canvas.getObjects().forEach((obj, index) => {
-                    if (workspace.pastedNames[index]) {
+                    if (!obj.characterKey && obj.type !== 'image' && workspace.pastedNames?.[index]) {
                         obj.characterKey = workspace.pastedNames[index].text.replace(' - ', '');
                     }
                 });
@@ -380,6 +385,11 @@ function minifyForShare(snap) {
 async function buildShareLink() {
     const snap = serializeWorkspace();
     delete snap.backgroundImage;        // tracing aid, not the artwork — keep links small
+    // Same for tracing photos on the canvas (Fabric images): a photo's data-URL
+    // would make the link hundreds of KB long.
+    if (snap.canvas && Array.isArray(snap.canvas.objects)) {
+        snap.canvas.objects = snap.canvas.objects.filter(o => o.type !== 'image');
+    }
     minifyForShare(snap);               // drop Fabric defaults (re-applied on load)
     const packed = await packString(JSON.stringify(snap));
     return location.origin + location.pathname + '#c=' + packed;

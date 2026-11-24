@@ -230,7 +230,9 @@
         }
         .tool-grid .icon {
             display: inline-block;
-            width: 26px;
+            min-width: 2.6em;   /* fits the widest label ("BG α", "Page") so text never runs into it */
+            margin-right: 4px;
+            white-space: nowrap;
             color: var(--accent);
             text-align: center;
         }

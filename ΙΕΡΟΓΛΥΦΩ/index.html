@@ -90,7 +90,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=2590c4df">
+    <link rel="stylesheet" href="main.css?v=c142793d">
 
     <!-- 3rd party Scripts -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
@@ -106,7 +106,11 @@
             <!-- Gardiner's code section -->
             <div id="pastedNamesContainer">
                 <h4 style="margin: 0; display: inline-block;">Gardiner:</h4>
-                <div id="pastedNames"></div>
+                <!-- Codes in reading order, linked to the canvas (gardiner-bar.js). -->
+                <div id="gardinerCodes" aria-label="Gardiner codes of the signs, in reading order"></div>
+                <!-- Ledger of placed signs: saved in workspaces, used by undo; not shown. -->
+                <div id="pastedNames" hidden></div>
+                <button id="gardinerBarClose" type="button" title="Hide the Gardiner codes (≡ menu brings them back)" aria-label="Hide the Gardiner codes">×</button>
             </div>
             <div id="fixedTextOverlay">ΙΕΡΟΓΛΥΦΩ</div>
 
@@ -174,6 +178,9 @@
                 <button id="saveAsSvgBtn" data-icon="🖌">Save as SVG</button>
                 <button id="saveAsPdfBtn" data-icon="📄" title="The canvas as a picture, with selectable and searchable text">Save as PDF</button>
                 <button id="saveAsPdfTextBtn" data-icon="📄" title="Real text in embedded fonts and vector shapes: sharp at any zoom, small file">Save as PDF (vector text)</button>
+                <hr class="save-menu-sep">
+                <!-- View -->
+                <button id="gardinerBarBtn" data-icon="🏷" aria-pressed="true" title="Show or hide the strip of Gardiner codes above the canvas">Hide Gardiner codes</button>
                 <hr class="save-menu-sep">
                 <!-- Reference -->
                 <button id="courseBtn" data-icon="🎓" onclick="window.open('../course/', '_blank', 'noopener')">Learn to read hieroglyphs (course)</button>
@@ -279,7 +286,7 @@
 
     <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
     <div class="help-overlay" id="helpOverlay">
-        <iframe src="help-content.html?v=9f5f51b4" class="help-content-frame" id="helpContent"></iframe>
+        <iframe src="help-content.html?v=dabb7036" class="help-content-frame" id="helpContent"></iframe>
     </div>
 
     <!-- About overlay (reuses the .help-overlay backdrop; body-level) -->
@@ -501,11 +508,12 @@
         <script defer src="export.js?v=80cc5ffe"></script>
         <script defer src="pdf-export.js?v=a6c7ff4e"></script>
         <script defer src="drawing-tools.js?v=81e4c5f4"></script>
-        <script defer src="glyph-input.js?v=01781d95"></script>
+        <script defer src="glyph-input.js?v=93d4cd1c"></script>
         <script defer src="photo-trace.js?v=2d26e813"></script>
         <script defer src="jsesh-codes.js?v=4cbe549b"></script>
         <script defer src="jsesh-import.js?v=bcad1097"></script>
         <script defer src="editor-init.js?v=9fb9da4f"></script>
+        <script defer src="gardiner-bar.js?v=438df303"></script>
         <script defer src="dictionary-search.js?v=53a81900"></script>
         <script defer src="word-finder.js?v=042fa74c"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->

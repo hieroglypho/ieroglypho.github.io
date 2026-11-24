@@ -26,6 +26,12 @@ re-run it after editing editor assets, before committing._
 
 ## Fixed
 
+### BUG-8 — reading order overflowed the stack on crowded canvases (fixed 2026-11-24)
+mdcLayoutTree recursed forever when overlapping signs put every centre on one side of a cut
+(2,000 signs 45 px apart: "Maximum call stack size exceeded" in →MdC, Unicode copy, PDF text
+order). Now such a set is kept in plain reading order. Found while building the reading-order
+Gardiner bar (gardiner-bar.js); test pw/gbarperf.mjs.
+
 ### BUG-7 — narrow windows: signs dragged from the palette drawer were lost (fixed 2026-11-24)
 Below 900 px the palette is a slide-in drawer with a scrim over the canvas; a sign dragged out
 of it was dropped on the scrim, never on the canvas. Fix (f9e829c, editor-init.js): the drawer

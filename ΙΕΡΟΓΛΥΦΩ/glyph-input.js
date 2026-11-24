@@ -1685,6 +1685,12 @@ function mdcLayoutTree(boxes, avgW, avgH, rtl = false, size = 0) {
         : b => b.top + b.height / 2;
     let first = boxes.filter(b => center(b) < cut.pos);
     let second = boxes.filter(b => center(b) >= cut.pos);
+    // Overlapping signs can put every centre on one side of the cut; recursing
+    // on the same set again never ended (stack overflow on crowded canvases).
+    if (!first.length || !second.length) {
+        const ordered = [...boxes].sort((a, b) => (a.top - b.top) || (rtl ? b.left - a.left : a.left - b.left));
+        return { seq: ordered.map(b => b.obj) };
+    }
     // Right to left: the right-hand part is read first.
     if (rtl && axis === 'x') [first, second] = [second, first];
     return { op, a: mdcLayoutTree(first, avgW, avgH, rtl, size), b: mdcLayoutTree(second, avgW, avgH, rtl, size) };

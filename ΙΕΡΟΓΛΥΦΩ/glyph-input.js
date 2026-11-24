@@ -536,7 +536,7 @@ const MDC_BASE = 60;            // fontSize glyphs are added at (matches addChar
 const MDC_GAP = 6;              // gap between siblings inside a cadrat, at scale 1
 const MDC_MAX_CADRAT = 130;     // cap on a single cadrat's width/height before downscaling
 const MDC_FONT = '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif';
-const MDC_CADRAT_GAP = 10;      // '-' separator: cadrats within a word
+const MDC_CADRAT_GAP = 10;      // '-' separator: cadrats within a word (also between the cadrats inside a cartouche or [ ])
 const MDC_WORD_GAP = 28;        // single space / '_' : word boundary
 const MDC_SENTENCE_GAP = 50;    // double space / '__' : sentence boundary
 // Vertical gap between rows (normal wrap / '!'). Wider than any gap inside a
@@ -1035,7 +1035,7 @@ function measureMdCNode(node) {
     if (node.type === 'brackets') {
         node.children.forEach(measureMdCNode);
         const n = node.children.length;
-        node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_GAP * Math.max(0, n - 1);
+        node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_CADRAT_GAP * Math.max(0, n - 1);
         // Size the marks by the signs' ASCENT (visible height above the
         // baseline), not the full ink box: some signs (e.g. N35) carry a large
         // empty descent in the font metrics, which would push the marks well
@@ -1054,7 +1054,7 @@ function measureMdCNode(node) {
     if (node.type === 'enclosure') {
         node.children.forEach(measureMdCNode);
         const n = node.children.length;
-        node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_GAP * Math.max(0, n - 1);
+        node.innerW = node.children.reduce((s, c) => s + c.w, 0) + MDC_CADRAT_GAP * Math.max(0, n - 1);
         node.innerH = n ? Math.max(...node.children.map(c => c.h)) : MDC_BASE;
         node.padTop = node.variant === 'C' ? MDC_ENC_PAD : MDC_ENC_PAD_TOP;
         node.w = node.innerW + 2 * MDC_ENC_PAD + (node.variant === 'C' ? MDC_CART_TIE : 0);
@@ -1133,7 +1133,7 @@ function placeMdCNode(node, x, y, scale) {
         for (const c of node.children) {
             const ch = c.h * scale;
             placeMdCNode(c, cx, contentTop + (contentH - ch), scale);  // bottom-align in content
-            cx += c.w * scale + MDC_GAP * scale;
+            cx += c.w * scale + MDC_CADRAT_GAP * scale;
         }
         // Soft-link the frame and everything inside it: each member stays
         // independently editable, but moves/mirrors/deletes as one unit (the same
@@ -1157,7 +1157,7 @@ function placeMdCNode(node, x, y, scale) {
         let cx = x + arm + pad;
         for (const c of node.children) {
             placeMdCNode(c, cx, baseY - mdcNodeAscent(c) * scale, scale);  // baseline-align
-            cx += c.w * scale + MDC_GAP * scale;
+            cx += c.w * scale + MDC_CADRAT_GAP * scale;
         }
         addMdCAuxObject(buildBracketMark(node.variant, 'right', x + boxW - arm, y, boxH, arm));
         return;
@@ -1562,8 +1562,10 @@ function mdcWidestGap(boxes, axis) {
 // separator (`-`) else tight juxtaposition (`*`); a vertical split is a stack.
 // Shared by the MdC and Unicode exports (mdcFromTree / uniFromTree).
 // `rtl`: the text reads right to left (signsReadRtl), so side-by-side parts
-// come right first.
-function mdcLayoutTree(boxes, avgW, avgH, rtl = false) {
+// come right first. `size`: the typical sign size (mdcSignSize); it sets the
+// '-' / '*' threshold (mdcCadratGapMin). Without it, 0.4·avgW (word finder,
+// which only needs the order).
+function mdcLayoutTree(boxes, avgW, avgH, rtl = false, size = 0) {
     if (boxes.length === 1) return { leaf: boxes[0].obj };
 
     const xGap = mdcWidestGap(boxes, 'x');
@@ -1582,7 +1584,7 @@ function mdcLayoutTree(boxes, avgW, avgH, rtl = false) {
         return { seq: ordered.map(b => b.obj) };
     }
 
-    const op = axis === 'x' ? (cut.gap >= avgW * 0.4 ? '-' : '*') : ':';
+    const op = axis === 'x' ? (cut.gap >= (size ? mdcCadratGapMin(size) : avgW * 0.4) ? '-' : '*') : ':';
     const center = axis === 'x'
         ? b => b.left + b.width / 2
         : b => b.top + b.height / 2;
@@ -1590,7 +1592,18 @@ function mdcLayoutTree(boxes, avgW, avgH, rtl = false) {
     let second = boxes.filter(b => center(b) >= cut.pos);
     // Right to left: the right-hand part is read first.
     if (rtl && axis === 'x') [first, second] = [second, first];
-    return { op, a: mdcLayoutTree(first, avgW, avgH, rtl), b: mdcLayoutTree(second, avgW, avgH, rtl) };
+    return { op, a: mdcLayoutTree(first, avgW, avgH, rtl, size), b: mdcLayoutTree(second, avgW, avgH, rtl, size) };
+}
+
+// The smallest ink gap that still means a new cadrat ('-') rather than signs
+// side by side ('*'). The layout puts cadrats MDC_CADRAT_GAP (10) apart and
+// side-by-side signs MDC_GAP (6) apart at size MDC_BASE; measured ink gaps
+// are exactly that (9.6 / 5.6), so the threshold is halfway, scaled to the
+// sign size. (It was 0.4 of the average sign WIDTH: 17 px for A1, 27 for N35,
+// so every '-' between wide signs came out as '*', and between thin ones such
+// as Z1 every '*' came out as '-'.)
+function mdcCadratGapMin(size) {
+    return (MDC_GAP + MDC_CADRAT_GAP) / 2 * size / MDC_BASE;
 }
 
 // Layout tree → { str, rank } in MdC.
@@ -1605,8 +1618,8 @@ function mdcFromTree(t) {
     return { str: wrap(a) + t.op + wrap(c), rank };
 }
 
-function mdcFromBoxes(boxes, avgW, avgH, rtl = false) {
-    return mdcFromTree(mdcLayoutTree(boxes, avgW, avgH, rtl));
+function mdcFromBoxes(boxes, avgW, avgH, rtl = false, size = 0) {
+    return mdcFromTree(mdcLayoutTree(boxes, avgW, avgH, rtl, size));
 }
 
 // Group boxes top-to-bottom into rows, breaking only on a clean vertical gap
@@ -1693,9 +1706,10 @@ function mdcStringForObjs(objs) {
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
 
     const rtl = signsReadRtl(signs);
+    const size = mdcSignSize(boxes);
     // Rows first (line breaks), then guillotine each row into cadrats.
-    return mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
-        .map(row => mdcFromBoxes(row, avgW, avgH, rtl).str)
+    return mdcSplitRows(boxes, avgH, size)
+        .map(row => mdcFromBoxes(row, avgW, avgH, rtl, size).str)
         .join(' ! ');
 }
 
@@ -1761,8 +1775,9 @@ function unicodeStringForObjs(objs) {
     const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
     const rtl = signsReadRtl(signs);
-    return mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
-        .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH, rtl), false, rtl).str)
+    const size = mdcSignSize(boxes);
+    return mdcSplitRows(boxes, avgH, size)
+        .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH, rtl, size), false, rtl).str)
         .filter(Boolean)
         .join('\n');
 }

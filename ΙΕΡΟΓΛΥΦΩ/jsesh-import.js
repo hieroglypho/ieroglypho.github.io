@@ -481,7 +481,10 @@ async function importJSeshText(text, filename) {
     try {
         await Promise.all([
             document.fonts.load(`${MDC_BASE}px "Noto Sans Egyptian Hieroglyphs"`),
-            document.fonts.load(`${MDC_BASE}px "Hieroglyphica Extended"`, '\u{13460}'),
+            // Extended-A comes from two files (NewGardiner, Magna): load the
+            // ones this text uses, judged by its own signs.
+            document.fonts.load(`${MDC_BASE}px "Hieroglyphica Extended"`,
+                [...r.mdc].filter(c => c.codePointAt(0) >= 0x13460).join('') || '\u{13460}'),
         ]);
     } catch (_) { /* best-effort */ }
 

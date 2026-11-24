@@ -53,11 +53,12 @@ async function ensurePdfLibLoaded() {
 }
 
 // Fonts the PDF can embed (fonts/). All open licence except Hieroglyphica
-// Extended (the editor's own font). The TTF of Extended is generated from the
-// woff2 by tools/build-pdf-fonts.py: re-run it after editing the font.
+// Magna (the editor's own font: only the 568 Extended-A signs NewGardiner
+// leaves out). Its TTF is written with the woff2 by tools/build-magna-subset.py.
 const PDF_FONTS = {
     egy:    'NotoSansEgyptianHieroglyphs-Regular.ttf',   // hieroglyphs U+13000–1345F
-    ext:    'HieroglyphicaExtended-Regular.ttf',          // Extended-A U+13460–143FF
+    ng:     'NewGardiner.ttf',                            // Extended-A U+13460–143FF (SIL OFL, unchanged)
+    ext:    'HieroglyphicaExtended-Regular.ttf',          // Magna: the Extended-A signs NewGardiner lacks
     serif:  'GentiumPlus-Regular.ttf',                    // Times etc.; transliteration
     serifI: 'GentiumPlus-Italic.ttf',
     sans:   'NotoSans-Regular.ttf',                       // Arial etc.
@@ -78,8 +79,8 @@ function loadPdfFont(key) {
 
 // Which fonts to try, in order, for one character drawn with a CSS font.
 function pdfFontChain(cp, css) {
-    if (cp >= 0x13460 && cp <= 0x143FF) return ['ext', 'egy'];
-    if (cp >= 0x13000 && cp <= 0x1345F) return ['egy', 'ext'];
+    if (cp >= 0x13460 && cp <= 0x143FF) return ['ng', 'ext', 'egy'];
+    if (cp >= 0x13000 && cp <= 0x1345F) return ['egy', 'ng'];
     const italic = /(^|\s)(italic|oblique)(\s|$)/i.test(cssFontPrefix(css));
     const serif = cssFontIsSerif(css);
     const i = italic ? 'I' : '';

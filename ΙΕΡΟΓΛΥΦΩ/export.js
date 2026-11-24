@@ -86,54 +86,9 @@ async function saveToSVG() {
 }
 
 // =============================================================================
-// Save as PDF
+// PDF export lives in pdf-export.js (pdf-lib). The helpers below are shared.
 // =============================================================================
-let jsPDFPromise = null;
-function getJsPDFCtor() {
-    // jsPDF's UMD build exposes the constructor at window.jspdf.jsPDF;
-    // older builds put it directly at window.jsPDF.
-    return (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
-}
-function ensureJsPDFLoaded() {
-    if (getJsPDFCtor()) return Promise.resolve();
-    if (jsPDFPromise) return jsPDFPromise;
-    jsPDFPromise = new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        // Vendored locally (vendor/jspdf.umd.min.js) so PDF export works fully
-        // offline — no CDN round-trip. Update the file to bump the version.
-        s.src = 'vendor/jspdf.umd.min.js';
-        s.onload = resolve;
-        s.onerror = () => { jsPDFPromise = null; reject(new Error('Failed to load jsPDF')); };
-        document.head.appendChild(s);
-    });
-    return jsPDFPromise;
-}
 
-// Lazy fetch + base64 of the bundled Noto TTF (~1 MB) for jsPDF font embedding.
-// Cached after first call so subsequent PDF saves don't re-fetch.
-let hieroTtfPromise = null;
-function ensureHieroTtfBase64() {
-    if (hieroTtfPromise) return hieroTtfPromise;
-    hieroTtfPromise = (async () => {
-        try {
-            const resp = await fetch('fonts/NotoSansEgyptianHieroglyphs-Regular.ttf');
-            if (!resp.ok) return null;
-            const buf = await resp.arrayBuffer();
-            const bytes = new Uint8Array(buf);
-            let bin = '';
-            for (let i = 0; i < bytes.length; i += 0x8000) {
-                bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-            }
-            return btoa(bin);
-        } catch (_) {
-            return null;
-        }
-    })();
-    return hieroTtfPromise;
-}
-
-// Hybrid PDF: raster page (preserves all canvas shapes) + an invisible text
-// layer (Unicode hieroglyphs and transliteration become selectable/copyable).
 // The editing grid is set as Fabric's backgroundImage (see drawGrid). Temporarily
 // detach it so exports don't bake in the grid lines, then restore in `finally`.
 async function withGridHidden(fn) {
@@ -222,8 +177,8 @@ function stampExportWatermark(ctx, w, h) {
 
 // The brand wordmark as a transparent PNG, tight-cropped to the glyphs. Used by
 // the PDF, which paints it into the page header *margin* (like the URL footer)
-// rather than baking it into the artwork. jsPDF's built-in fonts are Latin-1, so
-// the Greek "ΙΕΡΟΓΛΥΦΩ" can't be written with pdf.text — we rasterise it with a
+// rather than baking it into the artwork. The standard PDF fonts have no Greek, so
+// the "ΙΕΡΟΓΛΥΦΩ" wordmark is rasterised with a
 // system font instead. Rendered at hi-res for a crisp result when placed small.
 function watermarkRasterDataUrl() {
     const text = 'ΙΕΡΟΓΛΥΦΩ';
@@ -365,41 +320,50 @@ function _scanInkBounds() {
     }
 }
 
-// Content bounding box (canvas coords) plus padding, clamped to the canvas.
-// Returns null when empty. Call inside an identity viewport so the rect lines
+// Content bounding box (canvas coords) plus padding; it may reach beyond the
+// visible canvas. Returns null when empty. Call inside an identity viewport so the rect lines
 // up with rendered pixels.
 function getContentBounds(padding = 8) {
     const objs = canvas.getObjects().filter(o => o && !o._pageGuide
         && !(o.type === 'image' && (!o.visible || o.photoExport === false)));
     if (!objs.length) return null;
 
-    // Prefer the true visible-ink extent; fall back to the metric union of
-    // bounding boxes if the pixel scan is unavailable (e.g. a tainted canvas).
-    let minX, minY, maxX, maxY;
+    // The pixel scan below only sees the visible canvas. Objects not wholly
+    // inside it (panned away, or a long imported text) count with their
+    // metric bounding box instead. (Until 2026-11-24 the crop was clamped to
+    // the visible canvas, and work beyond it was cut off.)
+    const box = () => ({ minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+    const grow = (b, r) => {
+        b.minX = Math.min(b.minX, r.left); b.minY = Math.min(b.minY, r.top);
+        b.maxX = Math.max(b.maxX, r.left + r.width); b.maxY = Math.max(b.maxY, r.top + r.height);
+    };
+    const all = box(), outside = box();
+    for (const obj of objs) {
+        const r = obj.getBoundingRect(true, true);
+        grow(all, r);
+        if (r.left < 0 || r.top < 0 || r.left + r.width > canvas.width || r.top + r.height > canvas.height) grow(outside, r);
+    }
+    if (!isFinite(all.minX)) return null;
+
+    // Prefer the true visible-ink extent (a text's metric box sits well off a
+    // hieroglyph's real ink); the metric union alone is the fallback if the
+    // scan is unavailable (e.g. a tainted canvas).
     let ink = null;
     try { ink = _scanInkBounds(); } catch (e) { console.warn('ink scan failed; using metric bounds', e); }
-    if (ink) {
-        ({ minX, minY, maxX, maxY } = ink);
-    } else {
-        minX = Infinity; minY = Infinity; maxX = -Infinity; maxY = -Infinity;
-        for (const obj of objs) {
-            const r = obj.getBoundingRect(true, true);
-            minX = Math.min(minX, r.left);
-            minY = Math.min(minY, r.top);
-            maxX = Math.max(maxX, r.left + r.width);
-            maxY = Math.max(maxY, r.top + r.height);
-        }
-        if (!isFinite(minX)) return null;
+    let { minX, minY, maxX, maxY } = ink || all;
+    if (ink && isFinite(outside.minX)) {
+        minX = Math.min(minX, outside.minX); minY = Math.min(minY, outside.minY);
+        maxX = Math.max(maxX, outside.maxX); maxY = Math.max(maxY, outside.maxY);
     }
 
     // True content extent (no padding) — drives the 1:1 fit decision so content
     // inside the printable area exports unscaled, padding spilling into the margin.
     const contentWidth = maxX - minX;
     const contentHeight = maxY - minY;
-    minX = Math.max(0, minX - padding);
-    minY = Math.max(0, minY - padding);
-    maxX = Math.min(canvas.width, maxX + padding);
-    maxY = Math.min(canvas.height, maxY + padding);
+    minX -= padding;
+    minY -= padding;
+    maxX += padding;
+    maxY += padding;
     const width = maxX - minX, height = maxY - minY;
     if (width <= 0 || height <= 0) return null;
     return { left: minX, top: minY, width, height, contentWidth, contentHeight };
@@ -412,11 +376,13 @@ function getContentBounds(padding = 8) {
 async function compositeCropForPDF(bounds) {
     return withGridHidden(async () => {
         const { left, top } = bounds;
-        const SS = EXPORT_SUPERSAMPLE;
         const w = Math.round(bounds.width), h = Math.round(bounds.height);
+        // Browsers refuse canvases beyond ~16k px a side or ~268M px in all;
+        // a very large work (e.g. an imported Sinuhe) gets a lower supersample.
+        const SS = Math.max(0.25, Math.min(EXPORT_SUPERSAMPLE, 14000 / w, 14000 / h, Math.sqrt(120e6 / (w * h))));
         const out = document.createElement('canvas');
-        out.width = w * SS;
-        out.height = h * SS;
+        out.width = Math.round(w * SS);
+        out.height = Math.round(h * SS);
         const ctx = out.getContext('2d');
         ctx.scale(SS, SS);   // author in logical px; pixels land at SS resolution
 
@@ -437,7 +403,7 @@ async function compositeCropForPDF(bounds) {
         ctx.drawImage(fab, 0, 0, w, h);
 
         // No watermark baked here: the PDF paints the wordmark into the page
-        // header margin (see saveToPDF) so it never lands on the artwork.
+        // header margin (see addPdfFooterAndWordmark) so it never lands on the artwork.
         return out;
     });
 }
@@ -453,149 +419,4 @@ function pageGuidePaperRect() {
         width: d.pageW, height: d.pageH,
         contentWidth: d.pageW, contentHeight: d.pageH
     };
-}
-
-// jsPDF: embed the canvas as an image plus an invisible, selectable Unicode text
-// overlay, on a US-Letter page. Two modes:
-//   • Page guide ON  → WYSIWYG: export exactly the guide's page, 1:1, glyphs in
-//     the positions you see (no cropping, no centring).
-//   • Page guide OFF → crop tightly to the content and centre it on the page,
-//     scaling down only if the work is larger than the printable area.
-async function saveToPDF() {
-    try {
-        await ensureJsPDFLoaded();
-        const jsPDFCtor = getJsPDFCtor();
-        if (!jsPDFCtor) throw new Error('jsPDF unavailable after load');
-
-        await withIdentityViewport(async () => {
-            const PT = 72 / 96;            // 96 DPI canvas px → 72 DPI points
-            const MARGIN = 36;             // 0.5 inch
-
-            const pageRect = pageGuidePaperRect();
-            const pageMode = !!pageRect;
-
-            // Region of the canvas to export, and the page orientation.
-            let bounds, orientation;
-            if (pageMode) {
-                bounds = pageRect;
-                orientation = (pageGuideState === 'l') ? 'l' : 'p';
-            } else {
-                bounds = getContentBounds();
-                if (!bounds) { showCanvasToast('Nothing to export'); return; }
-                orientation = bounds.contentWidth > bounds.contentHeight ? 'l' : 'p';
-            }
-
-            const composite = await compositeCropForPDF(bounds);
-            const pngDataUrl = composite.toDataURL('image/png');
-
-            const pdf = new jsPDFCtor({ unit: 'pt', format: 'letter', orientation });
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
-
-            let fit, cW, cH, imgX, imgY;
-            if (pageMode) {
-                // The 8.5×11" paper rectangle maps 1:1 onto the whole page.
-                cW = pageW; cH = pageH; imgX = 0; imgY = 0;
-                fit = pageW / (bounds.width * PT);   // ≈1; keeps the text overlay aligned
-            } else {
-                // Fit-to-page from the true glyph extent (not the padded crop):
-                // content inside the printable area exports 1:1, the padding
-                // spilling into the margin; larger work scales down to fit.
-                const printW = pageW - 2 * MARGIN, printH = pageH - 2 * MARGIN;
-                const nW = bounds.contentWidth * PT, nH = bounds.contentHeight * PT;
-                fit = Math.min(printW / nW, printH / nH, 1);
-                cW = bounds.width * PT * fit;
-                cH = bounds.height * PT * fit;
-                imgX = (pageW - cW) / 2;
-                imgY = (pageH - cH) / 2;
-            }
-            pdf.addImage(pngDataUrl, 'PNG', imgX, imgY, cW, cH);
-
-            // Invisible text overlay so glyphs and transliteration are
-            // selectable/copyable as Unicode. Skipped silently if the font
-            // fetch failed — the rasterised PDF is still produced. Positions are
-            // crop-local (objCoord − cropOrigin) shifted to the placed image and
-            // converted px→pt; no fit-scale because nothing is scaled.
-            const ttfB64 = await ensureHieroTtfBase64();
-            let textLayerOK = false;
-            if (ttfB64) {
-                try {
-                    pdf.addFileToVFS('NotoSansEgyptianHieroglyphs-Regular.ttf', ttfB64);
-                    pdf.addFont('NotoSansEgyptianHieroglyphs-Regular.ttf', 'NotoSansEgyptianHieroglyphs', 'normal');
-                    pdf.setFont('NotoSansEgyptianHieroglyphs', 'normal');
-
-                    for (const obj of canvas.getObjects()) {
-                        if (!obj || !obj.text) continue;
-                        if (obj.type !== 'text' && obj.type !== 'i-text' && obj.type !== 'textbox') continue;
-                        if (obj._pageGuide) continue;
-                        const r = obj.getBoundingRect(true, true);
-                        const fs = (obj.fontSize || 16) * (obj.scaleY || 1);
-                        // Same px→pt and fit-to-page scale as the raster image.
-                        pdf.setFontSize(fs * PT * fit);
-                        const lineHeight = fs * (obj.lineHeight || 1.16);
-                        const lines = String(obj.text).split('\n');
-                        for (let i = 0; i < lines.length; i++) {
-                            if (!lines[i]) continue;
-                            // Baseline ~85% down the bbox; exact position isn't
-                            // critical for invisible text, only selection accuracy.
-                            const localX = r.left - bounds.left;
-                            const localY = (r.top - bounds.top) + fs * 0.85 + i * lineHeight;
-                            try {
-                                pdf.text(lines[i], imgX + localX * PT * fit, imgY + localY * PT * fit,
-                                         { renderingMode: 'invisible' });
-                            } catch (e) {
-                                console.warn('PDF text overlay skipped:', lines[i], e);
-                            }
-                        }
-                    }
-                    textLayerOK = true;
-                } catch (e) {
-                    console.warn('PDF text layer disabled:', e);
-                }
-            }
-
-            // Footer: the site URL centred in the bottom margin, as real (vector,
-            // selectable) PDF text in a built-in font — crisp at any zoom. In
-            // page-guide mode the image is full-bleed, so the footer sits lightly
-            // over the artwork's lower edge; otherwise it lands in white margin.
-            try {
-                pdf.setFont('helvetica', 'normal');
-                pdf.setFontSize(8);
-                pdf.setTextColor(150);
-                pdf.text('www.hieroglyphica.org', pageW / 2, pageH - MARGIN / 2,
-                         { align: 'center', baseline: 'middle' });
-                pdf.setTextColor(0);   // restore default for any later writes
-            } catch (e) {
-                console.warn('PDF footer skipped:', e);
-            }
-
-            // Header wordmark: the brand in the top-right margin, mirroring the
-            // footer. Painted as a small raster (Greek isn't in jsPDF's base
-            // fonts) onto the page itself, so it sits in the margin rather than on
-            // the artwork. Centred vertically in the 0.5" top margin band.
-            try {
-                const wm = watermarkRasterDataUrl();
-                const hPt = 9;                       // wordmark height in points
-                const wPt = hPt * wm.aspect;
-                pdf.addImage(wm.dataUrl, 'PNG', pageW - MARGIN - wPt,
-                             MARGIN / 2 - hPt / 2, wPt, hPt);
-            } catch (e) {
-                console.warn('PDF header wordmark skipped:', e);
-            }
-
-            const filename = `canvas_${new Date().toISOString().split('.')[0].replace(/[-:T]/g, '_')}.pdf`;
-            pdf.save(filename);
-
-            const indicator = document.createElement('div');
-            const scaledNote = fit < 1 ? ` — scaled to ${Math.round(fit * 100)}% to fit page` : '';
-            indicator.textContent = (textLayerOK ? 'PDF saved (selectable text)' : 'PDF saved') + scaledNote;
-            indicator.style.cssText = `position:fixed;bottom:20px;right:20px;background:rgba(0,0,0,0.8);color:white;padding:8px 16px;border-radius:4px;z-index:1000;`;
-            document.body.appendChild(indicator);
-            setTimeout(() => indicator.remove(), 2000);
-        });
-
-    } catch (error) {
-        console.error('Error saving PDF:', error);
-        alert('Error saving PDF: ' + (error.message || error));
-    }
 }

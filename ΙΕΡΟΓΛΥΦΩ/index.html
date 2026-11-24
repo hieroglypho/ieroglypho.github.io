@@ -94,7 +94,7 @@
 
     <!-- 3rd party Scripts -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
-    <!-- jsPDF is lazy-loaded on first Save-as-PDF click (see script.js). -->
+    <!-- pdf-lib + fontkit (vendor/) are lazy-loaded on the first PDF save (see pdf-export.js). -->
 
 </head>
 
@@ -172,7 +172,8 @@
                 <!-- Export (flattened image / document formats) -->
                 <button id="saveAsPngBtn" data-icon="🖼">Save as PNG</button>
                 <button id="saveAsSvgBtn" data-icon="🖌">Save as SVG</button>
-                <button id="saveAsPdfBtn" data-icon="📄">Save as PDF</button>
+                <button id="saveAsPdfBtn" data-icon="📄" title="The canvas as a picture, with selectable and searchable text">Save as PDF</button>
+                <button id="saveAsPdfTextBtn" data-icon="📄" title="Real text in embedded fonts and vector shapes: sharp at any zoom, small file">Save as PDF (vector text)</button>
                 <hr class="save-menu-sep">
                 <!-- Reference -->
                 <button id="courseBtn" data-icon="🎓" onclick="window.open('../course/', '_blank', 'noopener')">Learn to read hieroglyphs (course)</button>
@@ -273,6 +274,7 @@
         <button data-action="png">💾 Save as PNG</button>
         <button data-action="svg">💾 Save as SVG</button>
         <button data-action="pdf">💾 Save as PDF</button>
+        <button data-action="pdftext">💾 Save as PDF (vector text)</button>
     </div>
 
     <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
@@ -492,13 +494,14 @@
         <script defer src="editor-core.js?v=01afd1f1"></script>
         <script defer src="canvas-interactions.js?v=89db2be5"></script>
         <script defer src="workspace.js?v=37b95b7d"></script>
-        <script defer src="export.js?v=2ea7ad54"></script>
+        <script defer src="export.js?v=7d609dcd"></script>
+        <script defer src="pdf-export.js?v=c2f34cb2"></script>
         <script defer src="drawing-tools.js?v=ab324a5d"></script>
-        <script defer src="glyph-input.js?v=fb2df85c"></script>
+        <script defer src="glyph-input.js?v=0890c6d2"></script>
         <script defer src="photo-trace.js?v=2d26e813"></script>
         <script defer src="jsesh-codes.js?v=4cbe549b"></script>
         <script defer src="jsesh-import.js?v=7e5f2a8f"></script>
-        <script defer src="editor-init.js?v=a2c5e4ae"></script>
+        <script defer src="editor-init.js?v=40e78c2c"></script>
         <script defer src="dictionary-search.js?v=53a81900"></script>
         <script defer src="word-finder.js?v=7bd21140"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->

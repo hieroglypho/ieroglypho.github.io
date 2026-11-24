@@ -332,6 +332,7 @@ function initCanvasContextMenu() {
             case 'png':  saveToPNG();       break;
             case 'svg':  saveToSVG();       break;
             case 'pdf':  saveToPDF();       break;
+            case 'pdftext': saveToPDFText(); break;
         }
     });
 

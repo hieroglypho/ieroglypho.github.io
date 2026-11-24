@@ -58,8 +58,14 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
       zoom, drop, dblclick, moving/rotating/scaling/modified), undo, delete/cleanup,
       `mirrorTextObject`, `alignObjects`.
    3. `workspace.js` — `saveWorkspace`, `loadWorkspace`, `syncPastedNamesWithCanvas`.
-   4. `export.js` — `saveToSVG`, `saveToPNG`, `saveToPDF`, `copyCanvasImage`, watermark
-      stamping, hiero-font embedding (`ensureHieroTtfBase64`, `ensureJsPDFLoaded`).
+   4. `export.js` — `saveToSVG`, `saveToPNG`, `copyCanvasImage`, watermark stamping, and
+      the helpers both PDF exports share (`getContentBounds`, `compositeCropForPDF`,
+      `pageGuidePaperRect`, `withIdentityViewport`, `withGridHidden`).
+   4b. `pdf-export.js` — `saveToPDF` (picture + invisible Unicode text layer) and
+      `saveToPDFText` (real text in embedded fonts + vector shapes), built with pdf-lib +
+      fontkit. `PdfPainter` is a canvas-2D stand-in that Fabric renders into, writing PDF
+      operators; text runs are placed where Fabric drew them, in the font chosen per
+      character (`pdfFontChain`).
    5. `drawing-tools.js` — the search/filter dropdown wiring + shape tools
       (`addCartouche`, `addCircle`, `addLine`, `addArrow`, `addSquareBracket`,
       `addCustomRect`, `addPencilLine`, `addSpeechBubble`).
@@ -83,8 +89,9 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 4. `dictionary-search.js` — loads the bundled dictionary files and searches them
    (formerly `fjgus.js`). `word-finder.js` — "What does this say?".
 
-`jsPDF` is **lazy-loaded from cdnjs** on the first "Save as PDF" click
-(`ensureJsPDFLoaded()` in `script.js`) — it is not in the page `<head>`.
+`pdf-lib` + `fontkit` (`vendor/`, MIT, see `vendor/LICENSES.md`) are **lazy-loaded** on the
+first PDF save (`ensurePdfLibLoaded()` in `pdf-export.js`) — they are not in the page `<head>`.
+jsPDF was used until 2026-11-24 and removed: it could not map hieroglyphs (Unicode plane 1).
 
 ### Other files in the folder
 | File | Role |
@@ -93,13 +100,15 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
 | `help-content.html` | Loaded in an `<iframe>` for the in-app help overlay. |
 | `mobile.html` | Standalone "please visit on desktop" page (loads no app scripts). |
 | `mazzon-dictionary.txt` | Bundled dictionary data the user uploads manually via "Upload Dictionary". **Not auto-loaded** by code; referenced by name in `help-content.html`. |
-| `fonts/NotoSansEgyptianHieroglyphs-Regular.ttf` | Fetched + base64-encoded for jsPDF font embedding. |
+| `fonts/NotoSansEgyptianHieroglyphs-Regular.ttf` | Embedded (subset) in PDFs for hieroglyphs U+13000–1345F. |
 | `fonts/HieroglyphicaExtended-Regular.woff2` | Web font (`@font-face` in `main.css`). |
+| `fonts/HieroglyphicaExtended-Regular.ttf` | PDF copy of the woff2, made by `tools/build-pdf-fonts.py`. **Re-run it after every edit of the woff2.** |
+| `fonts/GentiumPlus-*.ttf`, `fonts/NotoSans-*.ttf` | PDF fonts for serif (transliteration) and sans text, regular + italic (OFL, `fonts/GentiumPlus-NotoSans-OFL.txt`). |
 | `favicon.ico`, `robot.txt` | Misc. |
 | `MDC-TIERS.md` | Roadmap + status for Manuel de Codage layout support (the `handleMdCInput` engine in `glyph-input.js`). Source of truth for which MdC operators are implemented; update as tiers land. |
 
 ### Orphans removed (2026-05-29)
-- `pdf.js` — was a dead standalone PDF snippet; the real export is `saveToPDF()` in `export.js`.
+- `pdf.js` — was a dead standalone PDF snippet; the real export is `saveToPDF()` (now in `pdf-export.js`).
 - `keyboard-styles.css` — was unlinked; keyboard styles live in `main.css`.
 
 > The editor's major sections now live in the files listed under **Load order** above.
@@ -193,3 +202,8 @@ here.** The source lives in the private repo `ieroglypho-courseware` (sibling fo
   and load-time console logging.
 - **2026-11-23** — Added `ΙΕΡΟΓΛΥΦΩ/jsesh-codes.js` + `jsesh-import.js` (JSesh `.gly` import),
   loaded after `photo-trace.js`. See MDC-TIERS.md changelog.
+- **2026-11-24** — PDF export moved from jsPDF to pdf-lib + fontkit (`pdf-export.js`,
+  `vendor/`). jsPDF wrote every hieroglyph as an empty string, so the "selectable text"
+  layer was empty; now both PDFs carry real Unicode text, with fonts subset. New ≡ menu
+  item "Save as PDF (vector text)". The PDF crop now includes work beyond the visible
+  canvas. New fonts (Gentium Plus, Noto Sans; OFL) and `tools/build-pdf-fonts.py`.

@@ -90,7 +90,7 @@ function closeKeyboard() {
 // Distinct from addCharacterToCanvas, which creates one fabric.Text per glyph
 // for free positioning. A glyph text run keeps multiple glyphs as one editable
 // text block — selectable/copyable in the browser, and exported as a single
-// text node in SVG (PDF embeds the canvas raster via jsPDF).
+// text node in SVG and as real text in both PDF exports.
 
 function syncThreeLineExtras() {
     const mode = document.querySelector('input[name="glyphMode"]:checked')?.value || 'textRun';
@@ -459,6 +459,8 @@ function initMainMenu() {
     if (saveAsPngBtn) saveAsPngBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPNG(); close(); });
     saveAsSvgBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToSVG(); close(); });
     saveAsPdfBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPDF(); close(); });
+    const saveAsPdfTextBtn = document.getElementById('saveAsPdfTextBtn');
+    if (saveAsPdfTextBtn) saveAsPdfTextBtn.addEventListener('click', (e) => { e.stopPropagation(); saveToPDFText(); close(); });
     openBtn.addEventListener('click', (e) => { e.stopPropagation(); loadWorkspace(); close(); });
     const shareBtn = document.getElementById('shareLinkBtn');
     if (shareBtn) shareBtn.addEventListener('click', (e) => { e.stopPropagation(); shareWorkspace(); close(); });

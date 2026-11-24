@@ -26,6 +26,31 @@ re-run it after editing editor assets, before committing._
 
 ## Fixed
 
+### BUG-5 — "Save as PDF (selectable text)" had no hieroglyph text (fixed 2026-11-24)
+Symptom: the PDF's invisible text layer was empty for hieroglyphs: nothing to select,
+copy or search, although the save message said "selectable text". Every PDF also
+carried the whole Noto font (~0.5 MB a file).
+
+Cause: jsPDF 2.5.1 reads only the Basic Multilingual Plane part of a TrueType cmap;
+hieroglyphs are in plane 1 (U+13000–143FF), so each was written as `<> Tj`. Visible
+hieroglyph text was impossible for the same reason.
+
+Fix: PDF export rebuilt on pdf-lib + fontkit (`pdf-export.js`): real Unicode text (all
+9,875 signs of an imported Sinuhe copy back out), fonts subset. jsPDF removed. Also new:
+"Save as PDF (vector text)".
+
+### BUG-6 — PDF crop cut off work beyond the visible canvas (fixed 2026-11-24)
+`getContentBounds` clamped the crop to the visible canvas and its pixel scan only saw
+the visible canvas, so anything panned out of view (or most of a long imported text)
+was left out of the PDF. Objects not wholly inside the visible canvas now count with
+their bounding boxes; very large crops get a lower supersample (browser canvas limits).
+
+### Note — Hieroglyphica Extended TTF for PDFs must be padded
+`fonts/HieroglyphicaExtended-Regular.ttf` is made from the woff2 by
+`tools/build-pdf-fonts.py`. A plain woff2 → ttf conversion leaves glyph records unpadded
+(padding 1); fontkit's subsetter then writes a short `loca` with wrong offsets and every
+Extended-A sign is blank in the PDF. The script pads to 4. Re-run it after editing the font.
+
 ### TODO-7 — autosave quietly stopped for very large canvases (fixed 2026-11-24)
 Symptom: after importing a long JSesh text (Sinuhe, 10,257 objects) nothing was
 autosaved (10.3 MB of JSON against localStorage's ~5 MB), with only a console warning.

@@ -189,7 +189,7 @@ table.plain th { font-size: 13px; text-transform: uppercase; letter-spacing: .06
 .hg.rtl { flex-direction: row-reverse; }
 .hg.rtl .g { transform: scaleX(-1); }
 .hg .cad { display: inline-flex; align-items: flex-end; justify-content: center; }
-.hg .stack { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.hg .stack { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: .04em; }   /* same breathing room as .hg; stacked signs touched */
 .hg .row  { display: inline-flex; flex-direction: row; align-items: flex-end; }
 .hg .g { display: inline-block; }
 .hg .ins { position: relative; display: inline-flex; align-items: flex-end; }   /* A^B: B drawn inside A */

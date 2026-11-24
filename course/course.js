@@ -156,6 +156,35 @@ function build(node, scale) {
     if (scale !== 1) box.style.fontSize = scale + 'em';
     return box;
 }
+/* Room for signs that draw outside their box. Each sign's box is one em tall,
+ * from the text line up (line-height 1), but in Noto Sans Egyptian Hieroglyphs
+ * 457 of the 1,072 signs draw below that line (up to a third of an em: S29,
+ * fish, crocodiles) and 54 above it, so they crossed cartouche rings, the sign
+ * under them in a stack, or the next line. Each such sign gets padding as deep
+ * as its measured ink: it then stands on the line like the others, and its
+ * group grows to hold it. Measured on a canvas once the sign's font is in.   */
+const inkCache = new Map();
+let inkCtx = null;
+function inkFont() { return '100px ' + getComputedStyle(document.documentElement).getPropertyValue('--font-h').trim(); }
+function fitInk(g) {
+    const ch = g.textContent;
+    if (!ch) return;
+    const apply = () => {
+        let v = inkCache.get(ch);
+        if (!v) {
+            inkCtx = inkCtx || document.createElement('canvas').getContext('2d');
+            inkCtx.font = inkFont();
+            const m = inkCtx.measureText(ch);
+            v = { below: Math.max(0, m.actualBoundingBoxDescent) / 100, above: Math.max(0, m.actualBoundingBoxAscent - 100) / 100 };
+            inkCache.set(ch, v);
+        }
+        g.style.paddingBottom = v.below > 0.005 ? v.below.toFixed(3) + 'em' : '';
+        g.style.paddingTop = v.above > 0.005 ? v.above.toFixed(3) + 'em' : '';
+    };
+    const font = inkFont();
+    if (!document.fonts || document.fonts.check(font, ch)) apply();
+    else document.fonts.load(font, ch).then(apply, apply);
+}
 /* Render one element: data-m="MdC", optional data-dir="rtl", data-cart. */
 function renderOne(host) {
     if (host._mdc === host.dataset.m) return;        // already drawn (e.g. by hg()); keep any styling games added
@@ -163,6 +192,7 @@ function renderOne(host) {
     const groups = parse(tokenize(host.dataset.m));
     const wrap = el('span', { class: 'hg' + (host.dataset.dir === 'rtl' ? ' rtl' : '') });
     groups.forEach(g => wrap.append(el('span', { class: 'cad' }, build(g, 1))));
+    wrap.querySelectorAll('.g').forEach(g => { if (!g.closest('.ins-in')) fitInk(g); });   // not a small sign drawn inside another
     wrap.setAttribute('aria-hidden', 'true');
     host.textContent = '';
     if (host.hasAttribute('data-cart')) {

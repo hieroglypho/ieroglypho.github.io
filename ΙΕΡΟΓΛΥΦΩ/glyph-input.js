@@ -539,7 +539,15 @@ const MDC_FONT = '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sa
 const MDC_CADRAT_GAP = 10;      // '-' separator: cadrats within a word
 const MDC_WORD_GAP = 28;        // single space / '_' : word boundary
 const MDC_SENTENCE_GAP = 50;    // double space / '__' : sentence boundary
-const MDC_LINE_VGAP = 18;       // vertical gap between rows (normal wrap / '!')
+// Vertical gap between rows (normal wrap / '!'). Wider than any gap inside a
+// stack (up to 26 at size 60, e.g. A1:B1), so a copy can always tell a new
+// row from the lower half of a stack (mdcSplitRows breaks at 0.5·size = 30).
+const MDC_LINE_VGAP = 34;
+// A row is at least as tall as a standing sign (A1's ink is 42 at size 60), so a
+// row of only flat signs (N35, D21, X1…) keeps the normal line spacing. Packed
+// to its own height it sat so close under the row above that it looked, and
+// copied, like the bottom half of a stack.
+const MDC_ROW_MIN_H = MDC_BASE * 0.7;
 const MDC_PAGE_VGAP = 70;       // extra vertical gap added for a '!!' page break
 const MDC_ENC_PAD = 14;         // inner padding: sides + gap below content (to panel/base)
 const MDC_ENC_PAD_TOP = 30;     // inner padding above content (generous: figure stands, sky above)
@@ -1372,7 +1380,7 @@ function layoutMdCRow(items, opts = {}) {
             if (!first) top += r.extra;
             continue;
         }
-        const baselineY = top + (first ? 0 : r.extra) + r.h;
+        const baselineY = top + (first ? 0 : r.extra) + Math.max(r.h, MDC_ROW_MIN_H);
         if (!opts.unbounded && baselineY > usableBottom) {
             alert('Canvas is full. Some glyphs were not placed.');
             break;
@@ -1609,9 +1617,10 @@ function mdcFromBoxes(boxes, avgW, avgH, rtl = false) {
 // the sign size) can be as large as the gap between two lines of flat signs.
 // Pass `signSize` (the typical font size on the canvas) for the ink rule: a
 // break needs a gap of 0.5·size, or of 0.3·size under a row wider than any
-// single cadrat can be (2.3·size). Measured on the layout engine's output:
-// stack gaps 5–25 px, line gaps 23 (flat signs) to 35 px, at size 60. Two
-// one-sign "lines" closer than that read as a stack, which looks the same. Without `signSize`, the
+// single cadrat can be (2.3·size). Measured on the layout engine's output at
+// size 60: stack gaps 6–26 px; line gaps at least 34 (MDC_LINE_VGAP, plus
+// MDC_ROW_MIN_H for rows of flat signs), so typed rows always break. Signs
+// moved by hand closer than that read as a stack, which looks the same. Without `signSize`, the
 // original line-box rule (gap ≥ 0.9·avgH) applies — word-finder.js uses that.
 function mdcSplitRows(boxes, avgH, signSize) {
     const sorted = [...boxes].sort((a, b) => a.top - b.top);

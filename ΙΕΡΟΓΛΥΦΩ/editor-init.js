@@ -611,7 +611,7 @@ const PASTE_STEP = 20;   // px each successive paste cascades down-right
 
 // Extra props clone()/toObject() must copy beyond Fabric's defaults. (id and
 // blockId are intentionally absent — they're minted fresh on paste.)
-const CLIPBOARD_PROPS = ['characterKey', 'fontFamily'];
+const CLIPBOARD_PROPS = ['characterKey', 'fontFamily', 'mdcEnclosure', 'mdcBracket', 'mdcBracketSide'];
 
 // Copy the selection into the buffer. Returns the sign count (0 = nothing
 // copyable) so callers can show their own toast / decide whether to proceed.

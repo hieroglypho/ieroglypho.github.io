@@ -112,6 +112,7 @@ function addCartouche() {
 
     // Generate unique ID
     cartouche.id = generateUniqueId();
+    cartouche.mdcEnclosure = 'C';   // the exports write the signs inside it as a cartouche
 
     // Add to canvas
     canvas.add(cartouche);
@@ -119,7 +120,7 @@ function addCartouche() {
     // Push to undoHistory instead of history
     pushUndo({
         type: 'add',
-        object: cartouche.toJSON(['id']),
+        object: cartouche.toJSON(UNDO_PROPS),
         id: cartouche.id
     });
 

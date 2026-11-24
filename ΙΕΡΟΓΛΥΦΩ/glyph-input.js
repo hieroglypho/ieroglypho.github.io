@@ -1129,7 +1129,9 @@ function placeMdCNode(node, x, y, scale) {
     if (node.type === 'enclosure') {
         // Frame first so the glyphs (added afterwards) render on top of it.
         const startIdx = canvas.getObjects().length;
-        addEnclosureFrame(buildEnclosureFrame(node.variant, x, y, boxW, boxH));
+        const frame = buildEnclosureFrame(node.variant, x, y, boxW, boxH);
+        frame.mdcEnclosure = node.variant;   // read back by the exports (enclosureVariantOf)
+        addEnclosureFrame(frame);
         const contentTop = y + node.padTop * scale;
         const contentH = node.innerH * scale;
         let cx = x + MDC_ENC_PAD * scale;
@@ -1269,6 +1271,8 @@ function buildBracketMark(variant, side, X, Ytop, H, arm) {
         strokeDashArray: variant === 'vanished' ? [4, 3] : null,
         objectCaching: false,
         selectable: true,
+        mdcBracket: variant,        // read back by the exports
+        mdcBracketSide: side,       // 'left' opens (also after a right-to-left mirror)
     });
 }
 
@@ -1299,7 +1303,7 @@ function buildLacunaBox(x, y, w, h) {
 function addMdCAuxObject(obj) {
     obj.id = generateUniqueId();
     canvas.add(obj);
-    pushUndo({ type: 'add', object: obj.toJSON(['id']), id: obj.id });
+    pushUndo({ type: 'add', object: obj.toJSON(UNDO_PROPS), id: obj.id });
     return obj;
 }
 
@@ -1527,6 +1531,12 @@ const MDC_OP_RANK = { '*': 3, ':': 2, '-': 1 };
 const MDC_LEAF_RANK = 99;   // a bare sign never needs parentheses
 
 function mdcCodeFor(obj) {
+    if (obj._exp === 'enc') {
+        const c = obj.ctx;
+        const inner = mdcFromBoxes(obj.members, c.avgW, c.avgH, c.rtl, c.size).str;
+        return `${MDC_ENC_OPEN[obj.variant]}-${inner}-${MDC_ENC_CLOSE[obj.variant]}`;
+    }
+    if (obj._exp === 'brk') return MDC_BRK_TOKENS[obj.variant][obj.open ? 0 : 1];
     // The first code that reads back as this same sign: the palette's Gardiner
     // code, the stored key, then the JSesh code. A code must be letters and
     // digits only: the Extended-A catalogue codes (A-08-008) contain '-', which
@@ -1541,6 +1551,81 @@ function mdcCodeFor(obj) {
         if (e && e[1] === ch) return code;
     }
     return ch;
+}
+
+// ---- Enclosures and editorial brackets in the exports ----
+// A cartouche (or serekh, ḥwt, fortified wall) frame stands in for the signs
+// inside it: the layout sees one box, and the leaf writes the frame's markup
+// around the contents ('<-…->' in MdC; the enclosure controls in Unicode).
+// Each bracket mark is a box of its own, written as its opening or closing
+// token. Before this, the exports dropped frames and marks, so a copied royal
+// name came back without its cartouche.
+const MDC_ENC_OPEN = { C: '<', S: '<S', H: '<H', F: '<F' };
+const MDC_ENC_CLOSE = { C: '>', S: '>S', H: '>H', F: '>F' };
+const MDC_BRK_TOKENS = {
+    erased: ['[[', ']]'], superfluous: ['[{', '}]'], vanished: ['["', '"]'],
+    scribal: ["['", "']"], editorial: ['[&', '&]'],
+};
+// Unicode: opening sign + BEGIN control … END control + closing sign. The
+// walled controls go with the fortified wall (O36C/O36D); the serekh has no
+// closing sign (Unicode allows an enclosure end to be missing).
+const UNI_ENC = {
+    C: ['\u{13379}\u{1343C}', '\u{1343D}\u{1337A}'],   // V11A … V11B
+    H: ['\u{13258}\u{1343C}', '\u{1343D}\u{1325B}'],   // O6A … O6D
+    F: ['\u{13288}\u{1343E}', '\u{1343F}\u{13289}'],   // O36C … O36D
+    S: ['\u{13282}\u{1343C}', '\u{1343D}'],             // O33A …
+};
+// Unicode's text-critical marks (Unicode §11.4.4).
+const UNI_BRK = {
+    erased: ['\u27E6', '\u27E7'], superfluous: ['{', '}'], vanished: ['[', ']'],
+    scribal: ['\u2E22', '\u2E23'], editorial: ['\u27E8', '\u27E9'],
+};
+
+// The enclosure variant ('C', 'S', 'H', 'F') an object's frame draws, or
+// null. Frames made since the exports learnt enclosures carry it
+// (mdcEnclosure); older ones are recognised by their parts: the MdC frames
+// by their link (enclosureId), the cartouche tool's by its rounded loop + tie.
+function enclosureVariantOf(o) {
+    if (!o || o._pageGuide) return null;
+    if (o.mdcEnclosure) return o.mdcEnclosure;
+    if (o.type === 'group') {
+        const kids = o._objects || [];
+        const rects = kids.filter(k => k.type === 'rect'), lines = kids.filter(k => k.type === 'line');
+        if (rects.length !== 1 || rects.length + lines.length !== kids.length) return null;
+        if (rects[0].rx > 0 && lines.length === 1) return 'C';
+        if (!o.enclosureId) return null;
+        return lines.length === 1 ? 'H' : lines.length > 1 ? 'S' : null;
+    }
+    return o.type === 'rect' && o.enclosureId && o.fill === 'transparent' && !o.strokeDashArray ? 'F' : null;
+}
+
+// The boxes the export lays out: the sign boxes, except that the signs inside
+// an enclosure frame are replaced by one box for the frame, plus a box per
+// bracket mark. `ctx` ({avgW, avgH, rtl, size}) lays out a frame's contents.
+function exportBoxesWithMarks(objs, signBoxes, ctx) {
+    const frames = objs.map(o => ({ o, v: enclosureVariantOf(o) })).filter(f => f.v)
+        .map(f => ({ ...f, r: f.o.getBoundingRect(true, true) }))
+        .sort((a, b) => a.r.width * a.r.height - b.r.width * b.r.height);   // innermost first
+    const marks = objs.filter(o => o && o.mdcBracket && MDC_BRK_TOKENS[o.mdcBracket] && !o._pageGuide);
+    if (!frames.length && !marks.length) return signBoxes;
+    let free = signBoxes;
+    const out = [];
+    for (const { v, r } of frames) {
+        const inside = b => {
+            const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+            return cx > r.left && cx < r.left + r.width && cy > r.top && cy < r.top + r.height;
+        };
+        const members = free.filter(inside);
+        if (!members.length) continue;               // an empty frame has nothing to write
+        free = free.filter(b => !inside(b));
+        out.push({ obj: { _exp: 'enc', variant: v, members, ctx }, left: r.left, top: r.top, width: r.width, height: r.height });
+    }
+    for (const m of marks) {
+        const r = m.getBoundingRect(true, true);
+        out.push({ obj: { _exp: 'brk', variant: m.mdcBracket, open: m.mdcBracketSide !== 'right' },
+            left: r.left, top: r.top, width: r.width, height: r.height });
+    }
+    return free.concat(out);
 }
 
 // The widest separation along an axis: the neighbouring pair (ordered by start
@@ -1620,12 +1705,15 @@ function mdcCadratGapMin(size) {
 function mdcFromTree(t) {
     if (t.leaf) return { str: mdcCodeFor(t.leaf), rank: MDC_LEAF_RANK };
     if (t.seq) return { str: t.seq.map(mdcCodeFor).join('-'), rank: MDC_OP_RANK['-'] };
-    const rank = MDC_OP_RANK[t.op];
+    // A bracket mark or an enclosure is never part of a quadrat.
+    const isMark = n => n.leaf && !!n.leaf._exp;
+    const op = t.op === '*' && (isMark(t.a) || isMark(t.b)) ? '-' : t.op;
+    const rank = MDC_OP_RANK[op];
     const a = mdcFromTree(t.a), c = mdcFromTree(t.b);
     // Parenthesize an operand only when it binds looser than the joining
     // operator (e.g. a stack inside a juxtaposition: A*(B:C)).
     const wrap = part => part.rank < rank ? `(${part.str})` : part.str;
-    return { str: wrap(a) + t.op + wrap(c), rank };
+    return { str: wrap(a) + op + wrap(c), rank };
 }
 
 function mdcFromBoxes(boxes, avgW, avgH, rtl = false, size = 0) {
@@ -1711,12 +1799,13 @@ function signInkBox(o) {
 function mdcStringForObjs(objs) {
     const signs = (objs || []).filter(o => o.type === 'text' && !o._pageGuide);
     if (signs.length === 0) return '';
-    const boxes = signs.map(signInkBox);
-    const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
-    const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
+    const signBoxes = signs.map(signInkBox);
+    const avgW = signBoxes.reduce((s, b) => s + b.width, 0) / signBoxes.length;
+    const avgH = signBoxes.reduce((s, b) => s + b.height, 0) / signBoxes.length;
 
     const rtl = signsReadRtl(signs);
-    const size = mdcSignSize(boxes);
+    const size = mdcSignSize(signBoxes);
+    const boxes = exportBoxesWithMarks(objs, signBoxes, { avgW, avgH, rtl, size });
     // Rows first (line breaks), then guillotine each row into cadrats.
     return mdcSplitRows(boxes, avgH, size)
         .map(row => mdcFromBoxes(row, avgW, avgH, rtl, size).str)
@@ -1742,6 +1831,13 @@ const UNI_SIGN_RE = /[\u{13000}-\u{1342F}\u{13460}-\u{143FF}]/gu;   // for match
 const UNI_HAS_SIGN = /[\u{13000}-\u{1342F}\u{13460}-\u{143FF}]/u;   // for test(): no lastIndex state
 
 function uniSignsOf(obj, rtl = false) {
+    if (obj._exp === 'enc') {
+        const c = obj.ctx;
+        const inner = uniFromTree(mdcLayoutTree(obj.members, c.avgW, c.avgH, c.rtl, c.size), false, c.rtl).str;
+        const [open, close] = UNI_ENC[obj.variant];
+        return [open + inner + close];
+    }
+    if (obj._exp === 'brk') return [UNI_BRK[obj.variant][obj.open ? 0 : 1]];
     let signs = (obj.text || '').match(UNI_SIGN_RE) || [];
     // A sign facing against the writing direction is marked mirrored (Unicode
     // leaves the direction itself to the display), and a run facing against
@@ -1781,11 +1877,12 @@ function unicodeStringForObjs(objs) {
     const signs = (objs || []).filter(o => o && (o.type === 'text' || o.type === 'i-text')
         && !o._pageGuide && UNI_HAS_SIGN.test(o.text || ''));
     if (signs.length === 0) return '';
-    const boxes = signs.map(signInkBox);
-    const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
-    const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
+    const signBoxes = signs.map(signInkBox);
+    const avgW = signBoxes.reduce((s, b) => s + b.width, 0) / signBoxes.length;
+    const avgH = signBoxes.reduce((s, b) => s + b.height, 0) / signBoxes.length;
     const rtl = signsReadRtl(signs);
-    const size = mdcSignSize(boxes);
+    const size = mdcSignSize(signBoxes);
+    const boxes = exportBoxesWithMarks(objs, signBoxes, { avgW, avgH, rtl, size });
     return mdcSplitRows(boxes, avgH, size)
         .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH, rtl, size), false, rtl).str)
         .filter(Boolean)
@@ -1828,24 +1925,58 @@ function copySelectionAsUnicode(objs) {
 // Unicode with layout controls → MdC, so text copied from elsewhere (or from
 // this editor) can be pasted back and laid out. Joiners and segments map 1:1;
 // the insertion and overlay controls have no MdC operator in this editor and
-// become side by side; enclosure, mirror, blank and damage marks are dropped.
-// Text without format controls is returned unchanged.
+// become side by side. Enclosures (opening sign + BEGIN control … END control
+// + closing sign) become '<-…->' and its serekh / ḥwt / wall forms; the
+// text-critical marks ⟦ ⟧ { } [ ] ⸢ ⸣ ⟨ ⟩ become MdC's bracket pairs. Mirror,
+// blank and damage marks are dropped. Text without any of these is returned
+// unchanged.
+const UNI_ENC_OPEN_SIGN = { 0x13379: 'C', 0x13258: 'H', 0x13259: 'H', 0x1325A: 'H',
+    0x13286: 'F', 0x13288: 'F', 0x13282: 'S' };
+const UNI_ENC_CLOSE_SIGN = new Set([0x1337A, 0x1325B, 0x1325C, 0x1325D, 0x13287, 0x13289]);
+const UNI_BRK_TO_MDC = { '\u27E6': '[[', '\u27E7': ']]', '{': '[{', '}': '}]', '[': '["', ']': '"]',
+    '\u2E22': "['", '\u2E23': "']", '\u27E8': '[&', '\u27E9': '&]' };
 function unicodeLayoutToMdC(str) {
-    if (!/[\u{13430}-\u{1345F}]/u.test(str || '')) return str;
+    str = str || '';
+    const hasControls = /[\u{13430}-\u{1345F}]/u.test(str);
+    // Bracket characters only count in Unicode text: in MdC, '[' and '{' are
+    // MdC's own (a text with Latin letters or digits is MdC).
+    const hasMarks = UNI_HAS_SIGN.test(str) && !/[A-Za-z0-9]/.test(str)
+        && /[\u27E6-\u27E9{}[\]\u2E22\u2E23]/.test(str);
+    if (!hasControls && !hasMarks) return str;
+    const chars = [...str];
+    const encStack = [];
     let out = '', prev = null;       // prev: 'sign' | 'close' | 'op' | 'open' | null
-    for (const ch of str) {
+    const newQuadrat = () => { if (prev === 'sign' || prev === 'close') out += '-'; };
+    for (let i = 0; i < chars.length; i++) {
+        const ch = chars[i];
         const cp = ch.codePointAt(0);
+        const nx = chars[i + 1] ? chars[i + 1].codePointAt(0) : 0;
         const isSign = (cp >= 0x13000 && cp <= 0x1342F) || (cp >= 0x13460 && cp <= 0x143FF);
-        if (isSign || cp === 0x13437) {
-            if (prev === 'sign' || prev === 'close') out += '-';   // a new quadrat starts
+        if (isSign && UNI_ENC_OPEN_SIGN[cp] && (nx === 0x1343C || nx === 0x1343E)) {
+            // Opening sign + BEGIN: the enclosure starts.
+            const v = UNI_ENC_OPEN_SIGN[cp];
+            newQuadrat(); out += MDC_ENC_OPEN[v] + '-'; encStack.push(v); prev = 'open'; i++;
+        } else if (cp === 0x1343C || cp === 0x1343E) {
+            // BEGIN without an opening sign (a damaged end): a plain cartouche.
+            newQuadrat(); out += '<-'; encStack.push('C'); prev = 'open';
+        } else if (cp === 0x1343D || cp === 0x1343F) {
+            const v = encStack.pop() || 'C';
+            out += '-' + MDC_ENC_CLOSE[v]; prev = 'close';
+            if (UNI_ENC_CLOSE_SIGN.has(nx)) i++;      // the closing sign belongs to the frame
+        } else if (!isSign && UNI_BRK_TO_MDC[ch] && hasMarks) {
+            const tok = UNI_BRK_TO_MDC[ch];
+            if (tok[0] === '[') { newQuadrat(); out += tok + '-'; prev = 'open'; }
+            else { out += '-' + tok; prev = 'close'; }
+        } else if (isSign || cp === 0x13437) {
+            newQuadrat();
             out += isSign ? ch : '(';
             prev = isSign ? 'sign' : 'open';
         } else if (cp === 0x13438) { out += ')'; prev = 'close'; }
         else if (cp === 0x13430) { out += ':'; prev = 'op'; }
         else if (cp === 0x13431 || (cp >= 0x13432 && cp <= 0x13436) || (cp >= 0x13439 && cp <= 0x1343B)) {
             out += '*'; prev = 'op';
-        } else if (cp >= 0x1343C && cp <= 0x1345F) {
-            // enclosures, mirror, blanks, damage: not representable here
+        } else if (cp >= 0x13440 && cp <= 0x1345F) {
+            // mirror, blanks, damage: not representable here
         } else if (ch === '\n' || ch === '\r') {
             if (prev !== null) out += ' ! ';
             prev = null;

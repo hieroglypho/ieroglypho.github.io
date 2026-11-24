@@ -66,7 +66,7 @@ const redoHistory = [];
 // Properties an undo snapshot keeps besides Fabric's own, so an undone delete
 // comes back still linked (three-line block, enclosure), named and locked.
 const UNDO_PROPS = ['id', 'characterKey', 'isGlyphTextRun', 'blockId', 'blockRow', 'enclosureId',
-                    'photoLocked', 'photoExport'];
+                    'photoLocked', 'photoExport', 'mdcEnclosure', 'mdcBracket', 'mdcBracketSide'];
 
 // Record a new user action. Any fresh action invalidates the redo stack —
 // you can't redo past a branch you just diverged from. This is the single

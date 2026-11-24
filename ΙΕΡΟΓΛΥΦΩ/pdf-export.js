@@ -596,8 +596,14 @@ const LETTER = [612, 792];
 // What to export and where it goes on the page:
 //   • Page guide ON  → WYSIWYG: exactly the guide's page, 1:1.
 //   • Page guide OFF → crop to the content and centre it on the page, scaling
-//     down only if the work is larger than the printable area.
-// Must run inside withIdentityViewport. Returns null when there is nothing.
+//     down only if the work is larger than the printable area. A long text
+//     (one that would have to shrink below PDF_MIN_ONE_PAGE of its full-width
+//     size to fit one page) is split over several pages instead, at full width,
+//     cutting only in the space between rows (pdfPageSlices).
+// Must run inside withIdentityViewport. Returns null when there is nothing,
+// else { pageW, pageH, fit, pages: [{ bounds, cW, cH, imgX, imgY, toPage, slice }] }
+// where `slice` is null for a single page, else the canvas band {top, bottom}.
+const PDF_MIN_ONE_PAGE = 0.75;
 function pdfLayout() {
     const pageRect = pageGuidePaperRect();
     const pageMode = !!pageRect;
@@ -611,32 +617,110 @@ function pdfLayout() {
         landscape = bounds.contentWidth > bounds.contentHeight;
     }
     const [pageW, pageH] = landscape ? [LETTER[1], LETTER[0]] : LETTER;
-    let fit, cW, cH, imgX, imgY;
+    // canvas px → PDF points, y up (PDF's origin is the bottom-left corner):
+    // the canvas point (left, top) lands at (imgX, imgY) from the page's top left.
+    const place = (b, fit, imgX, imgY, slice) => {
+        const k = PDF_PT * fit;
+        return { bounds: b, cW: b.width * k, cH: b.height * k, imgX, imgY, slice,
+            toPage: [k, 0, 0, -k, imgX - b.left * k, pageH - (imgY - b.top * k)] };
+    };
     if (pageMode) {
-        cW = pageW; cH = pageH; imgX = 0; imgY = 0;
-        fit = pageW / (bounds.width * PDF_PT);
-    } else {
-        // Fit from the true glyph extent (not the padded crop): content inside
-        // the printable area exports 1:1, larger work scales down to fit.
-        const printW = pageW - 2 * PDF_MARGIN, printH = pageH - 2 * PDF_MARGIN;
-        fit = Math.min(printW / (bounds.contentWidth * PDF_PT), printH / (bounds.contentHeight * PDF_PT), 1);
-        cW = bounds.width * PDF_PT * fit;
-        cH = bounds.height * PDF_PT * fit;
-        imgX = (pageW - cW) / 2;
-        imgY = (pageH - cH) / 2;
+        const fit = pageW / (bounds.width * PDF_PT);
+        return { pageW, pageH, fit, pages: [place(bounds, fit, 0, 0, null)] };
     }
-    // canvas px → PDF points, y up (PDF's origin is the bottom-left corner).
-    const k = PDF_PT * fit;
-    const toPage = [k, 0, 0, -k, imgX - bounds.left * k, pageH - (imgY - bounds.top * k)];
-    return { bounds, pageMode, pageW, pageH, fit, cW, cH, imgX, imgY, toPage };
+    // Fit from the true glyph extent (not the padded crop): content inside
+    // the printable area exports 1:1, larger work scales down to fit.
+    const printW = pageW - 2 * PDF_MARGIN, printH = pageH - 2 * PDF_MARGIN;
+    const widthFit = Math.min(printW / (bounds.contentWidth * PDF_PT), 1);
+    const oneFit = Math.min(widthFit, printH / (bounds.contentHeight * PDF_PT));
+    if (oneFit >= widthFit * PDF_MIN_ONE_PAGE) {
+        const cW = bounds.width * PDF_PT * oneFit, cH = bounds.height * PDF_PT * oneFit;
+        return { pageW, pageH, fit: oneFit, pages: [place(bounds, oneFit, (pageW - cW) / 2, (pageH - cH) / 2, null)] };
+    }
+    // Several pages, each filled from the top margin, centred across.
+    const fit = widthFit;
+    const imgX = (pageW - bounds.width * PDF_PT * fit) / 2;
+    const pages = pdfPageSlices(bounds, printH / (PDF_PT * fit)).map(sl => {
+        const b = { left: bounds.left, top: sl.top, width: bounds.width, height: sl.bottom - sl.top };
+        return place(b, fit, imgX, PDF_MARGIN, sl);
+    });
+    return { pageW, pageH, fit, pages };
 }
 
-// Footer URL (real text, Helvetica) and the ΙΕΡΟΓΛΥΦΩ wordmark in the top
-// margin (a small picture: the standard PDF fonts have no Greek).
-async function addPdfFooterAndWordmark(doc, page, L) {
+// The vertical extent of an object as the page split sees it: a sign's ink
+// (its text box is much taller than the sign and would bridge the gap
+// between rows), any other object's bounding box.
+function pdfObjectBand(o) {
+    if (typeof o.text === 'string' && typeof signInkBox === 'function') {
+        try { const b = signInkBox(o); return { top: b.top, bottom: b.top + b.height }; } catch (_) { /* fall through */ }
+    }
+    const r = o.getBoundingRect(true, true);
+    return { top: r.top, bottom: r.top + r.height };
+}
+
+// Cut the content (canvas px, top to bottom) into page bands of at most
+// `maxH`, cutting in the middle of a gap between rows: the objects' vertical
+// extents are merged into bands, and a page takes whole bands while they
+// fit. An object taller than a page (a long frame line, a photo) is left
+// out of the bands: it is split over its pages anyway, and counting it would
+// join every row beside it into one band and force cuts through the rows.
+// A band still taller than a page is cut where the page ends.
+function pdfPageSlices(bounds, maxH) {
+    const top = bounds.top, bottom = bounds.top + bounds.height;
+    const spans = exportableObjects().map(pdfObjectBand)
+        .filter(b => b.bottom > top && b.top < bottom && b.bottom - b.top < maxH * 0.9)
+        .sort((a, b) => a.top - b.top);
+    const bands = [];
+    for (const b of spans) {
+        const last = bands[bands.length - 1];
+        if (last && b.top <= last.bottom) last.bottom = Math.max(last.bottom, b.bottom);
+        else bands.push({ top: b.top, bottom: b.bottom });
+    }
+    const slices = [];
+    let start = top, prevBottom = null;
+    for (const band of bands) {
+        if (band.bottom - start > maxH && prevBottom !== null) {
+            const cut = Math.min((prevBottom + band.top) / 2, start + maxH);
+            slices.push({ top: start, bottom: cut });
+            start = cut;
+        }
+        while (band.bottom - start > maxH) {          // one band taller than a page
+            slices.push({ top: start, bottom: start + maxH });
+            start += maxH;
+        }
+        prevBottom = band.bottom;
+    }
+    if (bottom - start > maxH) { slices.push({ top: start, bottom: start + maxH }); start += maxH; }
+    slices.push({ top: start, bottom: Math.max(bottom, start + 1) });
+    return slices;
+}
+
+// The objects drawn on one page: all of them on a single page, else those
+// whose extent reaches into the page's band (an object across a cut is drawn
+// on both pages, clipped to each).
+function pdfPageObjects(objs, P) {
+    if (!P.slice) return objs;
+    return objs.filter(o => { const b = pdfObjectBand(o); return b.bottom > P.slice.top && b.top < P.slice.bottom; });
+}
+
+// Clip what follows on the page to the page's band (several pages only).
+function pdfClipToSlice(page, P) {
+    if (!P.slice) return;
+    page.pushOperators(PDFLib.pushGraphicsState(),
+        PDFLib.rectangle(P.imgX, page.getHeight() - P.imgY - P.cH, P.cW, P.cH), PDFLib.clip(), PDFLib.endPath());
+}
+function pdfEndClip(page, P) {
+    if (P.slice) page.pushOperators(PDFLib.popGraphicsState());
+}
+
+// Footer URL (real text, Helvetica), with the page number on a text of
+// several pages, and the ΙΕΡΟΓΛΥΦΩ wordmark in the top margin (a small
+// picture: the standard PDF fonts have no Greek).
+async function addPdfFooterAndWordmark(doc, page, L, pageNo = 1) {
     try {
         const helv = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
-        const text = 'www.hieroglyphica.org', size = 8;
+        const n = L.pages ? L.pages.length : 1;
+        const text = 'www.hieroglyphica.org' + (n > 1 ? `   ${pageNo} / ${n}` : ''), size = 8;
         page.drawText(text, {
             x: (L.pageW - helv.widthOfTextAtSize(text, size)) / 2,
             y: PDF_MARGIN / 2 - size * 0.35,
@@ -690,37 +774,51 @@ async function saveToPDF() {
         await withIdentityViewport(async () => {
             const L = pdfLayout();
             if (!L) { showCanvasToast('Nothing to export'); return; }
-            const composite = await compositeCropForPDF(L.bounds);
+            if (L.pages.length > 1) showCanvasToast(`Making the PDF (${L.pages.length} pages)…`);
             const doc = await newPdfDoc();
-            const page = doc.addPage([L.pageW, L.pageH]);
-            const png = await doc.embedPng(composite.toDataURL('image/png'));
-            page.drawImage(png, { x: L.imgX, y: L.pageH - L.imgY - L.cH, width: L.cW, height: L.cH });
-
-            // Invisible text over the picture: signs and transliteration can be
-            // selected, copied and searched. Skipped if a font can't be loaded;
-            // the picture alone is still a good PDF.
+            const all = await withGridHidden(async () => exportableObjects());
+            // Fonts for the invisible text: loaded once for the whole document.
+            let fonts = null;
+            try { fonts = await embedPdfFonts(doc, await loadFontsForText(collectTextObjects(all))); }
+            catch (e) { console.warn('PDF text layer skipped:', e); }
             let textOK = false;
-            try {
-                await withGridHidden(async () => {
-                    const objs = exportableObjects();
-                    const fonts = await embedPdfFonts(doc, await loadFontsForText(collectTextObjects(objs)));
-                    const painter = new PdfPainter(doc, page, L.toPage, fonts, { textOnly: true });
-                    renderObjectsToPainter(pdfObjectsInReadingOrder(objs), painter);
-                    textOK = painter.textRuns > 0;
-                });
-            } catch (e) { console.warn('PDF text layer skipped:', e); }
+            for (let i = 0; i < L.pages.length; i++) {
+                const P = L.pages[i];
+                const composite = await compositeCropForPDF(P.bounds);
+                const page = doc.addPage([L.pageW, L.pageH]);
+                const png = await doc.embedPng(composite.toDataURL('image/png'));
+                page.drawImage(png, { x: P.imgX, y: L.pageH - P.imgY - P.cH, width: P.cW, height: P.cH });
 
-            await addPdfFooterAndWordmark(doc, page, L);
-            result = { bytes: await doc.save(), fit: L.fit, textOK };
+                // Invisible text over the picture: signs and transliteration can be
+                // selected, copied and searched. Skipped if a font can't be loaded;
+                // the picture alone is still a good PDF.
+                if (fonts) {
+                    try {
+                        await withGridHidden(async () => {
+                            const painter = new PdfPainter(doc, page, P.toPage, fonts, { textOnly: true });
+                            renderObjectsToPainter(pdfObjectsInReadingOrder(pdfPageObjects(all, P)), painter);
+                            if (painter.textRuns > 0) textOK = true;
+                        });
+                    } catch (e) { console.warn('PDF text layer skipped:', e); }
+                }
+                await addPdfFooterAndWordmark(doc, page, L, i + 1);
+            }
+            result = { bytes: await doc.save(), fit: L.fit, textOK, pages: L.pages.length };
         });
         if (!result) return;
         triggerDownload(new Blob([result.bytes], { type: 'application/pdf' }), pdfFilename());
-        const scaled = result.fit < 1 ? ` — scaled to ${Math.round(result.fit * 100)}% to fit page` : '';
-        showPdfSaved((result.textOK ? 'PDF saved (selectable text)' : 'PDF saved') + scaled);
+        showPdfSaved((result.textOK ? 'PDF saved (selectable text)' : 'PDF saved') + pdfSizeNote(result));
     } catch (error) {
         console.error('Error saving PDF:', error);
         alert('Error saving PDF: ' + (error.message || error));
     }
+}
+
+// " — 3 pages" / " — scaled to 80% to fit page", for the saved message.
+function pdfSizeNote(r) {
+    const scaled = r.fit < 1 ? `scaled to ${Math.round(r.fit * 100)}%` : '';
+    if (r.pages > 1) return ` — ${r.pages} pages` + (scaled ? `, ${scaled} to fit the width` : '');
+    return scaled ? ` — ${scaled} to fit page` : '';
 }
 
 // -----------------------------------------------------------------------------
@@ -733,32 +831,38 @@ async function saveToPDFText() {
         await withIdentityViewport(async () => {
             const L = pdfLayout();
             if (!L) { showCanvasToast('Nothing to export'); return; }
+            if (L.pages.length > 1) showCanvasToast(`Making the PDF (${L.pages.length} pages)…`);
             const doc = await newPdfDoc();
-            const page = doc.addPage([L.pageW, L.pageH]);
-            let painter;
+            let raster = 0;
             await withGridHidden(async () => {
-                const objs = exportableObjects();
-                const fonts = await embedPdfFonts(doc, await loadFontsForText(collectTextObjects(objs)));
-                painter = new PdfPainter(doc, page, L.toPage, fonts);
-                // Same opaque page background as the picture exports.
-                const bg = exportBgColor();
-                if (bg && !/^#?f{3}(f{3})?$/i.test(bg)) {
-                    painter.save(); painter.fillStyle = bg;
-                    painter.fillRect(L.bounds.left, L.bounds.top, L.bounds.width, L.bounds.height);
-                    painter.restore();
+                const all = exportableObjects();
+                const fonts = await embedPdfFonts(doc, await loadFontsForText(collectTextObjects(all)));
+                for (let i = 0; i < L.pages.length; i++) {
+                    const P = L.pages[i];
+                    const page = doc.addPage([L.pageW, L.pageH]);
+                    const painter = new PdfPainter(doc, page, P.toPage, fonts);
+                    // Same opaque page background as the picture exports.
+                    const bg = exportBgColor();
+                    if (bg && !/^#?f{3}(f{3})?$/i.test(bg)) {
+                        painter.save(); painter.fillStyle = bg;
+                        painter.fillRect(P.bounds.left, P.bounds.top, P.bounds.width, P.bounds.height);
+                        painter.restore();
+                    }
+                    pdfClipToSlice(page, P);
+                    renderObjectsToPainter(pdfObjectsInReadingOrder(pdfPageObjects(all, P)), painter);
+                    await painter.finish();
+                    pdfEndClip(page, P);
+                    raster += painter.rasterChars;
+                    await addPdfFooterAndWordmark(doc, page, L, i + 1);
                 }
-                renderObjectsToPainter(pdfObjectsInReadingOrder(objs), painter);
-                await painter.finish();
             });
-            await addPdfFooterAndWordmark(doc, page, L);
-            result = { bytes: await doc.save(), fit: L.fit, raster: painter.rasterChars };
+            result = { bytes: await doc.save(), fit: L.fit, raster, pages: L.pages.length };
         });
         canvas.requestRenderAll();
         if (!result) return;
         triggerDownload(new Blob([result.bytes], { type: 'application/pdf' }), pdfFilename());
-        const scaled = result.fit < 1 ? ` — scaled to ${Math.round(result.fit * 100)}% to fit page` : '';
         const raster = result.raster ? ` (${result.raster} character${result.raster === 1 ? '' : 's'} with no font, drawn as pictures)` : '';
-        showPdfSaved('PDF saved (vector, selectable text)' + scaled + raster);
+        showPdfSaved('PDF saved (vector, selectable text)' + pdfSizeNote(result) + raster);
     } catch (error) {
         console.error('Error saving PDF:', error);
         alert('Error saving PDF: ' + (error.message || error));

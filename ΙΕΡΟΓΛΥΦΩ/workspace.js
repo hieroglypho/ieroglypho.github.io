@@ -108,6 +108,7 @@ function applyWorkspace(workspace, unsaved = false) {
         canvasData.objects = canvasData.objects.filter(obj =>
             !obj.isGridGroup && !obj.grid
         );
+        addMissingTextStyles(canvasData.objects);
     }
 
     // Load canvas data
@@ -118,8 +119,10 @@ function applyWorkspace(workspace, unsaved = false) {
                 // pasted-names list is only a fallback for objects that lack one.
                 // Matching by index used to shift every key by one when the
                 // canvas also held a photo or a shape (they have no name entry).
+                // Only signs (text objects) take a name: a cartouche frame (a
+                // group) used to pick one up and show as an extra "N5".
                 canvas.getObjects().forEach((obj, index) => {
-                    if (!obj.characterKey && obj.type !== 'image' && workspace.pastedNames?.[index]) {
+                    if (!obj.characterKey && typeof obj.text === 'string' && workspace.pastedNames?.[index]) {
                         obj.characterKey = workspace.pastedNames[index].text.replace(' - ', '');
                     }
                 });
@@ -163,6 +166,18 @@ function applyWorkspace(workspace, unsaved = false) {
                 canvas.requestRenderAll();
                 canvasModified = unsaved;
             });
+}
+
+// Share links and autosaves leave out empty `styles` (minifyForShare). Fabric
+// 5 then loads the text with styles = undefined, and every later toJSON of it
+// throws, so Save as JSON, sharing again and autosave all failed after opening
+// a share link. Give such text objects (and any inside groups) an empty one.
+function addMissingTextStyles(objects) {
+    for (const o of objects || []) {
+        if (!o) continue;
+        if (typeof o.text === 'string' && o.styles == null) o.styles = [];
+        if (Array.isArray(o.objects)) addMissingTextStyles(o.objects);
+    }
 }
 
 // Old-format tracing photo -> a locked photo at the back of the canvas, sized
@@ -215,58 +230,129 @@ function loadWorkspace() {
 // =============================================================================
 // Crash-recovery autosave  (TODO-2)
 // =============================================================================
-// A quiet background snapshot of the workspace to localStorage so an
-// involuntary loss — browser/OS crash, killed tab, power cut — doesn't wipe
-// unsaved work. This is NOT a replacement for "Save as JSON" (the durable,
-// shareable artefact) nor for the beforeunload nudge (deliberate navigation):
-// it only buys back the *current* session if the page dies unexpectedly.
+// A quiet background snapshot of the workspace so an involuntary loss —
+// browser/OS crash, killed tab, power cut — doesn't wipe unsaved work. This is
+// NOT a replacement for "Save as JSON" (the durable, shareable artefact) nor
+// for the beforeunload nudge (deliberate navigation): it only buys back the
+// *current* session if the page dies unexpectedly.
 //
 // One snapshot, overwritten as you work, offered back once on the next load.
+//
+// Storage (TODO-7): the snapshot is trimmed like a share link (Fabric defaults
+// dropped) and deflated with packString, then kept in IndexedDB, whose quota
+// is a share of free disk. An imported Sinuhe (~10,000 signs) goes from 10 MB
+// of raw JSON to under 0.5 MB. localStorage (~5 MB per site) is only the
+// fallback when IndexedDB can't be opened; there, photos are dropped if the
+// snapshot doesn't fit. Stored record: { v: 2, savedAt, data: <packed JSON> }.
+// Snapshots from before TODO-7 ({ savedAt, workspace } in localStorage) are
+// still read once.
 const AUTOSAVE_KEY = 'ieroglypho:autosave';
 const AUTOSAVE_DEBOUNCE_MS = 1000;
+const AUTOSAVE_BIG_DEBOUNCE_MS = 5000;   // canvases over AUTOSAVE_BIG_OBJECTS
+const AUTOSAVE_BIG_OBJECTS = 2000;
 let autosaveTimer = null;
 
-// Debounced entry point — called on every canvas mutation. Coalesces a burst
-// of edits into a single write ~1s after the user pauses.
-function scheduleAutosave() {
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(writeAutosave, AUTOSAVE_DEBOUNCE_MS);
+// Reads, writes and clears run one after another in this queue, so a clear
+// followed by a write (Dismiss) lands in that order, and no write can replace
+// the old snapshot before the restore banner has read it.
+let autosaveQueue = Promise.resolve();
+let autosaveWriteQueued = false;
+let autosaveFailShown = false;
+function queueAutosave(task) {
+    const run = autosaveQueue.then(task);
+    autosaveQueue = run.catch(err => console.warn('Autosave:', err));
+    return run;
 }
 
-// Serialize + persist. localStorage has a ~5MB cap, and an image (a big
-// data-URL, a Fabric image object)
-// can blow it. On QuotaExceededError we retry with every image stripped — the
-// actual hieroglyph work is the irreplaceable part and easily fits. If even
-// that won't fit, we give up silently: autosave can never break the editor.
-function writeAutosave() {
-    let snapshot;
-    try {
-        snapshot = { savedAt: Date.now(), workspace: serializeWorkspace() };
-    } catch (err) {
-        console.warn('Autosave: serialize failed, skipping', err);
-        return;
+// ---- IndexedDB: one record in store 'autosave' of database 'ieroglypho' ----
+let autosaveDbPromise = null;
+function autosaveDb() {
+    if (!autosaveDbPromise) {
+        autosaveDbPromise = new Promise(resolve => {
+            try {
+                const open = indexedDB.open('ieroglypho', 1);
+                open.onupgradeneeded = () => open.result.createObjectStore('autosave');
+                open.onsuccess = () => resolve(open.result);
+                open.onerror = () => resolve(null);
+                open.onblocked = () => resolve(null);
+            } catch (_) {
+                resolve(null);   // no IndexedDB (very old or locked-down browser)
+            }
+        });
     }
+    return autosaveDbPromise;
+}
+function idbAutosave(mode, op) {
+    return autosaveDb().then(db => {
+        if (!db) throw new Error('IndexedDB unavailable');
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('autosave', mode);
+            const req = op(tx.objectStore('autosave'));
+            tx.oncomplete = () => resolve(req.result);
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error);
+        });
+    });
+}
 
+// Debounced entry point — called on every canvas mutation. Coalesces a burst
+// of edits into a single write after the user pauses: 1 s, or 5 s on a big
+// canvas, where each snapshot costs ~0.1 s of serializing.
+function scheduleAutosave() {
+    clearTimeout(autosaveTimer);
+    const big = canvas.getObjects().length > AUTOSAVE_BIG_OBJECTS;
+    autosaveTimer = setTimeout(writeAutosave, big ? AUTOSAVE_BIG_DEBOUNCE_MS : AUTOSAVE_DEBOUNCE_MS);
+}
+
+function writeAutosave() {
+    if (autosaveWriteQueued) return;    // the queued write will pick up this state too
+    autosaveWriteQueued = true;
+    queueAutosave(async () => {
+        autosaveWriteQueued = false;
+        const ok = await saveSnapshotNow();
+        if (!ok && !autosaveFailShown) {
+            autosaveFailShown = true;
+            showToast('Autosave could not save this canvas. Use ≡ → Save as JSON to keep your work.', 8000);
+        }
+    });
+}
+
+// Serialize, trim, pack, store. Returns false when nothing could be saved;
+// never throws, so autosave can never break the editor.
+async function saveSnapshotNow() {
+    let snap;
     try {
-        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(snapshot));
-        return;
+        snap = minifyForShare(serializeWorkspace());
     } catch (err) {
-        if (!isQuotaError(err)) {
-            console.warn('Autosave: write failed, skipping', err);
-            return;
+        console.warn('Autosave: serialize failed', err);
+        return false;
+    }
+    const savedAt = Date.now();
+    try {
+        const record = { v: 2, savedAt, data: await packString(JSON.stringify(snap)) };
+        await idbAutosave('readwrite', s => s.put(record, 'snapshot'));
+        try { localStorage.removeItem(AUTOSAVE_KEY); } catch (_) { }   // drop any older copy
+        return true;
+    } catch (err) {
+        console.warn('Autosave: IndexedDB write failed, trying localStorage', err);
+    }
+    // Fallback: localStorage. Over quota, retry without photos (the hieroglyph
+    // work is the irreplaceable part).
+    for (const dropPhotos of [false, true]) {
+        try {
+            if (dropPhotos) {
+                if (!snap.canvas?.objects?.some(o => o.type === 'image')) break;
+                snap.canvas.objects = snap.canvas.objects.filter(o => o.type !== 'image');
+            }
+            const record = { v: 2, savedAt, data: await packString(JSON.stringify(snap)) };
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(record));
+            return true;
+        } catch (err) {
+            if (!isQuotaError(err)) { console.warn('Autosave: write failed', err); return false; }
         }
     }
-
-    // Over quota — drop all image payloads and retry the glyph work alone.
-    if (snapshot.workspace.canvas?.objects) {
-        snapshot.workspace.canvas.objects =
-            snapshot.workspace.canvas.objects.filter(obj => obj.type !== 'image');
-    }
-    try {
-        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(snapshot));
-    } catch (err2) {
-        console.warn('Autosave: still over quota without images, skipping', err2);
-    }
+    console.warn('Autosave: over the storage quota, skipped');
+    return false;
 }
 
 function isQuotaError(err) {
@@ -275,21 +361,36 @@ function isQuotaError(err) {
         || err.code === 22 || err.code === 1014);
 }
 
-function readAutosave() {
+// The saved snapshot as { savedAt, workspace }, or null when there is nothing
+// to recover. IndexedDB first, then localStorage (fallback or pre-TODO-7).
+async function readAutosave() {
+    let record = null;
+    try { record = await idbAutosave('readonly', s => s.get('snapshot')); } catch (_) { }
+    if (!record) {
+        try {
+            const raw = localStorage.getItem(AUTOSAVE_KEY);
+            if (raw) record = JSON.parse(raw);
+        } catch (_) { }
+    }
+    if (!record) return null;
     try {
-        const raw = localStorage.getItem(AUTOSAVE_KEY);
-        if (!raw) return null;
-        const snapshot = JSON.parse(raw);
+        const workspace = record.v === 2
+            ? JSON.parse(await unpackString(record.data))
+            : record.workspace;
         // Treat an empty canvas snapshot as nothing to recover.
-        if (!snapshot.workspace?.canvas?.objects?.length) return null;
-        return snapshot;
-    } catch (_) {
+        if (!workspace?.canvas?.objects?.length) return null;
+        return { savedAt: record.savedAt, workspace };
+    } catch (err) {
+        console.warn('Autosave: could not read the saved snapshot', err);
         return null;
     }
 }
 
 function clearAutosave() {
-    try { localStorage.removeItem(AUTOSAVE_KEY); } catch (_) { }
+    return queueAutosave(async () => {
+        try { localStorage.removeItem(AUTOSAVE_KEY); } catch (_) { }
+        try { await idbAutosave('readwrite', s => s.delete('snapshot')); } catch (_) { }
+    });
 }
 
 // =============================================================================
@@ -377,7 +478,7 @@ async function buildShareLink() {
 }
 
 // A small dark toast (matches the existing "Saved!" indicator styling).
-function showToast(msg) {
+function showToast(msg, ms = 2600) {
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText =
@@ -385,7 +486,7 @@ function showToast(msg) {
         + 'padding:9px 16px;border-radius:6px;z-index:3000;font-size:14px;'
         + 'box-shadow:0 2px 10px rgba(0,0,0,0.4);max-width:80vw';
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2600);
+    setTimeout(() => t.remove(), ms);
 }
 
 // Ask the share-shortener Worker (configured via window.SHARE_API) to turn the
@@ -472,11 +573,12 @@ function initAutosaveRestore() {
     canvas.on('object:modified', onChange);
     canvas.on('object:removed', onChange);
 
+    // Read the old snapshot first: it is the queue's first task, so no write
+    // made meanwhile can replace it before the banner holds it.
+    const reading = queueAutosave(readAutosave);
     if (loadFromShareLink()) return;    // opened a shared link → don't also nag with restore
 
-    const snapshot = readAutosave();
-    if (!snapshot) return;
-    showRestoreBanner(snapshot);
+    reading.then(snapshot => { if (snapshot) showRestoreBanner(snapshot); });
 }
 
 function showRestoreBanner(snapshot) {

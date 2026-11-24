@@ -14,32 +14,7 @@ _(none)_
 
 ## TODO
 
-### TODO-7 — autosave quietly stops for very large canvases (e.g. an imported Sinuhe)
-**Noted:** 2026-11-23
-
-Symptom: after importing a long JSesh text (Sinuhe, ~10,000 signs) the crash-recovery
-autosave no longer saves, and nothing tells the user.
-
-Cause: `writeAutosave` (workspace.js) stores the full Fabric JSON of every object in
-localStorage, which holds about 5 MB per site. Each sign is several hundred bytes of
-JSON, so ~10,000 signs run past the limit. The fallback (drop photos, retry) doesn't help
-when the signs themselves are too big, so it gives up with only a console warning.
-Serializing 10,000 objects after every 1 s pause is also slow.
-
-Suggested fix, in order:
-1. Write the snapshot to IndexedDB instead of localStorage (quota is a share of free
-   disk, typically hundreds of MB; async, so it doesn't freeze the page). Keep the
-   localStorage key only as a fallback, and read either on load.
-2. Make snapshots smaller: serialize with `includeDefaultValues = false` (Fabric then
-   omits every property left at its default, typically halving the size or better),
-   and/or compress with the gzip `CompressionStream` the share links already use
-   (`packString` / `unpackString`).
-3. If a write still fails, say so once: a small "Autosave is off for this canvas, use
-   Save as JSON" notice, instead of only a console warning.
-4. For big canvases, autosave less often (e.g. every 10 s instead of 1 s after
-   the last change once the canvas has more than ~2,000 objects).
-
-Test: import Sinuhe, wait, reload, and the restore banner should offer all ~10,000 signs.
+_(none open; TODO-7 fixed, see below)_
 
 ---
 
@@ -50,6 +25,39 @@ re-run it after editing editor assets, before committing._
 ---
 
 ## Fixed
+
+### TODO-7 — autosave quietly stopped for very large canvases (fixed 2026-11-24)
+Symptom: after importing a long JSesh text (Sinuhe, 10,257 objects) nothing was
+autosaved (10.3 MB of JSON against localStorage's ~5 MB), with only a console warning.
+
+Fix (workspace.js): the snapshot is trimmed like a share link (`minifyForShare`) and
+deflated (`packString`), then stored in IndexedDB (database `ieroglypho`, store
+`autosave`, record `{ v: 2, savedAt, data }`). Sinuhe: 10.3 MB → 0.48 MB, ~0.1 s.
+localStorage is only the fallback (photos dropped there if over quota); old
+`{ savedAt, workspace }` snapshots are still read. Reads, writes and clears run in one
+queue, so no write can replace the old snapshot before the restore banner reads it.
+Canvases over 2,000 objects autosave 5 s (not 1 s) after the last change. If nothing
+can be stored, a notice says so once ("use ≡ → Save as JSON").
+
+### BUG-3 — after opening a share link, Save as JSON / share / autosave failed (fixed 2026-11-24)
+Symptom: open any share link, then ≡ → Save as JSON → "Error saving workspace";
+sharing again and autosave failed too (console: `stylesToArray … reading '0'`).
+Live since share links existed.
+
+Cause: `minifyForShare` drops empty `styles`; Fabric 5.2.4 then loads the text with
+`styles = undefined`, and its `toObject` throws. Fix: `applyWorkspace` gives text
+objects without `styles` an empty one (`addMissingTextStyles`), so links already
+shared open correctly too.
+
+### BUG-4 — reopened workspaces showed an extra "N5" in the names bar (fixed 2026-11-24)
+Cause: the old index-based `pastedNames` fallback in `applyWorkspace` gave a name to any
+non-image object without one, including cartouche frames (groups). Now only text
+objects (signs) take a fallback name.
+
+Tests (scratchpad, Chromium + Firefox): Sinuhe import → reload → Restore brings back all
+10,257 objects and autosave continues; restored objects identical to the originals
+(incl. a photo); Dismiss clears; legacy snapshot; no-IndexedDB fallback; nothing
+storable → one notice; share link → Save works.
 
 ### BUG-1 — content at the page-edge / footer missing from exported PDF (579140a, stale cache)
 **Reported / resolved:** 2026-06-04

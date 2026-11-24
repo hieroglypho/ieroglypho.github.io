@@ -19,8 +19,9 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const targets = process.argv.slice(2);
 if (targets.length === 0) targets.push(resolve(repoRoot, 'ΙΕΡΟΓΛΥΦΩ/index.html'));
 
-// (src|href)="path.js|css" with an optional existing ?v=... we replace.
-const REF = /\b(src|href)="([^"?#]+\.(?:js|css))(?:\?v=[^"]*)?"/g;
+// (src|href)="path.js|css", or src="page.html" (the help iframe), with an
+// optional existing ?v=... we replace. Plain links to .html pages are left alone.
+const REF = /\b(src|href)="([^"?#]+\.(?:js|css))(?:\?v=[^"]*)?"|\b(src)="([^"?#]+\.html)(?:\?v=[^"]*)?"/g;
 
 let totalChanged = 0;
 for (const htmlPath of targets) {
@@ -28,7 +29,8 @@ for (const htmlPath of targets) {
     const htmlDir = dirname(htmlPath);
     let changed = 0;
 
-    const out = html.replace(REF, (whole, attr, url) => {
+    const out = html.replace(REF, (whole, a1, u1, a2, u2) => {
+        const attr = a1 || a2, url = u1 || u2;
         if (/^(?:https?:)?\/\//.test(url) || url.startsWith('data:')) return whole; // external
         const assetPath = resolve(htmlDir, url);
         if (!existsSync(assetPath)) {

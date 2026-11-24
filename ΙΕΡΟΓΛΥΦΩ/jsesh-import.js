@@ -498,7 +498,7 @@ async function importJSeshText(text, filename) {
             canvas.add(note);
             pushUndo({ type: 'add', object: note.toObject(UNDO_PROPS), id: note.id });
         }
-        handleMdCInputNow(r.mdc, { unbounded: true });
+        handleMdCInputNow(r.mdc, { unbounded: true, rtl: /RIGHT_TO_LEFT/i.test(r.props.JSesh_page_direction || '') });
     });
     canvas.discardActiveObject();
     if (typeof fitCanvasToContent === 'function') fitCanvasToContent();
@@ -508,7 +508,7 @@ async function importJSeshText(text, filename) {
     notes.push(`Opened ${name}: ${r.signs} signs.`);
     const vertical = /VERTICAL/i.test(r.props.JSesh_page_orientation || '');
     const rtl = /RIGHT_TO_LEFT/i.test(r.props.JSesh_page_direction || '');
-    if (vertical || rtl) notes.push(`It was written ${[vertical && 'in columns', rtl && 'right to left'].filter(Boolean).join(', ')}; here it is laid out in rows, left to right.`);
+    if (vertical) notes.push(`It was written in columns; here it is laid out in rows, ${rtl ? 'right to left' : 'left to right'}.`);
     if (r.missing.size) {
         const list = [...r.missing.entries()].sort((a, b) => b[1] - a[1]).map(([c, n]) => n > 1 ? `${c} (×${n})` : c);
         notes.push(`${list.length} sign code${list.length > 1 ? 's have' : ' has'} no Unicode sign and show${list.length > 1 ? '' : 's'} as a dashed box: ${list.slice(0, 12).join(', ')}${list.length > 12 ? ', …' : ''}.`);

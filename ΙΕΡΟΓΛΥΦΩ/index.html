@@ -279,7 +279,7 @@
 
     <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
     <div class="help-overlay" id="helpOverlay">
-        <iframe src="help-content.html?v=fc90916c" class="help-content-frame" id="helpContent"></iframe>
+        <iframe src="help-content.html?v=e36ad3c1" class="help-content-frame" id="helpContent"></iframe>
     </div>
 
     <!-- About overlay (reuses the .help-overlay backdrop; body-level) -->
@@ -433,6 +433,10 @@
                     <input type="radio" name="glyphMode" value="threeLine">
                     Three-line block <span style="color:#888;">(glyphs / transliteration / translation)</span>
                 </label>
+                <label style="cursor:pointer; user-select:none; margin-top:2px;" title="Signs face right and rows start at the right edge. Lays the text out as individual signs.">
+                    <input type="checkbox" id="glyphRtl">
+                    &larr; Right to left <span style="color:#888;">(signs face right, rows start at the right)</span>
+                </label>
             </div>
 
             <!-- Extra rows revealed only in three-line mode. -->
@@ -497,13 +501,13 @@
         <script defer src="export.js?v=7d609dcd"></script>
         <script defer src="pdf-export.js?v=c2f34cb2"></script>
         <script defer src="drawing-tools.js?v=ab324a5d"></script>
-        <script defer src="glyph-input.js?v=0890c6d2"></script>
+        <script defer src="glyph-input.js?v=ca4ba47e"></script>
         <script defer src="photo-trace.js?v=2d26e813"></script>
         <script defer src="jsesh-codes.js?v=4cbe549b"></script>
-        <script defer src="jsesh-import.js?v=7e5f2a8f"></script>
+        <script defer src="jsesh-import.js?v=72984f27"></script>
         <script defer src="editor-init.js?v=40e78c2c"></script>
         <script defer src="dictionary-search.js?v=53a81900"></script>
-        <script defer src="word-finder.js?v=7bd21140"></script>
+        <script defer src="word-finder.js?v=042fa74c"></script>
         <!-- Authoring tool: self-disables unless served from localhost. -->
         <script defer src="dict-author.js?v=65018cb5"></script>
 

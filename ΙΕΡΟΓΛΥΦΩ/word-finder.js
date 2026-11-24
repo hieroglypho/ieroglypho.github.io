@@ -180,8 +180,9 @@ function compositionGlyphRun(objs) {
     const boxes = src.map(signInkBox);
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
     const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
+    const rtl = signsReadRtl(src);
     const run = mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
-        .map(row => _wfTreeObjs(mdcLayoutTree(row, avgW, avgH)).map(o => _wfHieros(o.text)).join(''))
+        .map(row => _wfTreeObjs(mdcLayoutTree(row, avgW, avgH, rtl)).map(o => _wfHieros(o.text)).join(''))
         .join('');
     return { run, scope };
 }

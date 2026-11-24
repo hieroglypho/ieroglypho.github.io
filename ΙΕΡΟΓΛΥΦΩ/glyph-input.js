@@ -138,6 +138,8 @@ function openGlyphTextDialog() {
     try { mode = localStorage.getItem('glyphMode') || 'textRun'; } catch (_) { }
     const radio = document.querySelector(`input[name="glyphMode"][value="${mode}"]`);
     if (radio) radio.checked = true;
+    const rtlBox = document.getElementById('glyphRtl');
+    if (rtlBox) { try { rtlBox.checked = localStorage.getItem('glyphRtl') === '1'; } catch (_) { } }
     // Bind once per open via onchange (replaces, so no listener buildup).
     document.querySelectorAll('input[name="glyphMode"]').forEach(r => {
         r.onchange = syncThreeLineExtras;
@@ -179,12 +181,15 @@ async function addGlyphsFromDialog() {
     // input contains any such markup — so e.g. "(M17:X1)*N35" or "[[A1-B1]]"
     // lays out correctly even if "Single text run" happens to be selected.
     const hasSpatialMdC = /[:*()!<>$#?[\]{}&"']/.test(raw) || /[\u{13430}-\u{1345F}]/u.test(raw);
-    if (mode === 'individual' || hasSpatialMdC) {
+    // Right to left is a layout of individual signs (a text run stays as typed).
+    const rtl = !!document.getElementById('glyphRtl')?.checked;
+    try { localStorage.setItem('glyphRtl', rtl ? '1' : '0'); } catch (_) { }
+    if (mode === 'individual' || hasSpatialMdC || rtl) {
         // Ensure the hieroglyph font is ready before layout: the engine measures
         // glyph ink boxes with the Canvas API, which silently uses a fallback
         // font (wrong metrics) if this hasn't loaded yet.
         try { await document.fonts.load(`${MDC_BASE}px ${MDC_FONT}`); } catch (_) { /* best-effort */ }
-        handleMdCInput(raw);
+        handleMdCInput(raw, { rtl });
         closeGlyphTextDialog();
         return;
     }
@@ -622,6 +627,7 @@ function mdcBaselineFromTop(Hf) {
 
 // The whole string is one undo step. opts.unbounded: keep laying out rows
 // below the visible canvas (a long imported text) instead of stopping there.
+// opts.rtl: right to left (rows start at the right, signs face right).
 function handleMdCInput(mdcString, opts = {}) {
     return groupUndo(() => handleMdCInputNow(mdcString, opts));
 }
@@ -1359,6 +1365,7 @@ function layoutMdCRow(items, opts = {}) {
         top = Math.max(top, existing.reduce((m, o) => Math.max(m, bottomOf(o)), 0) + MDC_LINE_VGAP);
     }
 
+    const firstNew = canvas.getObjects().length;   // canvas.add appends: the new objects are the tail
     let first = true;
     for (const r of rows) {
         if (!r.cells.length) {                       // an empty row: just the break's space
@@ -1377,7 +1384,40 @@ function layoutMdCRow(items, opts = {}) {
         first = false;
     }
 
+    if (opts.rtl) mirrorLaidOutBlock(canvas.getObjects().slice(firstNew), startX, rightEdge);
     canvas.requestRenderAll();
+}
+
+// Right to left: lay out as usual, then mirror the new objects as one picture
+// across the writing area [left, right]. Each row then starts at the right
+// edge, and every sign, cartouche tie and bracket faces the other way.
+// Positions go by the INK centre, since a sign's ink is not centred in its
+// line box. A turned sign mirrors as turned the other way. (Undo is fine: the
+// caller's groupUndo re-reads the added objects afterwards.)
+function mirrorLaidOutBlock(objs, left, right) {
+    const midX = o => {
+        const b = o.type === 'text' ? signInkBox(o) : o.getBoundingRect(true, true);
+        return b.left + b.width / 2;
+    };
+    for (const o of objs) {
+        const target = left + right - midX(o);
+        o.set('flipX', !o.flipX);
+        if (o.angle) o.set('angle', (360 - o.angle) % 360);
+        o.setCoords();
+        o.set('left', o.left + target - midX(o));
+        o.setCoords();
+    }
+}
+
+// Most signs face right (mirrored) → the text reads right to left. Counted by
+// sign, so a mirrored text run of many signs weighs as many.
+function signsReadRtl(objs) {
+    let rtl = 0, ltr = 0;
+    for (const o of objs) {
+        const n = ((o && o.text || '').match(UNI_SIGN_RE) || []).length;   // frames, shapes: 0
+        if (o.flipX) rtl += n; else ltr += n;
+    }
+    return rtl > ltr;
 }
 
 // Original flat layout — one fabric.Text per sign in a single bottom-aligned,
@@ -1513,7 +1553,9 @@ function mdcWidestGap(boxes, axis) {
 // `avgW`/`avgH` only set thresholds: a horizontal gap wide enough is a cadrat
 // separator (`-`) else tight juxtaposition (`*`); a vertical split is a stack.
 // Shared by the MdC and Unicode exports (mdcFromTree / uniFromTree).
-function mdcLayoutTree(boxes, avgW, avgH) {
+// `rtl`: the text reads right to left (signsReadRtl), so side-by-side parts
+// come right first.
+function mdcLayoutTree(boxes, avgW, avgH, rtl = false) {
     if (boxes.length === 1) return { leaf: boxes[0].obj };
 
     const xGap = mdcWidestGap(boxes, 'x');
@@ -1528,7 +1570,7 @@ function mdcLayoutTree(boxes, avgW, avgH) {
     // Both axes overlap heavily (e.g. fused/ligatured signs): no sensible
     // guillotine, so keep them in reading order.
     if (cut.gap < -(axis === 'x' ? avgW : avgH) * 0.5) {
-        const ordered = [...boxes].sort((a, b) => (a.top - b.top) || (a.left - b.left));
+        const ordered = [...boxes].sort((a, b) => (a.top - b.top) || (rtl ? b.left - a.left : a.left - b.left));
         return { seq: ordered.map(b => b.obj) };
     }
 
@@ -1536,9 +1578,11 @@ function mdcLayoutTree(boxes, avgW, avgH) {
     const center = axis === 'x'
         ? b => b.left + b.width / 2
         : b => b.top + b.height / 2;
-    const first = boxes.filter(b => center(b) < cut.pos);
-    const second = boxes.filter(b => center(b) >= cut.pos);
-    return { op, a: mdcLayoutTree(first, avgW, avgH), b: mdcLayoutTree(second, avgW, avgH) };
+    let first = boxes.filter(b => center(b) < cut.pos);
+    let second = boxes.filter(b => center(b) >= cut.pos);
+    // Right to left: the right-hand part is read first.
+    if (rtl && axis === 'x') [first, second] = [second, first];
+    return { op, a: mdcLayoutTree(first, avgW, avgH, rtl), b: mdcLayoutTree(second, avgW, avgH, rtl) };
 }
 
 // Layout tree → { str, rank } in MdC.
@@ -1553,8 +1597,8 @@ function mdcFromTree(t) {
     return { str: wrap(a) + t.op + wrap(c), rank };
 }
 
-function mdcFromBoxes(boxes, avgW, avgH) {
-    return mdcFromTree(mdcLayoutTree(boxes, avgW, avgH));
+function mdcFromBoxes(boxes, avgW, avgH, rtl = false) {
+    return mdcFromTree(mdcLayoutTree(boxes, avgW, avgH, rtl));
 }
 
 // Group boxes top-to-bottom into rows, breaking only on a clean vertical gap
@@ -1639,9 +1683,10 @@ function mdcStringForObjs(objs) {
     const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
 
+    const rtl = signsReadRtl(signs);
     // Rows first (line breaks), then guillotine each row into cadrats.
     return mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
-        .map(row => mdcFromBoxes(row, avgW, avgH).str)
+        .map(row => mdcFromBoxes(row, avgW, avgH, rtl).str)
         .join(' ! ');
 }
 
@@ -1663,23 +1708,25 @@ const UNI_BEGIN = '\u{13437}', UNI_END = '\u{13438}', UNI_MIRROR = '\u{13440}';
 const UNI_SIGN_RE = /[\u{13000}-\u{1342F}\u{13460}-\u{143FF}]/gu;   // for match()
 const UNI_HAS_SIGN = /[\u{13000}-\u{1342F}\u{13460}-\u{143FF}]/u;   // for test(): no lastIndex state
 
-function uniSignsOf(obj) {
+function uniSignsOf(obj, rtl = false) {
     let signs = (obj.text || '').match(UNI_SIGN_RE) || [];
-    // A mirrored run reads in the other direction, each sign mirrored.
-    if (obj.flipX) signs = signs.reverse().map(g => g + UNI_MIRROR);
+    // A sign facing against the writing direction is marked mirrored (Unicode
+    // leaves the direction itself to the display), and a run facing against
+    // it reads in the other order. In a right-to-left text, signs face right.
+    if (!!obj.flipX !== rtl) signs = signs.reverse().map(g => g + UNI_MIRROR);
     return signs;
 }
 
 // Layout tree → { str, rank }. `nested`: inside a joiner, where a run of
 // several quadrats is not allowed, so a run becomes a horizontal group.
-function uniFromTree(t, nested) {
+function uniFromTree(t, nested, rtl = false) {
     const run = (signs) => {
         if (signs.length === 1) return { str: signs[0], rank: MDC_LEAF_RANK };
         return nested ? { str: signs.join(UNI_HJ), rank: MDC_OP_RANK['*'] }
                       : { str: signs.join(''), rank: MDC_OP_RANK['-'] };
     };
-    if (t.leaf) return run(uniSignsOf(t.leaf));
-    if (t.seq) return run(t.seq.flatMap(uniSignsOf));
+    if (t.leaf) return run(uniSignsOf(t.leaf, rtl));
+    if (t.seq) return run(t.seq.flatMap(o => uniSignsOf(o, rtl)));
     // Inside a joiner a cadrat break can't exist, so it becomes side by side.
     // At the top of a line, side by side is written as separate quadrats:
     // it looks the same, and a whole line joined into ONE quadrat would be
@@ -1687,10 +1734,10 @@ function uniFromTree(t, nested) {
     // too close to tell apart reliably).
     const op = nested ? (t.op === '-' ? '*' : t.op) : (t.op === '*' ? '-' : t.op);
     if (op === '-') {
-        return { str: uniFromTree(t.a, false).str + uniFromTree(t.b, false).str, rank: MDC_OP_RANK['-'] };
+        return { str: uniFromTree(t.a, false, rtl).str + uniFromTree(t.b, false, rtl).str, rank: MDC_OP_RANK['-'] };
     }
     const rank = MDC_OP_RANK[op];
-    const a = uniFromTree(t.a, true), c = uniFromTree(t.b, true);
+    const a = uniFromTree(t.a, true, rtl), c = uniFromTree(t.b, true, rtl);
     const wrap = part => part.rank < rank ? UNI_BEGIN + part.str + UNI_END : part.str;
     return { str: wrap(a) + (op === ':' ? UNI_VJ : UNI_HJ) + wrap(c), rank };
 }
@@ -1704,8 +1751,9 @@ function unicodeStringForObjs(objs) {
     const boxes = signs.map(signInkBox);
     const avgW = boxes.reduce((s, b) => s + b.width, 0) / boxes.length;
     const avgH = boxes.reduce((s, b) => s + b.height, 0) / boxes.length;
+    const rtl = signsReadRtl(signs);
     return mdcSplitRows(boxes, avgH, mdcSignSize(boxes))
-        .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH), false).str)
+        .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH, rtl), false, rtl).str)
         .filter(Boolean)
         .join('\n');
 }
@@ -1725,7 +1773,9 @@ function copySelectionAsUnicode(objs) {
     const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const html = `<span style="font-family:'Egyptian Text','Noto Sans Egyptian Hieroglyphs'">` +
         esc(text).replace(/\n/g, '<br>') + '</span>';
-    const done = () => showCanvasToast('Unicode copied, with layout (needs a font such as Egyptian Text to show stacked)');
+    const done = () => showCanvasToast(signsReadRtl(src)
+        ? 'Unicode copied, with layout, in reading order (right to left; the receiving app shows it left to right)'
+        : 'Unicode copied, with layout (needs a font such as Egyptian Text to show stacked)');
     const plainOnly = () => navigator.clipboard.writeText(text).then(done);
     let p;
     if (navigator.clipboard && window.ClipboardItem && navigator.clipboard.write) {

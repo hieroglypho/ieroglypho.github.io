@@ -3,10 +3,12 @@
 that NewGardiner does not have.
 
 The editor draws Egyptian Hieroglyphs Extended-A (U+13460–143FF) with
-NewGardiner (Mark-Jan Nederhof, SIL OFL 1.1, fonts/NewGardiner.ttf, the
-original file unchanged) and falls back to Magna for the signs NewGardiner
-leaves out (568 non-core signs in the NewGardiner of 2026-11-23). The full
-Magna is NOT published: keep it outside this public repository.
+Hieroglyphica Gardiner Light (NewGardiner by Mark-Jan Nederhof, SIL OFL 1.1,
+with lighter strokes: tools/build-gardiner-light.py) and falls back to Magna
+for the signs NewGardiner leaves out (568 non-core signs in the NewGardiner
+of 2026-11-23). Magna's strokes are made lighter too (tools/thinfont.py), to
+match. The full Magna is NOT published: keep it outside this public
+repository.
 
     python3 tools/build-magna-subset.py <full Magna font (.woff2/.ttf/.otf)>
 
@@ -19,17 +21,23 @@ main.css, help-content.html and export.js. Then run tools/cache-bust.mjs.
 The TTF's glyph records are padded to 4 bytes: unpadded, fontkit's subsetter
 writes a short 'loca' table and every sign comes out blank in the PDF.
 
-Needs fontTools with brotli (pip install fonttools brotli).
+Needs fontTools with brotli (pip install fonttools brotli), Pillow, scipy and
+FontForge (apt install fontforge).
 """
 import re
 import sys
+import tempfile
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools import subset
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from thinfont import thin_font  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent / 'ΙΕΡΟΓΛΥΦΩ'
 FONTS = ROOT / 'fonts'
 EXT_A = range(0x13460, 0x14400)
+WEIGHTS = (-7, -5, -3)   # font units, tried in turn: -7 takes Magna from ~7.4 px at 200 px to ~5.8
 
 COPYRIGHT = ('(c) 2026 M. Mazzon. Outlines drawn by M. Mazzon after the sign images '
              'in Unicode document L2/23-181 (WG2 N5240, ed. M. Suignard).')
@@ -78,14 +86,22 @@ def main():
         elif rec.nameID == 10:
             rec.string = DESCRIPTION
 
-    font.flavor = 'woff2'
-    woff2 = FONTS / 'HieroglyphicaExtended-Regular.woff2'
-    font.save(woff2)
+    tmp = tempfile.TemporaryDirectory()
+    plain = Path(tmp.name) / 'magna-subset.ttf'
+    font.flavor = None   # the source may be a woff2: write a plain TTF
+    font.save(plain)
+    font, done, kept = thin_font(plain, WEIGHTS)
     font.flavor = None
+    print('signs thinned by weight:', done, f'- kept at the original weight: {" ".join(kept) or "none"}')
+
     if 'glyf' in font:
         font['glyf'].padding = 4
     ttf = FONTS / 'HieroglyphicaExtended-Regular.ttf'
     font.save(ttf)
+    font.flavor = 'woff2'
+    woff2 = FONTS / 'HieroglyphicaExtended-Regular.woff2'
+    font.save(woff2)
+    tmp.cleanup()
     check = TTFont(ttf)
     if 'glyf' in check:
         for name in check.getGlyphOrder():

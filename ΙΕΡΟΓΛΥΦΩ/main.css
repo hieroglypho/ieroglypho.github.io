@@ -1,14 +1,16 @@
 /* Egyptian Hieroglyphs Extended-A (U+13460–143FF), under the one family name
    'Hieroglyphica Extended' that every font stack uses after Noto:
-   - NewGardiner (Mark-Jan Nederhof, University of St Andrews; SIL OFL 1.1,
-     fonts/NewGardiner-OFL.txt), the original file unchanged: 3,427 signs;
-   - Hieroglyphica Magna (M. Mazzon) for the 568 signs NewGardiner leaves out.
+   - Hieroglyphica Gardiner Light: NewGardiner (Mark-Jan Nederhof, University
+     of St Andrews; SIL OFL 1.1, fonts/NewGardiner-OFL.txt) with lighter
+     strokes to match Noto (tools/build-gardiner-light.py): 3,427 signs;
+   - Hieroglyphica Magna (M. Mazzon) for the 568 signs NewGardiner leaves out,
+     also lightened (tools/build-magna-subset.py).
    Both faces cover the block; for a sign in both ranges the face defined LAST
    is tried first, so Magna's range must list exactly its own signs. That list
    is written by tools/build-magna-subset.py (do not edit it by hand). */
 @font-face {
     font-family: 'Hieroglyphica Extended';
-    src: url('fonts/NewGardiner.ttf') format('truetype');
+    src: url('fonts/HieroglyphicaGardiner-Light.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;

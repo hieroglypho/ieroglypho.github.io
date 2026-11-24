@@ -14,8 +14,9 @@
 // =============================================================================
 // Fabric emits text objects as real <text> nodes, so a SVG export is
 // selectable and scales losslessly. Extended-A signs need their fonts inside
-// the SVG (viewers rarely have them): NewGardiner (SIL OFL, which allows
-// embedding in documents) for most, Hieroglyphica Magna for the 568 signs
+// the SVG (viewers rarely have them): Hieroglyphica Gardiner Light
+// (NewGardiner with lighter strokes; SIL OFL, which allows embedding in
+// documents) for most, Hieroglyphica Magna for the 568 signs
 // NewGardiner leaves out. Each is embedded only when the drawing uses one of
 // its signs. The Noto base block is left as a family-name reference (most
 // viewers substitute).
@@ -92,8 +93,8 @@ async function buildSVGString() {
     // same order as main.css (Magna last, so its own signs are tried first).
     const need = extendedFontsNeeded();
     const fontFaces = [];
-    const ng = need.ng ? await fontDataUrl('NewGardiner.ttf', 'font/ttf') : null;
-    if (ng) fontFaces.push(`@font-face{font-family:'Hieroglyphica Extended';src:url(${ng}) format('truetype');unicode-range:U+13460-143FF;}`);
+    const ng = need.ng ? await fontDataUrl('HieroglyphicaGardiner-Light.woff2', 'font/woff2') : null;
+    if (ng) fontFaces.push(`@font-face{font-family:'Hieroglyphica Extended';src:url(${ng}) format('woff2');unicode-range:U+13460-143FF;}`);
     const magna = need.magna ? await fontDataUrl('HieroglyphicaExtended-Regular.woff2', 'font/woff2') : null;
     if (magna) fontFaces.push(`@font-face{font-family:'Hieroglyphica Extended';src:url(${magna}) format('woff2');unicode-range:${MAGNA_RANGES};}`);
     const styleBlock = fontFaces.length

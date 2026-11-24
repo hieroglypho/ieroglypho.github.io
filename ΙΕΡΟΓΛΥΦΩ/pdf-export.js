@@ -57,7 +57,7 @@ async function ensurePdfLibLoaded() {
 // leaves out). Its TTF is written with the woff2 by tools/build-magna-subset.py.
 const PDF_FONTS = {
     egy:    'NotoSansEgyptianHieroglyphs-Regular.ttf',   // hieroglyphs U+13000–1345F
-    ng:     'NewGardiner.ttf',                            // Extended-A U+13460–143FF (SIL OFL, unchanged)
+    ng:     'HieroglyphicaGardiner-Light.ttf',            // Extended-A U+13460–143FF: NewGardiner, lighter (SIL OFL)
     ext:    'HieroglyphicaExtended-Regular.ttf',          // Magna: the Extended-A signs NewGardiner lacks
     serif:  'GentiumPlus-Regular.ttf',                    // Times etc.; transliteration
     serifI: 'GentiumPlus-Italic.ttf',

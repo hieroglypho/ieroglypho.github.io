@@ -699,14 +699,17 @@ function signEntryForChar(ch, name) {
     if (e) return e;
     const cp = ch.codePointAt(0);
     if (!(cp >= 0x13000 && cp <= 0x1342F) && !(cp >= 0x13460 && cp <= 0x143FF)) return undefined;
-    if (!name) {
-        if (!_jseshNameOf) {
-            _jseshNameOf = new Map();
-            for (const [code, c] of jseshSignMap()) if (!_jseshNameOf.has(c)) _jseshNameOf.set(c, code);
-        }
-        name = _jseshNameOf.get(ch) || numeralSignName(cp) || 'U+' + cp.toString(16).toUpperCase();
-    }
+    if (!name) name = jseshNameOf(ch) || numeralSignName(cp) || 'U+' + cp.toString(16).toUpperCase();
     return [name, ch];
+}
+
+// The (first) JSesh code of a sign character, or undefined.
+function jseshNameOf(ch) {
+    if (!_jseshNameOf) {
+        _jseshNameOf = new Map();
+        for (const [code, c] of jseshSignMap()) if (!_jseshNameOf.has(c)) _jseshNameOf.set(c, code);
+    }
+    return _jseshNameOf.get(ch);
 }
 
 // Gardiner name of a Unicode numeral sign (Z15–Z15H, V20–V20H, V1–V1H,
@@ -1524,13 +1527,20 @@ const MDC_OP_RANK = { '*': 3, ':': 2, '-': 1 };
 const MDC_LEAF_RANK = 99;   // a bare sign never needs parentheses
 
 function mdcCodeFor(obj) {
-    // Prefer the canonical Gardiner code the importer is keyed on (charsByCode),
-    // so the string re-imports cleanly; fall back to the stored key, then the
-    // raw glyph (the tokenizer also accepts bare Unicode).
-    const entry = charsByGlyph.get(obj.text);
-    if (entry) return entry[0];
-    if (obj.characterKey) return obj.characterKey;
-    return obj.text;
+    // The first code that reads back as this same sign: the palette's Gardiner
+    // code, the stored key, then the JSesh code. A code must be letters and
+    // digits only: the Extended-A catalogue codes (A-08-008) contain '-', which
+    // MdC reads as a cadrat break. Failing all of them, the raw glyph (the
+    // tokenizer also accepts bare Unicode).
+    const ch = obj.text;
+    const entry = charsByGlyph.get(ch);
+    const cands = [entry && entry[0], obj.characterKey, jseshNameOf(ch)];
+    for (const code of cands) {
+        if (!code || !/^[A-Za-z0-9]+$/.test(code)) continue;
+        const e = mdcLookupCode(code);
+        if (e && e[1] === ch) return code;
+    }
+    return ch;
 }
 
 // The widest separation along an axis: the neighbouring pair (ordered by start

@@ -90,7 +90,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css?v=c142793d">
+    <link rel="stylesheet" href="main.css?v=61d2d33b">
 
     <!-- 3rd party Scripts -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
@@ -124,6 +124,12 @@
                 <div id="dropdownContent" class="dropdown-content">
                     <!-- Dynamic sentence links will be inserted here via JavaScript -->
                 </div>
+            </div>
+            <div class="palette-size-row">
+                <label for="paletteGlyphSize" title="Size of the signs you drag from the palette onto the canvas">Size of dropped signs</label>
+                <input type="number" id="paletteGlyphSize" class="palette-size-input" value="60" min="8" max="400" step="1"
+                    title="Size of the signs you drag from the palette onto the canvas (60 = the usual size)">
+                <button type="button" id="paletteSizeFromSel" title="Use the size of the selected sign">Use selected</button>
             </div>
             <div id="charListContainer">
                 <div id="charList"></div>
@@ -286,7 +292,7 @@
 
     <!-- Help overlay (body-level so it sits above #tools and the MdC widget) -->
     <div class="help-overlay" id="helpOverlay">
-        <iframe src="help-content.html?v=dabb7036" class="help-content-frame" id="helpContent"></iframe>
+        <iframe src="help-content.html?v=169def6e" class="help-content-frame" id="helpContent"></iframe>
     </div>
 
     <!-- About overlay (reuses the .help-overlay backdrop; body-level) -->
@@ -502,8 +508,8 @@
              links. See share-worker/README.md. -->
         <script>window.SHARE_API = 'https://hieroglyphica-share.linguaaegypta.workers.dev';</script>
         <!-- Editor core, split from the former script.js. Order is load-bearing; classic scripts (not modules) so onclick= handlers stay global. See STRUCTURE.md. -->
-        <script defer src="editor-core.js?v=26ef34d6"></script>
-        <script defer src="canvas-interactions.js?v=89db2be5"></script>
+        <script defer src="editor-core.js?v=489a3b82"></script>
+        <script defer src="canvas-interactions.js?v=5633fb64"></script>
         <script defer src="workspace.js?v=37b95b7d"></script>
         <script defer src="export.js?v=80cc5ffe"></script>
         <script defer src="pdf-export.js?v=a6c7ff4e"></script>
@@ -512,7 +518,7 @@
         <script defer src="photo-trace.js?v=2d26e813"></script>
         <script defer src="jsesh-codes.js?v=4cbe549b"></script>
         <script defer src="jsesh-import.js?v=bcad1097"></script>
-        <script defer src="editor-init.js?v=9fb9da4f"></script>
+        <script defer src="editor-init.js?v=da058251"></script>
         <script defer src="gardiner-bar.js?v=438df303"></script>
         <script defer src="dictionary-search.js?v=53a81900"></script>
         <script defer src="word-finder.js?v=042fa74c"></script>

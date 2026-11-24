@@ -493,13 +493,15 @@ function filterAndDisplayCharacters(charList, query) {
     displayCharactersInRows(filteredChars);
 }
 
-function addCharacterToCanvas(text, characterKey, x, y) {
+// `fontSize`: signs dropped from the palette use the palette's size setting
+// (paletteDropSize); the MdC layout keeps 60 (MDC_BASE) and scales the sign.
+function addCharacterToCanvas(text, characterKey, x, y, fontSize = 60) {
     canvasModified = true;
 
     var textObj = new fabric.Text(text, {
         left: x,
         top: y,
-        fontSize: 60,
+        fontSize,
         fill: 'black',
         originX: 'center',
         originY: 'center',

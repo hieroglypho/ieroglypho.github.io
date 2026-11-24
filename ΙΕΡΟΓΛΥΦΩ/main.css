@@ -304,6 +304,35 @@ body {
 }
 
 /* Rest of your styles remain the same */
+/* Palette: the size signs are dropped at (editor-init.js, paletteDropSize). */
+.palette-size-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 6px;
+    font-size: 12px;
+    color: #ccc;
+}
+.palette-size-input {
+    width: 58px;
+    padding: 3px 4px;
+    background-color: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #fff;
+    border-radius: 4px;
+    text-align: center;
+}
+.palette-size-row button {
+    padding: 3px 8px;
+    font-size: 12px;
+    background: #2a2a2a;
+    color: #ddd;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.palette-size-row button:hover { background: #3a3a3a; color: #fff; }
+
 #charListContainer {
     height: 60%;
     min-height: 400px;

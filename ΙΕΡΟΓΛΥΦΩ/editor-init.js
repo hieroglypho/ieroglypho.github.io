@@ -50,6 +50,54 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 });
 // Save / Open / Wiki are wired up inside the main file menu init above.
 
+//============================ Size of dropped signs =========================
+// The palette's "Size of dropped signs" field: every sign dragged from the
+// palette lands at this fontSize (60 by default), so a text at another size
+// needs no "Set size…" after each drop. Remembered per browser. "Use selected"
+// copies the size of the selected sign (fontSize × scale, as Set size shows it).
+const PALETTE_SIZE_KEY = 'hq_drop_size';
+const PALETTE_SIZE_MIN = 8, PALETTE_SIZE_MAX = 400, PALETTE_SIZE_DEFAULT = 60;
+function clampPaletteSize(v) {
+    const n = Math.round(parseFloat(v));
+    return isFinite(n) ? Math.min(PALETTE_SIZE_MAX, Math.max(PALETTE_SIZE_MIN, n)) : PALETTE_SIZE_DEFAULT;
+}
+function paletteDropSize() {
+    const input = document.getElementById('paletteGlyphSize');
+    return clampPaletteSize(input ? input.value : PALETTE_SIZE_DEFAULT);
+}
+(function initPaletteSize() {
+    const input = document.getElementById('paletteGlyphSize');
+    if (!input) return;
+    try {
+        const saved = localStorage.getItem(PALETTE_SIZE_KEY);
+        if (saved) input.value = clampPaletteSize(saved);
+    } catch (_) {}
+    const commit = () => {
+        input.value = clampPaletteSize(input.value);
+        try { localStorage.setItem(PALETTE_SIZE_KEY, input.value); } catch (_) {}
+    };
+    input.addEventListener('change', commit);
+    // Typing a size must not trigger the canvas shortcuts (Delete, R, m, u…).
+    input.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') { commit(); input.blur(); }
+    });
+    const fromSel = document.getElementById('paletteSizeFromSel');
+    if (fromSel) fromSel.addEventListener('click', () => {
+        const signs = canvas.getActiveObjects().filter(o => typeof o.fontSize === 'number');
+        if (!signs.length) {
+            if (typeof showCanvasToast === 'function') showCanvasToast('Select a sign on the canvas first');
+            return;
+        }
+        // Inside a multi-selection the selection's own scale counts too.
+        const a = canvas.getActiveObject();
+        const gs = a && a.type === 'activeSelection' ? Math.abs(a.scaleY || 1) : 1;
+        input.value = clampPaletteSize(signs[0].fontSize * Math.abs(signs[0].scaleY || 1) * gs);
+        commit();
+        if (typeof showCanvasToast === 'function') showCanvasToast(`Signs from the palette now drop at size ${input.value}`);
+    });
+})();
+
 //============================ Adds char to Gardiner field ===================
 function initCharDragstart() {
     const container = document.getElementById('charListContainer');

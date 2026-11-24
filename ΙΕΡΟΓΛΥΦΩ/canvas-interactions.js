@@ -231,7 +231,8 @@ canvas.on('drop', function (options) {
     if (single && [...droppedData].length === 1) {
         const characterKey = single.length === 3 ? single[2] : single[0];
         const pointer = canvas.getPointer(options.e);
-        addCharacterToCanvas(droppedData, characterKey, pointer.x, pointer.y);
+        const size = typeof paletteDropSize === 'function' ? paletteDropSize() : 60;
+        addCharacterToCanvas(droppedData, characterKey, pointer.x, pointer.y, size);
         return;
     }
 

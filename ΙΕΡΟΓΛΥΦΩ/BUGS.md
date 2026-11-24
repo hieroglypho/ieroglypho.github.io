@@ -26,6 +26,12 @@ re-run it after editing editor assets, before committing._
 
 ## Fixed
 
+### BUG-7 — narrow windows: signs dragged from the palette drawer were lost (fixed 2026-11-24)
+Below 900 px the palette is a slide-in drawer with a scrim over the canvas; a sign dragged out
+of it was dropped on the scrim, never on the canvas. Fix (f9e829c, editor-init.js): the drawer
+slides away once a drag starts and comes back on dragend. Test: Playwright, 872×841, drag the
+first palette cell to the canvas (0 signs placed before, 1 after).
+
 ### BUG-5 — "Save as PDF (selectable text)" had no hieroglyph text (fixed 2026-11-24)
 Symptom: the PDF's invisible text layer was empty for hieroglyphs: nothing to select,
 copy or search, although the save message said "selectable text". Every PDF also

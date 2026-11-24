@@ -542,6 +542,27 @@ window.addEventListener('load', () => {
         }
     });
     if (scrim) scrim.addEventListener('click', close);
+    // Dragging a sign (or dictionary text) out of the open drawer: the drawer
+    // and its scrim cover the canvas, so the drop would land on them and be
+    // lost. Slide the drawer away once the drag has started (deferred: changing
+    // the drag source inside dragstart can cancel the drag), and bring it back
+    // when the drag ends so the next sign is one move away.
+    const palette = document.getElementById('searchContainer');
+    let reopenAfterDrag = false;
+    if (palette) {
+        palette.addEventListener('dragstart', () => {
+            if (!document.body.classList.contains('palette-open')) return;
+            reopenAfterDrag = true;
+            setTimeout(close, 0);
+        });
+        palette.addEventListener('dragend', () => {
+            if (!reopenAfterDrag) return;
+            reopenAfterDrag = false;
+            if (typeof isDrawerMode !== 'function' || isDrawerMode()) {
+                document.body.classList.add('palette-open');
+            }
+        });
+    }
     // Leaving drawer mode (e.g. rotate to wide / desktop) clears the open state
     // so the palette returns to its normal in-flow column.
     window.matchMedia('(max-width: ' + (typeof DRAWER_BREAKPOINT !== 'undefined' ? DRAWER_BREAKPOINT : 899) + 'px)')

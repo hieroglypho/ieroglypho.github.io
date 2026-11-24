@@ -121,6 +121,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Lift the word so it sits just above the canvas's middle line
+       (the bottom padding shifts the flex centre up by half its size). */
+    padding-bottom: 1em;
+    box-sizing: border-box;
     pointer-events: none;
     user-select: none;
     overflow: hidden;

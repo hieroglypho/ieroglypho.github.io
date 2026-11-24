@@ -1871,22 +1871,44 @@ function uniFromTree(t, nested, rtl = false) {
     return { str: wrap(a) + (op === ':' ? UNI_VJ : UNI_HJ) + wrap(c), rank };
 }
 
-// Pure: the Unicode-with-layout text for a list of objects ('' if no signs).
-// Only objects holding hieroglyphs count (transliteration lines are skipped).
-function unicodeStringForObjs(objs) {
+// The objects holding hieroglyphs (transliteration lines are skipped), laid
+// out as rows of layout trees, as the Unicode copy reads them. null if none.
+function uniLayoutRows(objs) {
     const signs = (objs || []).filter(o => o && (o.type === 'text' || o.type === 'i-text')
         && !o._pageGuide && UNI_HAS_SIGN.test(o.text || ''));
-    if (signs.length === 0) return '';
+    if (signs.length === 0) return null;
     const signBoxes = signs.map(signInkBox);
     const avgW = signBoxes.reduce((s, b) => s + b.width, 0) / signBoxes.length;
     const avgH = signBoxes.reduce((s, b) => s + b.height, 0) / signBoxes.length;
     const rtl = signsReadRtl(signs);
     const size = mdcSignSize(signBoxes);
     const boxes = exportBoxesWithMarks(objs, signBoxes, { avgW, avgH, rtl, size });
-    return mdcSplitRows(boxes, avgH, size)
-        .map(row => uniFromTree(mdcLayoutTree(row, avgW, avgH, rtl, size), false, rtl).str)
-        .filter(Boolean)
-        .join('\n');
+    return { signs, rtl, ctx: { avgW, avgH, rtl, size },
+        trees: mdcSplitRows(boxes, avgH, size).map(row => mdcLayoutTree(row, avgW, avgH, rtl, size)) };
+}
+
+// Pure: the Unicode-with-layout text for a list of objects ('' if no signs).
+function unicodeStringForObjs(objs) {
+    const L = uniLayoutRows(objs);
+    if (!L) return '';
+    return L.trees.map(t => uniFromTree(t, false, L.rtl).str).filter(Boolean).join('\n');
+}
+
+// The sign objects in reading order: the order of the Unicode copy and
+// →MdC (rows top to bottom; in a row, cadrat by cadrat, a stack top first).
+// The PDF exports write their text in this order, so text copied out of a PDF
+// reads right even after signs were moved by hand.
+function signsInReadingOrder(objs) {
+    const L = uniLayoutRows(objs);
+    if (!L) return [];
+    const out = [];
+    const leaf = o => {
+        if (o._exp === 'enc') walk(mdcLayoutTree(o.members, o.ctx.avgW, o.ctx.avgH, o.ctx.rtl, o.ctx.size));
+        else if (!o._exp) out.push(o);
+    };
+    const walk = t => { if (t.leaf) leaf(t.leaf); else if (t.seq) t.seq.forEach(leaf); else { walk(t.a); walk(t.b); } };
+    L.trees.forEach(walk);
+    return out;
 }
 
 // Copy the selection (or, with nothing selected, the whole canvas) as Unicode

@@ -570,6 +570,22 @@ function exportableObjects() {
         && !o._pageGuide && !o.isGridGroup && !o.grid && !o._straightenAid);
 }
 
+// The same objects, with the signs in reading order (signsInReadingOrder):
+// a PDF's text comes out of it in the order it was written, so a sign moved
+// by hand, or added later, would otherwise be copied out of the PDF in the
+// order it was made. Only the signs swap places among themselves; every
+// other object keeps its place in the drawing order (frames under signs,
+// damage shading over them).
+function pdfObjectsInReadingOrder(objs) {
+    if (typeof signsInReadingOrder !== 'function') return objs;
+    let order;
+    try { order = signsInReadingOrder(objs); } catch (e) { console.warn('PDF reading order skipped:', e); return objs; }
+    const inOrder = new Set(order);
+    if (inOrder.size < 2) return objs;
+    let k = 0;
+    return objs.map(o => (inOrder.has(o) ? order[k++] : o));
+}
+
 // -----------------------------------------------------------------------------
 // Page layout shared by both exports
 // -----------------------------------------------------------------------------
@@ -689,7 +705,7 @@ async function saveToPDF() {
                     const objs = exportableObjects();
                     const fonts = await embedPdfFonts(doc, await loadFontsForText(collectTextObjects(objs)));
                     const painter = new PdfPainter(doc, page, L.toPage, fonts, { textOnly: true });
-                    renderObjectsToPainter(objs, painter);
+                    renderObjectsToPainter(pdfObjectsInReadingOrder(objs), painter);
                     textOK = painter.textRuns > 0;
                 });
             } catch (e) { console.warn('PDF text layer skipped:', e); }
@@ -731,7 +747,7 @@ async function saveToPDFText() {
                     painter.fillRect(L.bounds.left, L.bounds.top, L.bounds.width, L.bounds.height);
                     painter.restore();
                 }
-                renderObjectsToPainter(objs, painter);
+                renderObjectsToPainter(pdfObjectsInReadingOrder(objs), painter);
                 await painter.finish();
             });
             await addPdfFooterAndWordmark(doc, page, L);

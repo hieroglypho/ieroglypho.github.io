@@ -113,6 +113,9 @@ function applyWorkspace(workspace, unsaved = false) {
 
     // Load canvas data
     canvas.loadFromJSON(canvasData, () => {
+                // Files saved before the flip fix can hold mirrored signs as
+                // flipY + 180° (normalizeFlip, canvas-interactions.js).
+                canvas.getObjects().forEach(normalizeFlip);
                 // Restore viewport transform
                 // Restore characterKey for each object
                 // characterKey is saved on each object (CUSTOM_PROPS), so the

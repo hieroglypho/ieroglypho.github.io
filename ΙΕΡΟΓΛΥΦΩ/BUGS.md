@@ -26,6 +26,16 @@ re-run it after editing editor assets, before committing._
 
 ## Fixed
 
+### BUG-9 — R (mirror) scrambled a text with stacks; mirrored signs lost flipX (fixed 2026-11-24)
+Owner's report: a line dragged from the course, selected and mirrored with R, came out crowded and
+misplaced. Two causes. (1) `mirrorTextObject` gave each sign the place of another in reverse
+creation order: fine for one plain row, wrong for stacks and signs of different widths. Now it
+mirrors the selection as one picture (`mirrorLaidOutBlock`, by ink centre). (2) Fabric 5: letting
+go of a multi-selection rebuilt a mirrored object as flipY + angle 180, so R, right-to-left
+detection and the exports saw it as unmirrored and rotated. `normalizeFlip` turns flipY back
+into flipX on deselect and on opening a file. Test: pw/mirrorR.mjs (MdC unchanged after R, no
+overlaps, R twice and undo restore).
+
 ### BUG-8 — reading order overflowed the stack on crowded canvases (fixed 2026-11-24)
 mdcLayoutTree recursed forever when overlapping signs put every centre on one side of a cut
 (2,000 signs 45 px apart: "Maximum call stack size exceeded" in →MdC, Unicode copy, PDF text

@@ -679,6 +679,23 @@ function storeAndRemoveCharacter(obj) {
 // =============================================================================
 // Mirror + alignment
 // =============================================================================
+// Fabric 5 bug: when a multi-selection is let go, each object's transform is
+// rebuilt from a matrix, and a mirrored object (flipX) comes back as flipY +
+// angle 180. It looks the same, but the editor reads flipX (R, right-to-left
+// detection, MdC/Unicode/PDF exports, ink boxes), so the sign counted as
+// unmirrored and rotated. The editor never flips vertically, so any flipY is
+// turned back into the equivalent flipX + angle + 180 about the centre.
+function normalizeFlip(o) {
+    if (!o || !o.flipY) return false;
+    const c = o.getCenterPoint();
+    o.set({ flipX: !o.flipX, flipY: false, angle: (((o.angle || 0) + 180) % 360 + 360) % 360 });
+    o.setPositionByOrigin(c, 'center', 'center');
+    o.setCoords();
+    return true;
+}
+canvas.on('selection:cleared', e => { (e.deselected || []).forEach(normalizeFlip); });
+canvas.on('selection:updated', e => { (e.deselected || []).forEach(normalizeFlip); });
+
 function mirrorTextObject() {
     const initialSelection = canvas.getActiveObjects();
     if (initialSelection.length === 0) return;
@@ -689,6 +706,7 @@ function mirrorTextObject() {
         // write canvas coords back. (This is what the old code missed — it
         // reversed positions across a mix of frame + glyphs and scrambled them.)
         canvas.discardActiveObject();
+        initialSelection.forEach(normalizeFlip);
 
         // Expand to whole soft-linked enclosures so mirroring any member — even
         // just the frame — mirrors the unit. Three-line blocks are left alone
@@ -709,25 +727,20 @@ function mirrorTextObject() {
             }
         }));
 
-        // Only the GLYPHS reverse order among themselves; the enclosure frame,
-        // bracket marks and any shapes mirror in place (they are not part of the
-        // sign sequence). Splitting on type is what keeps the frame still.
-        const glyphs = objects.filter(o => o.type === 'text');
-        const others = objects.filter(o => o.type !== 'text');
-
-        if (glyphs.length > 1 && !isArrangedVertically(glyphs)) {
-            // Horizontal row: swap the glyphs into reversed positions (G5↔G6) and
-            // flip each, so the row reads mirror-image.
-            const positions = glyphs.map(o => ({ left: o.left, top: o.top }));
-            [...glyphs].reverse().forEach((o, i) => {
-                o.set({ left: positions[i].left, top: positions[i].top, flipX: !o.flipX });
-                o.setCoords();
-            });
-        } else {
-            // Vertical column (or a lone glyph): just flip each in place.
-            glyphs.forEach(o => { o.set('flipX', !o.flipX); o.setCoords(); });
-        }
-        others.forEach(o => { o.set('flipX', !o.flipX); o.setCoords(); });
+        // Mirror the selection as one picture across its own width: every
+        // object moves to the mirror image of its INK centre and flips (a
+        // turned sign turns the other way), exactly as a right-to-left layout
+        // does (mirrorLaidOutBlock). Stacks keep their top-to-bottom order,
+        // side-by-side signs and cadrats swap, and frames and brackets stay
+        // around their signs. (It used to hand each sign the place of another
+        // in reverse creation order: fine for one plain row, but stacks and
+        // signs of different widths landed in the wrong slots and overlapped.)
+        const box = o => (o.type === 'text' && typeof signInkBox === 'function')
+            ? signInkBox(o) : o.getBoundingRect(true, true);
+        const boxes = objects.map(box);
+        const left = Math.min(...boxes.map(b => b.left));
+        const right = Math.max(...boxes.map(b => b.left + b.width));
+        mirrorLaidOutBlock(objects, left, right);
 
         recordBatch(undoActions);
 
@@ -741,31 +754,6 @@ function mirrorTextObject() {
     }
 }
 
-// Helper function to determine if objects are arranged vertically
-function isArrangedVertically(objects) {
-    if (objects.length < 2) return false;
-
-    // Calculate average horizontal and vertical distances between objects
-    let totalHorizDist = 0;
-    let totalVertDist = 0;
-    let count = 0;
-
-    for (let i = 0; i < objects.length - 1; i++) {
-        const currObj = objects[i];
-        const nextObj = objects[i + 1];
-        
-        totalHorizDist += Math.abs(nextObj.left - currObj.left);
-        totalVertDist += Math.abs(nextObj.top - currObj.top);
-        count++;
-    }
-
-    const avgHorizDist = totalHorizDist / count;
-    const avgVertDist = totalVertDist / count;
-
-    // If vertical distance is significantly larger than horizontal distance,
-    // consider it a vertical arrangement
-    return avgVertDist > avgHorizDist * 1.5;
-}
 // Visible ink extent of an object in absolute canvas coords. A glyph's fabric
 // line box is far taller than its rendered sign (the font's ascent/descent
 // padding), so aligning by the raw bounding box drops signs visually off — a

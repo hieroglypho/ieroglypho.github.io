@@ -96,7 +96,7 @@
         <tr><td class="gl" data-m="D36"></td><td>forearm</td><td class="tr">ꜥ</td><td>"a"</td><td>a deep throat sound, like Arabic ʿayn</td></tr>
         <tr><td class="gl" data-m="G43"></td><td>quail chick, or <span class="gl" data-m="Z7"></span> a coil of rope</td><td class="tr">w</td><td>"w", or "u"</td><td>English <i>w</i>; the coil is a quick shorthand for the chick and means exactly the same</td></tr>
     </table></div>
-    <p class="tts-only" aria-hidden="true">The table shows the five signs. The vulture is aleph, said "a" in class; its ancient sound is debated. The flowering reed is yod, said "i". Two reeds, or two short strokes at the end of a word, are y. The forearm is ayin, a deep throat sound, said "a". The quail chick, or its shorthand, a coil of rope, is w, said "w" or "u".</p>
+    <p class="tts-only" aria-hidden="true">The table shows the first five signs: the vulture, the flowering reed, two reeds or two short strokes, the forearm, and the quail chick with its shorthand, a coil of rope. Their sounds are in the table, and the alphabet page has the teacher’s own recording of each letter.</p>
     <p><b>Tell the birds apart.</b> Egyptian has many bird signs, and three of the most common are sound-signs you'll meet in nearly every text: the <b>vulture</b> <span class="gl" data-m="G1"></span> (<span class="tr">ꜣ</span>), with its hooked beak and long back; the <b>quail chick</b> <span class="gl" data-m="G43"></span> (<span class="tr">w</span>), small and round with no tail to speak of; and the <b>owl</b> <span class="gl" data-m="G17"></span> (<span class="tr">m</span>), coming next, which turns its face toward you.</p>
     <p><b>One reed or two?</b> A single reed leaf is <span class="tr">j</span>. Two reed leaves side by side are not "j j" but one sound, <span class="tr">y</span>. You'll see this at the end of a famous royal name in the case file.</p>
     <div id="act-match-weak"></div>
@@ -117,7 +117,7 @@
         <tr><td class="gl" data-m="D21"></td><td>mouth</td><td class="tr">r</td><td>the Egyptian word for "mouth" began with <span class="tr">r</span>. On its own, <span class="tr">r</span> means "to, toward"</td></tr>
         <tr><td class="gl" data-m="O4"></td><td>plan of a courtyard or shelter</td><td class="tr">h</td><td>a plain <b>h</b>, as in <b>h</b>ouse; the other three h's come next week</td></tr>
     </table></div>
-    <p class="tts-only" aria-hidden="true">The table gives each sign a memory hook. The foot is b, for boot. The stool is p, the first sign of Ptolemy. The horned viper is f, for fangs; after a word it also means "his". The owl is m, the bird that looks at me; on its own, m means "in" or "with". The ripple of water is n, for Nile; on its own it means "to" or "for", and the red crown can write it too. The mouth is r; on its own, r means "to" or "toward". The plan of a courtyard is a plain h, as in house.</p>
+    <p class="tts-only" aria-hidden="true">The table gives each sign a memory hook: the foot, the stool, the horned viper, the owl, the ripple of water, the mouth, and the plan of a courtyard. Some of these signs are also short words on their own: the viper means “his”, the owl “in” or “with”, the water “to” or “for”, and the mouth “to” or “toward”. The red crown can also write the sound of the water. The sounds and the hooks are in the table.</p>
     <p>Notice that the owl, the water and the mouth also work as tiny words on their own. They are some of the most frequent signs in any text, so learning them pays off at once.</p>
     <div id="act-match-strong"></div>
 </section>
@@ -284,7 +284,7 @@ H.transcribe(document.getElementById('act-read'), [
     { m: 'D21-N35', tr: 'rn', gloss: 'name' },
     { m: 'Q3-X1-N1', tr: 'pt', gloss: 'sky' },
     { m: 'D21-D46-D56', tr: 'rd', gloss: 'foot, leg', why: 'The leg at the end is the determinative.' },
-    { m: 'M17-D21-Q3-W22-Z2', tr: 'jrp', gloss: 'wine', why: 'A wine jar tags the word.' },
+    { m: 'M17-D21-Q3-W23', tr: 'jrp', gloss: 'wine', why: 'A wine jar tags the word.' },
     { m: 'D58-M17-N35-G37', tr: 'bjn', gloss: 'bad', why: 'The small bird at the end tags things that are bad, small or weak.' },
     { m: 'D21-G17-G43-K1-Z2', tr: 'rmw', gloss: 'fish' },
     { m: 'D46-Q3-X1-P1', tr: 'dpt', gloss: 'boat', why: 'A boat determinative, of course.' },
@@ -298,7 +298,7 @@ H.transcribe(document.getElementById('act-read'), [
 
 H.spell(document.getElementById('act-spell'), [
     { tr: 'pt', gloss: 'sky', m: 'Q3-X1-N1' },
-    { tr: 'jrp', gloss: 'wine', m: 'M17-D21-Q3-W22-Z2' },
+    { tr: 'jrp', gloss: 'wine', m: 'M17-D21-Q3-W23' },
     { tr: 'rmw', gloss: 'fish', m: 'D21-G17-G43-K1-Z2' },
     { tr: 'hrw', gloss: 'day', m: 'O4-D21-G43-N5-Z1' },
     { tr: 'bjn', gloss: 'bad', m: 'D58-M17-N35-G37' },
@@ -343,7 +343,7 @@ H.decipher(document.getElementById('act-decipher'), [
       signs: [{ m: 'O4', a: 'h' }, { m: 'D58', a: 'b' }, { m: 'N35', a: 'n' }, { m: 'Z4', a: 'y' }, { m: 'M3', fixed: 'det.' }],
       tiles: ['p', 'f', 'ꜥ', 'j'],
       hint: 'Courtyard, foot, water, and the two strokes that write y at the end of a word.',
-      outro: '<b><span class="tr">hbny</span>, “hebeny”: ebony.</b> Greek borrowed it as <i>ebenos</i>, and English took it from there. You just read an English word in hieroglyphs.' }
+      outro: '<b><span class="tr">hbny</span>, “hebeny”: ebony.</b> Greek borrowed it as <i>ebenos</i>, and English took it from there. You just read an English word in hieroglyphs. (Scribes usually wrote the first two sounds, <span class="tr">hb</span>, with a single sign, a plough; this case spells the word with signs you already know.)' }
 ], { id: 'decipher', tag: 'Case file', title: 'The Saqqara family',
      how: 'Five names, read in order. Letters you prove in one case fill in automatically in the next.',
      finale: '<b>Case closed.</b> A king, a queen, their son, their god and an imported luxury, all read sound by sound. Next week the rest of the alphabet opens up names like Khufu and Tutankhamun.' });

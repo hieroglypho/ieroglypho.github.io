@@ -367,11 +367,11 @@ function classBar() {
     const step = (c, dir) => {
         const cls = 'cb-step' + (dir < 0 ? ' cb-prev' : ' cb-next');
         if (!c) return el('span', { class: cls + ' cb-off', 'aria-hidden': 'true' }, dir < 0 ? '←' : '→');
-        const txt = dir < 0 ? `← ${c.no}` : `${c.no} →`;
+        const lab = c.no > CAT.TOTAL ? 'Bonus' : c.no, txt = dir < 0 ? `← ${lab}` : `${lab} →`;
         if (!c.built) return el('span', { class: cls + ' cb-off', title: `Class ${c.no}: ${c.title} (coming soon)` }, txt);
         return el('a', { class: cls, href: c.url, rel: dir < 0 ? 'prev' : 'next',
             title: `${dir < 0 ? 'Previous' : 'Next'}: Class ${c.no}, ${c.title}${c.open ? '' : ' (members)'}`,
-            'aria-label': `${dir < 0 ? 'Previous' : 'Next'} class: Class ${c.no}, ${c.title}` }, c.open ? txt : txt.replace(String(c.no), c.no + ' 🔒'));
+            'aria-label': `${dir < 0 ? 'Previous' : 'Next'} class: Class ${c.no}, ${c.title}` }, c.open ? txt : txt.replace(String(lab), lab + ' 🔒'));
     };
     const pop = el('div', { class: 'cb-pop' });
     const due = dueCount();
@@ -392,7 +392,7 @@ function classBar() {
             })));
     }
     const menu = el('details', { class: 'cb-menu' },
-        el('summary', { title: 'All classes' }, el('span', { class: 'cb-long' }, `Class ${cur.no} of ${CAT.TOTAL}`), el('span', { class: 'cb-short' }, `Class ${cur.no}`)), pop);
+        el('summary', { title: 'All classes' }, el('span', { class: 'cb-long' }, cur.no > CAT.TOTAL ? 'Bonus class' : `Class ${cur.no} of ${CAT.TOTAL}`), el('span', { class: 'cb-short' }, cur.no > CAT.TOTAL ? 'Bonus' : `Class ${cur.no}`)), pop);
     const close = () => { menu.open = false; };
     document.addEventListener('click', e => { if (menu.open && !menu.contains(e.target)) close(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.open) { close(); menu.querySelector('summary').focus(); } });

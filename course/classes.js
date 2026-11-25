@@ -7,12 +7,13 @@
  * Load before course.js: <script src="../classes.js"></script>          */
 window.HQ_CLASSES = {
     FREE: 5,                     // Classes 1..FREE are free (must match tools/deploy-free.sh)
-    TOTAL: 30,
+    TOTAL: 30,                   // the course; classes numbered above TOTAL are bonus classes
     MODULES: {
         a: 'Module A · The script',
         b: 'Module B · Nouns and sentences without verbs',
         c: 'Module C · The verb',
-        d: 'Module D · Clauses and real reading'
+        d: 'Module D · Clauses and real reading',
+        e: 'Bonus · Reading a queen’s tomb'
     },
     // [module, no, title, blurb, folder or null]
     LIST: [
@@ -42,9 +43,10 @@ window.HQ_CLASSES = {
         ['d', 24, 'I Know That He Has Come: Noun Clauses', 'What was said? ntt “that”, ntt.f, ntt wj · no marker: “I know he has come” · why? ḥr ntt, n ntt “because” · mj mrr.k “as you wish” · who made it happen? rdj + sḏm.f, jmj · tm · a real line: Ahmose son of Ibana · find the scribe’s mistake · a letter from the palace', 'class-24/'],
         ['d', 25, 'The Stela That I Set Up: Relative Clauses', 'Which one? ntj, ntjw, ntt “who is” · the house he is in: a pronoun pointing back · without: jwtj, jwtj n.f · “a scribe called Imhotep”: no marker after a new noun · “the stela that I set up”: the relative sḏm.n.f, jrt.n.f “what he has done” · a real line: Ahmose’s motto · a letter home', 'class-25/'],
         ['d', 26, 'The Son He Loves: Relative Forms', 'The relative sḏm.f: zꜣ.f mrr.f “his son, whom he loves” · once or always? plain and doubled stems · jrt.n.k “what you have done”, ptr jrt.n.k “What have you done?”, NAME ḏd.f · tmt.f sḏm “what he will not hear” · ḥtp dj nswt taken apart · a real name: Ptolemy, beloved of Ptah · a father’s answer', 'class-26/'],
-        ['d', 27, 'Participles', '', null],
-        ['d', 28, 'Emphatic Sentences', '', null],
-        ['d', 29, 'Reading: The Shipwrecked Sailor', '', null],
-        ['d', 30, 'Reading: Sinuhe', '', null]
+        ['d', 27, 'The One Who Hears: Participles', 'Active participles: zẖꜣw sḏm “a scribe who listens”, sḏm nb “everyone who listens” · once or as a rule? dj / dd · jnk dd t n ḥqr · jn Jj-m-ḥtp jj “It is Imhotep who came” · passive participles: dj ꜥnḫ, mry n nswt, ḏdw n.f · sḏmtj.fj, tm sḏm · a real stela: Mentuwoser, “one who buried the dead” · the son comes home', 'class-27/'],
+        ['d', 28, 'It Was in Abydos That I Saw Him: Emphatic Sentences', 'The given and the point · questions: jj.n.k ḥr mj “Why have you come?”, jrr.f nn ḥr mj · jj.n.j r mꜣꜣ.k “It is to see you that I have come” (sḏm.n.f vs stative) · ḥḏ.n tꜣ “at dawn”, oaths, wnn pt wnn rn.k · nj … js vs tm · a real line: Ahmose, “I grew up in the town of Nekheb” · why the son came', 'class-28/'],
+        ['d', 29, 'Who Brought You, Little One? The Shipwrecked Sailor', 'A reading class: twelve real lines of the Middle Kingdom story, from the TLA · the follower’s tale, the voyage, the storm, ꜥḥꜥ.n dpt mt.tj “then the ship died”, the wave, the snake’s jn-m jn tw zp 2 nḏs “Who brought you, little one?”, jw dpt r jjt m ẖnw, snb.tj “farewell” · photos of the papyrus', 'class-29/'],
+        ['d', 30, 'Why Aren’t You Rowing? Tales from Papyrus Westcar', 'A reading class: fourteen real lines from the TLA · King Sneferu’s boat on the palace lake · the rower who stops: tm.t ẖnj ḥr m “Why aren’t you rowing?”, mrj.j ḥnw.j r zn.tj.f “I want my own” · the magician folds the lake · Rudjedet, Isis and Meskhenet: nswt jrtj.fj nswyt “a king who will exercise kingship” · the crocodile · a language on the move · photos of the papyrus', 'class-30/'],
+        ['e', 31, 'Bring Me a Palette: the Tomb of Queen Nefertari', 'A bonus reading class, after the course · her cartouche and titles on the walls, read from photos · Thoth’s gifts: dj.n(.j) n(.ṯ) st jmj tꜣ-ḏsr “I have given you a place in the Sacred Land” · spell 94: the queen asks for a palette, m.k wj jj.kw, jnk zẖꜣw · a game of senet · the painters’ slips, checked against the TLA', 'class-31/']
     ]
 };

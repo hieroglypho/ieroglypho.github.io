@@ -46,7 +46,7 @@
 // Constants
 const gridSize = 10;                 // Grid size in pixels
 
-// Alt-drag pan
+// Pan (space bar or Alt + drag; canvas-interactions.js)
 let isPanning = false;
 let lastPosX, lastPosY;
 

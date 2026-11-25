@@ -12,6 +12,54 @@
 // =============================================================================
 // Mouse handlers (drag, marquee, pan, zoom)
 // =============================================================================
+// Pan: hold the space bar (or Alt) and drag. While space is held over the
+// canvas, Fabric neither selects nor moves objects (skipTargetFind) and the
+// cursor is a hand. Space is only taken when the pointer is over the canvas
+// and no text field has focus, so typing a space and pressing a focused
+// button still work.
+let spaceHeld = false;
+let pointerOverCanvas = false;
+(function initSpacePan() {
+    const wrap = canvas.wrapperEl;
+    if (wrap) {
+        wrap.addEventListener('mouseenter', () => { pointerOverCanvas = true; });
+        wrap.addEventListener('mouseleave', () => { pointerOverCanvas = false; });
+    }
+    const inTextField = (t) => {
+        const tag = ((t && t.tagName) || '').toLowerCase();
+        return tag === 'input' || tag === 'textarea' || tag === 'select' || !!(t && t.isContentEditable);
+    };
+    const editingText = () => { const a = canvas.getActiveObject(); return !!(a && a.isEditing); };
+    const release = () => {
+        if (!spaceHeld) return;
+        spaceHeld = false;
+        canvas.skipTargetFind = false;
+        if (!isPanning) canvas.selection = true;
+        canvas.defaultCursor = 'default';
+        canvas.setCursor('default');
+    };
+    window.addEventListener('keydown', (e) => {
+        if (e.code !== 'Space' && e.key !== ' ') return;
+        if (inTextField(e.target) || editingText()) return;
+        if (!spaceHeld && !pointerOverCanvas && !isPanning) return;
+        e.preventDefault();               // no page scroll, no button click
+        e.stopPropagation();
+        if (spaceHeld) return;            // key repeat
+        spaceHeld = true;
+        canvas.skipTargetFind = true;
+        canvas.selection = false;
+        canvas.defaultCursor = 'grab';
+        canvas.setCursor('grab');
+    }, true);
+    window.addEventListener('keyup', (e) => {
+        if (e.code !== 'Space' && e.key !== ' ') return;
+        if (!spaceHeld) return;
+        e.preventDefault();
+        release();
+    }, true);
+    window.addEventListener('blur', release);
+})();
+
 // Update mouse:down event handler
 canvas.on('mouse:down', function (options) {
     // Save the clicked position
@@ -20,12 +68,13 @@ canvas.on('mouse:down', function (options) {
         x: pointer.x,
         y: pointer.y
     };
-    if (options.e.altKey) {
-        // Start panning if Alt key is held
+    if (spaceHeld || options.e.altKey) {
+        // Start panning (space bar or Alt held)
         isPanning = true;
         lastPosX = options.e.clientX;
         lastPosY = options.e.clientY;
         canvas.selection = false;
+        if (spaceHeld) canvas.setCursor('grabbing');
         return;
     }
     // Selection is left to Fabric: its target is already the TOP-most object
@@ -46,6 +95,7 @@ canvas.on('mouse:move', function (options) {
 
         lastPosX = options.e.clientX;
         lastPosY = options.e.clientY;
+        if (spaceHeld) canvas.setCursor('grabbing');
         canvas.requestRenderAll();
         drawGridThrottled();
         return;
@@ -54,8 +104,13 @@ canvas.on('mouse:move', function (options) {
 
 // Update mouse:up event handler
 canvas.on('mouse:up', function (options) {
+    // The pan moved the view by editing viewportTransform in place; hand it
+    // back through setViewportTransform so every object's on-screen hit area
+    // is recomputed (otherwise clicks after a pan miss the signs).
+    if (isPanning) canvas.setViewportTransform(canvas.viewportTransform);
     isPanning = false;
-    canvas.selection = true;
+    canvas.selection = !spaceHeld;
+    if (spaceHeld) canvas.setCursor('grab');
 
     // Handle move action for both single objects and groups
     if (initialMoveState !== null) {

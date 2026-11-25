@@ -239,7 +239,7 @@ canvas.on('drop', function (options) {
     // Multi-glyph drop (e.g. text selected from dictionary results, or pasted
     // Gardiner codes). Route through the MdC handler so the row is
     // bottom-aligned and laid out below existing content.
-    handleMdCInput(droppedData);
+    handleMdCInput(droppedData, { size: typeof paletteDropSize === 'function' ? paletteDropSize() : 0 });
 });
 canvas.on('mouse:dblclick', function (options) {
     if (options.target && (options.target.type === 'i-text' || options.target.type === 'text')) {

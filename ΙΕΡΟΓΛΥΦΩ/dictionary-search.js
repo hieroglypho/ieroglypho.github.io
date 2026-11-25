@@ -148,7 +148,7 @@ function initializeResultClickInsert() {
         if (!run) return;
         const glyphs = run.textContent.trim();
         if (glyphs && typeof handleMdCInput === 'function') {
-            handleMdCInput(glyphs);
+            handleMdCInput(glyphs, { size: typeof paletteDropSize === 'function' ? paletteDropSize() : 0 });
             run.classList.add('inserted-flash');
             setTimeout(() => run.classList.remove('inserted-flash'), 350);
         }

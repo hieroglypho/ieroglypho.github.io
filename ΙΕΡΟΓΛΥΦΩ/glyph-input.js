@@ -146,6 +146,10 @@ function openGlyphTextDialog() {
     });
     syncThreeLineExtras();
     setupTranslitPalette();
+    // The size starts at the palette's "Size of dropped signs" (one setting
+    // for every way of adding signs); it can still be changed for this text.
+    const sizeField = document.getElementById('glyphTextFontSize');
+    if (sizeField && typeof paletteDropSize === 'function') sizeField.value = paletteDropSize();
     document.getElementById('glyphTextInput').focus();
 }
 
@@ -189,7 +193,7 @@ async function addGlyphsFromDialog() {
         // glyph ink boxes with the Canvas API, which silently uses a fallback
         // font (wrong metrics) if this hasn't loaded yet.
         try { await document.fonts.load(`${MDC_BASE}px ${MDC_FONT}`); } catch (_) { /* best-effort */ }
-        handleMdCInput(raw, { rtl });
+        handleMdCInput(raw, { rtl, size: fontSize });
         closeGlyphTextDialog();
         return;
     }
@@ -651,7 +655,7 @@ function handleMdCInputNow(mdcString, opts = {}) {
 
     if (!tree || !tree.children.some(c => c.kind === 'cadrat')) {
         // No glyphs to place (or a parse error) — keep the original behaviour.
-        return handleMdCInputFlat(mdcString);
+        return handleMdCInputFlat(mdcString, opts);
     }
 
     layoutMdCRow(tree.children, opts);
@@ -1317,10 +1321,17 @@ function addEnclosureFrame(obj) {
 // separated by a gap whose width reflects the cadrat / word / sentence boundary,
 // with '!' / '!!' break items forcing a new row (plus extra space for a page
 // break). Placed below any existing canvas content.
+// opts.size: the sign size wanted (palette "Size of dropped signs", or the
+// 𓂀… dialog's size). The block is laid out at MDC_BASE as always, then scaled
+// as one picture by size / MDC_BASE around its top-left corner, so every gap,
+// frame and bracket keeps its proportion. Rows wrap at the width the scaled
+// block will have. Without it (JSesh import), the base size.
 function layoutMdCRow(items, opts = {}) {
     const margin = 50, startX = 100;
     const rightEdge = canvas.width - margin;
     const usableBottom = canvas.height - margin;
+    const k = opts.size > 0 ? opts.size / MDC_BASE : 1;
+    const wrapEdge = startX + (rightEdge - startX) / k;   // right edge in layout units
 
     const gapFor = strength => strength === 'sentence' ? MDC_SENTENCE_GAP
         : strength === 'word' ? MDC_WORD_GAP
@@ -1355,7 +1366,7 @@ function layoutMdCRow(items, opts = {}) {
         }
         const b = item.block;
         let gap = cursorX === startX ? 0 : gapFor(item.gap);
-        if (cursorX > startX && cursorX + gap + b.w > rightEdge) {
+        if (cursorX > startX && cursorX + gap + b.w > wrapEdge) {
             newRow(0);
             gap = 0;
         }
@@ -1379,6 +1390,7 @@ function layoutMdCRow(items, opts = {}) {
         };
         top = Math.max(top, existing.reduce((m, o) => Math.max(m, bottomOf(o)), 0) + MDC_LINE_VGAP);
     }
+    const blockTop = top;   // the corner the block is scaled around
 
     const firstNew = canvas.getObjects().length;   // canvas.add appends: the new objects are the tail
     let first = true;
@@ -1388,7 +1400,7 @@ function layoutMdCRow(items, opts = {}) {
             continue;
         }
         const baselineY = top + (first ? 0 : r.extra) + Math.max(r.h, MDC_ROW_MIN_H);
-        if (!opts.unbounded && baselineY > usableBottom) {
+        if (!opts.unbounded && blockTop + (baselineY - blockTop) * k > usableBottom) {
             alert('Canvas is full. Some glyphs were not placed.');
             break;
         }
@@ -1399,8 +1411,24 @@ function layoutMdCRow(items, opts = {}) {
         first = false;
     }
 
+    if (k !== 1) scaleLaidOutBlock(canvas.getObjects().slice(firstNew), startX, blockTop, k);
     if (opts.rtl) mirrorLaidOutBlock(canvas.getObjects().slice(firstNew), startX, rightEdge);
     canvas.requestRenderAll();
+}
+
+// Scale freshly laid-out objects as one picture by k around (x0, y0). Each
+// object's origin point moves with the picture and the object scales about
+// that point, whatever its origin (signs: centre; frames: top-left).
+function scaleLaidOutBlock(objs, x0, y0, k) {
+    for (const o of objs) {
+        o.set({
+            left: x0 + (o.left - x0) * k,
+            top: y0 + (o.top - y0) * k,
+            scaleX: (o.scaleX || 1) * k,
+            scaleY: (o.scaleY || 1) * k,
+        });
+        o.setCoords();
+    }
 }
 
 // Right to left: lay out as usual, then mirror the new objects as one picture
@@ -1438,7 +1466,7 @@ function signsReadRtl(objs) {
 // Original flat layout — one fabric.Text per sign in a single bottom-aligned,
 // wrapping row. Retained as the fallback when there is no spatial structure to
 // honour (or a parse error). Treats every operator as a plain separator.
-function handleMdCInputFlat(mdcString) {
+function handleMdCInputFlat(mdcString, opts = {}) {
     const matches = parseMdCInput(mdcString);
     if (matches.length === 0) {
         alert('No glyphs recognized. Paste Gardiner codes (e.g. A1-D21-N35) or hieroglyph characters.');
@@ -1448,9 +1476,9 @@ function handleMdCInputFlat(mdcString) {
     // Glyphs render at fontSize 60 with center origin. Real glyph widths
     // and heights vary, so step by measured width and bottom-align so the
     // baseline (bottom edge) is shared across the row.
-    const hGap = 12;
-    const vGap = 18;
-    const nominalGlyph = 60;
+    const nominalGlyph = opts.size > 0 ? opts.size : 60;
+    const hGap = 12 * nominalGlyph / 60;
+    const vGap = 18 * nominalGlyph / 60;
     const lineHeight = nominalGlyph + vGap;
     const startX = 100;
     const baselineYStart = 100 + nominalGlyph;  // shared bottom edge of first row
@@ -1489,7 +1517,7 @@ function handleMdCInputFlat(mdcString) {
 
         // Place provisionally to measure, then re-position so the left edge
         // sits at xOffset and the bottom edge sits on baselineY.
-        const obj = addCharacterToCanvas(match[1], match[0], xOffset, baselineY);
+        const obj = addCharacterToCanvas(match[1], match[0], xOffset, baselineY, nominalGlyph);
         const w = obj.getScaledWidth();
         const h = obj.getScaledHeight();
 

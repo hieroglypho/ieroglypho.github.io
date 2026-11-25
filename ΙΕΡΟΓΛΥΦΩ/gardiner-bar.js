@@ -79,23 +79,20 @@
         && UNI_HAS_SIGN.test(o.text || '');
 
     // Cheap fingerprint of everything that can change the order or the codes,
-    // so a render that changed nothing doesn't trigger a re-layout.
-    // While several signs are selected, Fabric keeps their left/top relative
-    // to the selection, so the layout can't read their places: positions are
-    // left out until the selection is let go (only added, removed or changed
-    // signs refresh the bar meanwhile), then the order catches up.
+    // so a render that changed nothing doesn't trigger a re-layout. Inside a
+    // multi-selection the signs keep selection-relative left/top, so the
+    // selection's own transform is part of it (the layout maps those boxes
+    // back to the canvas: toCanvasRect in glyph-input.js).
     function fingerprint() {
         const a = canvas.getActiveObject();
-        const multi = !!(a && a.type === 'activeSelection');
-        let s = multi ? 'multi;' : '';
+        let s = a && a.type === 'activeSelection'
+            ? `sel|${Math.round(a.left)}|${Math.round(a.top)}|${(a.scaleX || 1).toFixed(3)}|${(a.scaleY || 1).toFixed(3)}|${a.angle || 0}|${a.flipX ? 1 : 0};`
+            : '';
         for (const o of canvas.getObjects()) {
             if (o._pageGuide) continue;
-            s += `${o.id}|${o.type}|${o.text || ''}|${o.characterKey || ''}|`;
-            if (!multi) {
-                s += `${Math.round(o.left)}|${Math.round(o.top)}|${(o.scaleX || 1).toFixed(3)}|`
-                   + `${(o.scaleY || 1).toFixed(3)}|${o.angle || 0}|${o.flipX ? 1 : 0}`;
-            }
-            s += ';';
+            s += `${o.id}|${o.type}|${o.text || ''}|${o.characterKey || ''}|`
+               + `${Math.round(o.left)}|${Math.round(o.top)}|${(o.scaleX || 1).toFixed(3)}|`
+               + `${(o.scaleY || 1).toFixed(3)}|${o.angle || 0}|${o.flipX ? 1 : 0}|${o.group ? 1 : 0};`;
         }
         return s;
     }

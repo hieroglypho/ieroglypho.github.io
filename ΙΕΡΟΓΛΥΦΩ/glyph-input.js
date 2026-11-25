@@ -1439,7 +1439,7 @@ function scaleLaidOutBlock(objs, x0, y0, k) {
 // caller's groupUndo re-reads the added objects afterwards.)
 function mirrorLaidOutBlock(objs, left, right) {
     const midX = o => {
-        const b = o.type === 'text' ? signInkBox(o) : o.getBoundingRect(true, true);
+        const b = o.type === 'text' ? signInkBox(o) : canvasBoundingRect(o);   // objects outside any selection
         return b.left + b.width / 2;
     };
     for (const o of objs) {
@@ -1632,7 +1632,7 @@ function enclosureVariantOf(o) {
 // bracket mark. `ctx` ({avgW, avgH, rtl, size}) lays out a frame's contents.
 function exportBoxesWithMarks(objs, signBoxes, ctx) {
     const frames = objs.map(o => ({ o, v: enclosureVariantOf(o) })).filter(f => f.v)
-        .map(f => ({ ...f, r: f.o.getBoundingRect(true, true) }))
+        .map(f => ({ ...f, r: canvasBoundingRect(f.o) }))
         .sort((a, b) => a.r.width * a.r.height - b.r.width * b.r.height);   // innermost first
     const marks = objs.filter(o => o && o.mdcBracket && MDC_BRK_TOKENS[o.mdcBracket] && !o._pageGuide);
     if (!frames.length && !marks.length) return signBoxes;
@@ -1649,7 +1649,7 @@ function exportBoxesWithMarks(objs, signBoxes, ctx) {
         out.push({ obj: { _exp: 'enc', variant: v, members, ctx }, left: r.left, top: r.top, width: r.width, height: r.height });
     }
     for (const m of marks) {
-        const r = m.getBoundingRect(true, true);
+        const r = canvasBoundingRect(m);
         out.push({ obj: { _exp: 'brk', variant: m.mdcBracket, open: m.mdcBracketSide !== 'right' },
             left: r.left, top: r.top, width: r.width, height: r.height });
     }
@@ -1802,11 +1802,32 @@ function mdcSignSize(boxes) {
 // fabric's line box: a flat sign such as N35 sits in a tall box of empty
 // space, and those boxes overlapped when stacked, so stacks were read as rows.
 let _signInkCtx = null;
+// Inside a multi-selection (ActiveSelection) Fabric 5 measures an object
+// relative to the selection, not the canvas: a selected row came out near
+// (0, 0) and was read before the rows above it (the Gardiner bar reshuffled on
+// selecting; →MdC / PDF text order of the whole canvas too). Map such a box
+// back through the selection's transform.
+function toCanvasRect(o, box) {
+    const g = o && o.group;
+    if (!g) return box;
+    const m = g.calcTransformMatrix();
+    const pts = [[box.left, box.top], [box.left + box.width, box.top],
+                 [box.left, box.top + box.height], [box.left + box.width, box.top + box.height]]
+        .map(([x, y]) => fabric.util.transformPoint(new fabric.Point(x, y), m));
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    const left = Math.min(...xs), top = Math.min(...ys);
+    return { ...box, left, top, width: Math.max(...xs) - left, height: Math.max(...ys) - top };
+}
+// An object's bounding rect in canvas coordinates, also inside a selection.
+function canvasBoundingRect(o) {
+    return toCanvasRect(o, o.getBoundingRect(true, true));
+}
+
 function signInkBox(o) {
     o.setCoords();
-    const r = o.getBoundingRect(true, true);    // canvas-plane, zoom-independent
+    const r = o.getBoundingRect(true, true);    // zoom-independent; selection-relative inside a selection
     let box = { obj: o, left: r.left, top: r.top, width: r.width, height: r.height };
-    if (o.angle) return box;                    // rotated sign: keep its bounding box
+    if (o.angle) return toCanvasRect(o, box);   // rotated sign: keep its bounding box
     if (typeof objInkExtent === 'function') {
         const e = objInkExtent(o);
         box.top = e.top; box.height = Math.max(1, e.bottom - e.top);
@@ -1824,7 +1845,7 @@ function signInkBox(o) {
             box.width = Math.max(1, (rt - l) * r.width);
         }
     }
-    return box;
+    return toCanvasRect(o, box);
 }
 
 // Pure: build the MdC string for a list of sign objects (no clipboard, no toast).

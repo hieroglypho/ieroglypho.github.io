@@ -26,6 +26,15 @@ re-run it after editing editor assets, before committing._
 
 ## Fixed
 
+### BUG-10 — selecting signs reshuffled the Gardiner bar (fixed 2026-11-24)
+Owner's report: selecting a row (e.g. a duplicated one) lit its codes but also seemed to add them
+among the others. Inside a multi-selection Fabric 5 measures objects relative to the selection
+(`getBoundingRect(true, true)` gave about (-64, -32) for a selected row), so the reading order put
+the selected row first or between the other signs. `toCanvasRect` / `canvasBoundingRect`
+(glyph-input.js) map such boxes back to canvas coordinates in `signInkBox`, the enclosure and
+bracket boxes and the PDF page bands; the bar now also follows a moving selection live.
+Test: pw/selbar3.mjs.
+
 ### BUG-9 — R (mirror) scrambled a text with stacks; mirrored signs lost flipX (fixed 2026-11-24)
 Owner's report: a line dragged from the course, selected and mirrored with R, came out crowded and
 misplaced. Two causes. (1) `mirrorTextObject` gave each sign the place of another in reverse

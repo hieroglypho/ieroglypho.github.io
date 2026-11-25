@@ -654,7 +654,7 @@ function pdfObjectBand(o) {
     if (typeof o.text === 'string' && typeof signInkBox === 'function') {
         try { const b = signInkBox(o); return { top: b.top, bottom: b.top + b.height }; } catch (_) { /* fall through */ }
     }
-    const r = o.getBoundingRect(true, true);
+    const r = typeof canvasBoundingRect === 'function' ? canvasBoundingRect(o) : o.getBoundingRect(true, true);
     return { top: r.top, bottom: r.top + r.height };
 }
 

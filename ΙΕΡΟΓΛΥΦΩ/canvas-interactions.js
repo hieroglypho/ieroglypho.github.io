@@ -938,7 +938,8 @@ function centerObjectsHorizontally() {
 
 // Right-click → "Set size…": set a nominal fontSize on every selected text
 // object (single glyph, glyph run, three-line block, or keyboard text). The
-// keyboard's default is 18; drag-drop glyphs land at 60. Any manual handle
+// keyboard's default is 18; new signs land at the palette's "Size of dropped
+// signs" (paletteDropSize, 60 unless changed). Any manual handle
 // scaling is folded back to scale 1 so the number entered is the honest size.
 // Non-text shapes (lines/circles/rects) have no fontSize and are skipped.
 function setSelectionSize(objs) {
@@ -960,7 +961,7 @@ function setSelectionSize(objs) {
 
     const raw = prompt(
         `Set size for ${list.length} item${list.length > 1 ? 's' : ''} ` +
-        `(keyboard default is 18, drag-drop glyphs are 60):`, seed);
+        `(keyboard text starts at 18, new signs at ${typeof paletteDropSize === 'function' ? paletteDropSize() : 60}):`, seed);
     if (raw === null) return;                 // cancelled
     const size = parseFloat(raw);
     if (!isFinite(size) || size <= 0) { alert('Please enter a positive number.'); return; }

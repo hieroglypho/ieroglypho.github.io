@@ -42,4 +42,5 @@ prototype-wikidata/
 # Cloudflare Wrangler local cache for the share-worker (regenerable; also holds
 # a cached account-credentials file that must never be committed)
 share-worker/.wrangler/
+.wrangler/
 __pycache__/

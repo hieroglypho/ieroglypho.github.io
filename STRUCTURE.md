@@ -85,7 +85,14 @@ Entry point: **`index.html`** — public URL `hieroglyphica.org/ΙΕΡΟΓΛΥΦ
       editor-init's dispatcher.
    7. `editor-init.js` — `initMainMenu`, DOM event wiring, background image,
       the single `DOMContentLoaded` dispatcher, color popup, layout/resize/keydown
-      lifecycle. Runs last because it wires everything defined above.
+      lifecycle. Runs last because it wires everything defined above. Also the palette's
+      "Size of dropped signs" (`paletteDropSize`, localStorage `hq_drop_size`) and the
+      palette drawer below 900 px.
+   7b. `gardiner-bar.js` — the "Gardiner:" strip above the canvas: codes in reading order
+      (`signsInReadingOrder`), linked both ways with the canvas selection, hidden from
+      ≡ or its × (localStorage `hq_gardiner_bar`). Loaded after `editor-init.js`; it only
+      wires itself up (an IIFE), nothing calls into it. `#pastedNames` stays in the page,
+      hidden: it is the ledger saved in workspaces and used by undo.
 4. `dictionary-search.js` — loads the bundled dictionary files and searches them
    (formerly `fjgus.js`). `word-finder.js` — "What does this say?".
 
@@ -207,3 +214,10 @@ here.** The source lives in the private repo `ieroglypho-courseware` (sibling fo
   layer was empty; now both PDFs carry real Unicode text, with fonts subset. New ≡ menu
   item "Save as PDF (vector text)". The PDF crop now includes work beyond the visible
   canvas. New fonts (Gentium Plus, Noto Sans; OFL) and `tools/build-pdf-fonts.py`.
+- **2026-11-24** — Added `ΙΕΡΟΓΛΥΦΩ/gardiner-bar.js` (after `editor-init.js`): the Gardiner
+  strip shows `#gardinerCodes` in reading order; the old `#pastedNames` list is hidden but kept
+  as the save/undo ledger. Palette "Size of dropped signs" (`paletteDropSize`): palette drops
+  pass it to `addCharacterToCanvas` (new 5th argument `fontSize`); MdC, dictionary and the
+  𓂀… dialog pass `opts.size` to `layoutMdCRow`, which lays out at `MDC_BASE` and scales the
+  block (`scaleLaidOutBlock`). `mdcLayoutTree` no longer recurses forever when a cut
+  separates nothing (BUG-8). PDF export pages long texts (`pdfLayout` returns `pages[]`).

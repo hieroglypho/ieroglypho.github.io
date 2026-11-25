@@ -536,7 +536,7 @@ function parseMdCInput(input) {
 // operator, nothing recognised) falls back to the original flat-row layout so
 // a paste never hard-fails.
 
-const MDC_BASE = 60;            // fontSize glyphs are added at (matches addCharacterToCanvas)
+const MDC_BASE = 60;            // fontSize the layout works at (addCharacterToCanvas's default); opts.size scales the result
 const MDC_GAP = 6;              // gap between siblings inside a cadrat, at scale 1
 const MDC_MAX_CADRAT = 130;     // cap on a single cadrat's width/height before downscaling
 const MDC_FONT = '"Noto Sans Egyptian Hieroglyphs", "Hieroglyphica Extended", sans-serif';
@@ -1473,7 +1473,7 @@ function handleMdCInputFlat(mdcString, opts = {}) {
         return;
     }
 
-    // Glyphs render at fontSize 60 with center origin. Real glyph widths
+    // Glyphs render at nominalGlyph (opts.size, else 60) with center origin. Real glyph widths
     // and heights vary, so step by measured width and bottom-align so the
     // baseline (bottom edge) is shared across the row.
     const nominalGlyph = opts.size > 0 ? opts.size : 60;

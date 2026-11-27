@@ -82,6 +82,8 @@
     <ul class="class-list" id="list-c"></ul>
     <h3>Module D · Clauses and real reading</h3>
     <ul class="class-list" id="list-d"></ul>
+    <h3>Bonus · Reading a queen’s tomb</h3>
+    <ul class="class-list" id="list-e"></ul>
 </section>
 
 <section class="step" data-discord hidden>
@@ -122,7 +124,8 @@ for (const c of LIST) {
         el('div', {}, el('h3', {}, href ? el('a', { href, html: c.title }) : el('span', { html: c.title })), c.blurb ? el('p', {}, c.blurb) : null,
             href && pct ? el('div', { class: 'mini-bar' }, el('i', { style: `width:${pct}%` })) : null),
         el('span', { class: 'badge' + (c.free ? '' : ' locked') }, badge));
-    document.getElementById('list-' + c.mod).append(li);
+    const ul = document.getElementById('list-' + c.mod);
+    if (ul) ul.append(li);
 }
 // Today: cards due across all classes + next class
 const due = H.dueCount();

@@ -18,19 +18,19 @@ window.HQ_CONFIG = {
     // Members' classes (Class 6 onward). Keep false until the paid unlock serves them at this
     // address: until then the course home lists them without a link, because the public site
     // does not carry them. A local preview links them whatever this says.
-    membersOpen: false,
+    membersOpen: true,
 
     // The paid unlock (see course-worker/README.md). paymentLink: the Stripe Payment Link,
     // https://buy.stripe.com/… ; memberPrice: how the price reads on the members' page, e.g.
     // '€49'. The buy button shows only when membersOpen is true and paymentLink is set.
-    paymentLink: '',
-    memberPrice: '',
+    paymentLink: 'https://buy.stripe.com/3cI4gycnC9wJflDgF34F201',
+    memberPrice: '€49',
 
     // Early-access list (course-worker/README.md, "Early access and the early-bird price"): while
     // membersOpen is false, the course home, the end of Class 5 and the members' page ask for an
     // email address to tell when the members' course opens. Turn on only once the Worker's
     // /course/api/early route is deployed with RESEND_API_KEY and MAIL_FROM.
-    earlyAccess: true,
+    earlyAccess: false,
 
     // Quick search (search.js; index built by tools/build-search.mjs). Built but not shown yet:
     // keep false until it is launched. To try it in a local preview, open any course page with

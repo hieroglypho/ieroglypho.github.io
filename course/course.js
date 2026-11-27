@@ -377,7 +377,8 @@ function classBar() {
     const due = dueCount();
     pop.append(el('div', { class: 'cb-top' },
         el('a', { href: courseUrl('./') }, '⌂ Course home'),
-        el('a', { href: courseUrl('review/') }, '🗂 Review deck' + (due ? ` · ${due} due` : ''))));
+        el('a', { href: courseUrl('review/') }, '🗂 Review deck' + (due ? ` · ${due} due` : '')),
+        el('a', { href: courseUrl('grammar/') }, '📖 Grammar')));
     for (const [mod, name] of Object.entries(CAT.MODULES)) {
         const rows = list.filter(c => c.mod === mod);
         if (!rows.length) continue;
@@ -498,6 +499,7 @@ function initPage(id, opts = {}) {
     render();
     community();
     if (opts.searchHost) searchButton(opts.searchHost);
+    whatsNew();
     track('open');
 }
 
@@ -514,6 +516,7 @@ function initClass(id, opts = {}) {
     finishNext();
     community();
     readAloud();
+    whatsNew();
     track('open');
 }
 
@@ -1517,6 +1520,54 @@ function community() {
     });
 }
 
+/* -------------------------------------------------------- what's new -- *
+ * classes.js NEWS. The first course page a returning learner opens after a
+ * deploy that added an entry shows the newest entry they haven't seen, once,
+ * in a note in the corner. A first visit only records what is current, since
+ * nothing has changed for someone who was never here. "Returning" means this
+ * browser already holds course data (progress, the review deck…) but no news
+ * marker, which covers everyone who used the course before the notes began.
+ * Blocked storage: no note, rather than the same note on every page.        */
+const NEWS_KEY = 'hq-news-seen';
+// Read as course.js loads, before the page saves anything of its own (a class
+// records its visit at once): true / false, or null when storage is blocked.
+const HAD_COURSE_DATA = (() => {
+    try {
+        for (let i = 0; i < localStorage.length; i++) if (/^hq-/.test(localStorage.key(i))) return true;
+        return false;
+    } catch (_) { return null; }
+})();
+function whatsNew() {
+    const news = (CAT.NEWS || []).slice().sort((a, b) => b.id - a.id);
+    if (!news.length) return;
+    const n = news[0];
+    let seen = store.get(NEWS_KEY, null);
+    if (seen == null) {
+        if (HAD_COURSE_DATA == null) return;
+        seen = HAD_COURSE_DATA ? 0 : n.id;
+    }
+    store.set(NEWS_KEY, n.id);
+    if (n.id <= seen) return;
+
+    const href = n.link ? courseUrl(n.link) : null;
+    const here = href && new URL(href).pathname === location.pathname;
+    let timer = null;
+    const close = () => { clearTimeout(timer); box.remove(); };
+    const box = el('div', { class: 'news-toast', role: 'status' },
+        el('button', { class: 'news-x', type: 'button', 'aria-label': 'Close', onclick: close }, '×'),
+        el('p', { class: 'news-head' }, 'New in the course'),
+        el('p', {}, n.text),
+        href && !here ? el('a', { class: 'btn', href }, (n.linkText || 'Have a look') + ' →') : null);
+    // Goes by itself after 20 s, but not while the pointer or the keyboard is on it.
+    const later = () => { clearTimeout(timer); timer = setTimeout(close, 20000); };
+    box.addEventListener('mouseenter', () => clearTimeout(timer));
+    box.addEventListener('mouseleave', later);
+    box.addEventListener('focusin', () => clearTimeout(timer));
+    box.addEventListener('focusout', later);
+    document.body.append(box);
+    later();
+}
+
 /* --------------------------------------------------------- read aloud -- *
  * Free text-to-speech via the browser's built-in voices (Web Speech API):
  * no server, no cost. Adds a "Listen" button to every lesson section; reads
@@ -1903,5 +1954,5 @@ document.querySelectorAll('[data-early-access]').forEach(n => {
 window.HQ = { store, render, hg, glyph, glyphs, allen, normTr, normKey, trMatches, initClass, initPage, done,
     classes, classStatus, dueCount, courseUrl, openSearch, searchEnabled, PREVIEW, MEMBERS_OPEN, CAT,
     quiz, classify, sprint, direction, order, decipher, rebus, flashcards, mission,
-    nameCartouche, match, transcribe, spell, worked, compose, spot, soundParts, srsDue, EDITOR_URL, el, track, community, sayTr, ttsScript, ttsKey, egyptianWords, alphabet, ALPHABET };
+    nameCartouche, match, transcribe, spell, worked, compose, spot, soundParts, srsDue, EDITOR_URL, el, track, community, whatsNew, sayTr, ttsScript, ttsKey, egyptianWords, alphabet, ALPHABET };
 })();

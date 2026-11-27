@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grammar Lookup · ΙΕΡΟΓΛΥΦΩ Course</title>
+<meta name="description" content="Quick reference for Middle Egyptian grammar: look up an ending or a small word you see, and find the tables of pronouns, verb forms and negatives taught in the course.">
+<link rel="canonical" href="https://www.hieroglyphica.org/course/grammar/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../course.css">
+<style>
+/* Grammar lookup: page-only styles (tokens from course.css). */
+.g-bar { position: sticky; top: 0; z-index: 20; background: var(--primary-bg); border-bottom: 1px solid var(--line); margin: 0 -16px; padding: 8px 16px; }
+.g-bar ul { list-style: none; margin: 0 auto; padding: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; max-width: 1000px; }
+.g-bar a { display: block; white-space: nowrap; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text); text-decoration: none; font-size: 14px; font-weight: 600; }
+.g-bar a:hover, .g-bar a.on { border-color: var(--gold); color: var(--gold); }
+main.g-main { max-width: 1000px; }
+.g-main .step, .g-entry { scroll-margin-top: 64px; }
+.g-entry { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 16px 0; }
+.g-entry h3 { margin: 0 0 8px; }
+.g-entry h3 a.g-hash { margin-left: 6px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0; }
+.g-entry:hover h3 a.g-hash, .g-entry h3 a.g-hash:focus { opacity: 1; }
+.g-entry p:last-child { margin-bottom: 0; }
+.g-src { font-size: 13px; color: var(--muted); margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.g-src a { white-space: nowrap; }
+.g-locked { background: transparent; border-style: dashed; padding: 10px 16px; }
+.g-locked h3 { font-size: 16px; color: var(--muted); margin: 0; }
+.g-locked .g-src { border: 0; margin: 2px 0 0; padding: 0; }
+.g-search { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 4px; }
+.g-search input { font: inherit; font-size: 17px; flex: 1; min-width: 0; max-width: 420px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
+.g-search input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.lk-group h3 { margin: 22px 0 6px; font-size: 17px; }
+.lk { list-style: none; margin: 0; padding: 0; display: table; width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.lk li { display: table-row; }
+.lk li > * { display: table-cell; vertical-align: middle; padding: 8px 10px; border-top: 1px solid var(--line); }
+.lk li:first-child > * { border-top: 0; }
+.lk .lk-g { font-size: 26px; line-height: 1.15; text-align: center; white-space: nowrap; width: 1%; padding-left: 14px; }
+.lk .lk-f { font-style: italic; font-size: 17px; width: 1%; white-space: nowrap; }
+.lk .lk-c { font-size: 13px; white-space: nowrap; width: 1%; text-align: right; padding-right: 14px; }
+.lk-more { color: var(--muted); font-size: 14px; margin: 6px 2px 0; }
+.lk-none { color: var(--muted); }
+@media (max-width: 640px) {
+    .lk { display: block; }
+    .lk li { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); }
+    .lk li:first-child { border-top: 0; }
+    .lk li { grid-template-columns: 64px 1fr; }
+    .lk li > *, .lk .lk-g, .lk .lk-f, .lk .lk-c { display: block; padding: 0; border: 0; width: auto; text-align: left; }
+    .lk .lk-g { grid-row: span 3; font-size: 22px; white-space: normal; text-align: center; overflow-wrap: anywhere; }
+    /* Entry tables: one small card per row; a cell names its column where that helps. */
+    .g-entry table.plain, .g-entry table.plain tbody { display: block; }
+    .g-entry table.plain tr:first-child { display: none; }
+    .g-entry table.plain tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .g-entry table.plain td { display: inline-block; border: 0; padding: 2px 10px 2px 0; vertical-align: middle; }
+    .g-entry table.plain td:not(.gl):not(.tr) { display: block; }
+    .g-entry table.plain td.tr { white-space: normal; }
+    .g-entry table.plain td[data-l]::before { content: attr(data-l) " · "; font-size: 12px; font-style: normal; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .g-entry table.plain .gl { font-size: 26px; }
+    .g-entry table.plain td:empty { display: none; }
+}
+</style>
+</head>
+<body>
+<nav class="nav-tabs">
+    <a href="/about.html">ABOUT</a>
+    <a href="/tutorials.html">TUTORIALS</a>
+    <a class="active" href="../">COURSE<span class="nav-new">NEW</span></a>
+    <a class="nav-brand" href="/index.html">HOME</a>
+    <a href="/research.html">RESEARCH</a>
+    <a href="/dictionary.html">DICTIONARY</a>
+    <a class="nav-editor" href="https://www.hieroglyphica.org/ΙΕΡΟΓΛΥΦΩ/">✍ ΙΕΡΟΓΛΥΦΩ</a>
+</nav>
+
+<header class="class-hero">
+    <div class="kicker">Course reference</div>
+    <h1>Grammar Lookup</h1>
+    <p>Stuck on a line? Look up the ending or the small word in front of you, or check a table you half remember. Every entry links back to the class that teaches it.</p>
+    <div class="hero-glyphs"><span data-m="R8-S43" data-label="mdw-nṯr, the god’s words"></span></div>
+</header>
+
+<main class="g-main">
+<nav class="g-bar" aria-label="Topics"><ul id="bar"><li><a href="#lookup">What’s this?</a></li></ul></nav>
+<div id="search-host" class="search-host"></div>
+
+<div id="members-note" class="callout tip" hidden></div>
+
+<section class="step" id="lookup">
+    <h2>What’s this?</h2>
+    <p class="lead">Find what you see: an ending, a small word, a sign that doesn’t seem to fit. Some forms have more than one job, so read every row that matches.</p>
+    <div class="g-search">
+        <label for="q" class="how" style="margin:0">Filter</label>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="e.g. .n, ntt, sDm.n.f, because">
+    </div>
+    <p class="how" style="margin-top:4px">Type a transliteration (<code class="mdc-code">sDm.n.f</code> works too) or an English word.</p>
+    <div id="lookup-list"><p class="lk-none">Loading…</p></div>
+</section>
+
+<div id="topics"></div>
+
+<div class="community" data-discord hidden>
+    <p><b>💬 Still stuck?</b> Post the line in <b>#help</b> and say which word puzzles you.</p>
+    <a class="btn" data-discord-link>Join the Discord →</a>
+</div>
+</main>
+
+<footer class="site">© 2024–2026 ΙΕΡΟΓΛΥΦΩ · <a href="/TOS.html">Terms &amp; Privacy</a> · <a href="https://www.hieroglyphica.org">hieroglyphica.org</a></footer>
+
+<script src="../config.js"></script>
+<script src="../signs.js"></script>
+<script src="../classes.js"></script>
+<script src="../course.js"></script>
+<script>
+(async function () {
+const H = HQ, el = H.el;
+const $ = (s) => document.querySelector(s);
+const get = (url, opts) => fetch(url, opts).then(r => r.ok ? r.json() : null).catch(() => null);
+
+/* Data: the public part, plus the members' part where this visitor may have it
+ * (a local preview reads the file; the live site asks the course Worker, which
+ * answers members only).                                                     */
+const free = await get(H.courseUrl('grammar/free.json'), { cache: 'no-cache' });
+if (!free) { $('#lookup-list').innerHTML = '<p class="lk-none">The lookup could not be loaded. Please reload the page.</p>'; return; }
+let mem = null;
+if (H.PREVIEW) mem = await get(H.courseUrl('grammar/members.json'), { cache: 'no-cache' });
+else if (H.MEMBERS_OPEN) mem = await get('/course/api/grammar', { credentials: 'same-origin', cache: 'no-cache' });
+const byI = (a, b) => a.i - b.i;
+const entries = [...free.entries, ...(mem ? mem.entries : free.locked.map(e => ({ ...e, locked: true })))].sort(byI);
+const rows = [...free.rows, ...(mem ? mem.rows : [])].sort(byI);
+
+const CLS = new Map(H.classes().map(c => [c.no, c]));
+const membersUrl = H.courseUrl('members/');
+const classLabel = (no) => no > H.CAT.TOTAL ? 'the bonus class' : `Class ${no}`;
+const classTitle = (no) => { const c = CLS.get(no); return c ? `Class ${no}: ${c.title.replace(/<[^>]+>/g, '')}` : `Class ${no}`; };
+// Section numbers as the class shows them ("s5" -> "5").
+const secNo = (s) => s.replace(/^s/, '');
+// A link into a class, or to the members' page when this visitor can't open it.
+const classHref = (no, url) => { const c = CLS.get(no); return c && c.open && (mem || c.free) ? url : membersUrl; };
+
+if (!mem && free.locked.length) {
+    const note = $('#members-note');
+    note.innerHTML = H.MEMBERS_OPEN
+        ? `<b>🔒 Most of this page is for members.</b> Entries from Classes 1 to ${H.CAT.FREE} are open to everyone; the rest come with the full course. <a href="${membersUrl}">Unlock the full course</a>, or <a href="${membersUrl}#signin">sign in</a> if you already have.`
+        : `<b>🔒 Most of this page comes with the members’ course.</b> Entries from Classes 1 to ${H.CAT.FREE} are open to everyone.`;
+    note.hidden = false;
+}
+
+/* ------------------------------------------------------ "What's this?" -- */
+const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[ꜣꜥꜢꜤ]/g, 'a').toLowerCase().replace(/j/g, 'i').replace(/[^a-z0-9]+/g, '');
+const plain = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
+rows.forEach(r => {
+    r._tr = r.tr.toLowerCase();
+    r._trf = fold(r.tr);
+    r._is = plain(r.is).toLowerCase();
+    // The forms in the row, for finding the pieces of a whole word typed in ("sḏm.n.f" finds ".n" and ".f").
+    r._parts = r._tr.replace(/\([^)]*\)/g, ' ').split(/[\s,/+]+/).map(p => p.replace(/^-/, '')).filter(p => p.includes('.') ? p.length >= 2 : p.length >= 3);
+});
+function rowMatches(r, q) {
+    if (!q) return true;
+    const a = H.allen(q).toLowerCase(), f = fold(H.allen(q));
+    return (r._tr && r._tr.includes(a)) || (f && r._trf && r._trf.includes(f)) || r._is.includes(q.toLowerCase())
+        || (a.length > 2 && r._parts.some(p => a.includes(p)));
+}
+function drawLookup(q = '') {
+    const host = $('#lookup-list');
+    host.textContent = '';
+    let shown = 0;
+    for (const g of free.groups) {
+        const mine = rows.filter(r => r.g === g.id && rowMatches(r, q));
+        const more = !mem && !q ? (free.lockedRows[g.id] || 0) : 0;
+        if (!mine.length && !more) continue;
+        shown += mine.length;
+        const ul = el('ul', { class: 'lk' }, mine.map(r => el('li', {},
+            el('span', { class: 'lk-g', 'data-m': r.m || null }),
+            el('span', { class: 'lk-f' }, r.tr),
+            el('span', { class: 'lk-is', html: r.is }),
+            el('a', { class: 'lk-c', href: classHref(r.cls, r.url), title: classTitle(r.cls) }, `${classLabel(r.cls)} →`))));
+        host.append(el('div', { class: 'lk-group' }, el('h3', {}, g.title), mine.length ? ul : null,
+            more ? el('p', { class: 'lk-more' }, `🔒 ${more} more for members · `, el('a', { href: membersUrl }, 'unlock')) : null));
+    }
+    if (!shown && q) host.append(el('p', { class: 'lk-none' }, `Nothing here matches “${q}”.`,
+        !mem ? ' Members see many more rows.' : '',
+        H.searchEnabled() ? el('span', {}, ' ', el('a', { href: '#', onclick: (e) => { e.preventDefault(); H.openSearch(q); } }, 'Search the whole course'), '.') : ''));
+    H.render(host);
+}
+drawLookup();
+let timer = null;
+$('#q').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => drawLookup(e.target.value.trim()), 120); });
+
+/* ------------------------------------------------------------- topics -- */
+function sources(e) {
+    const by = new Map();
+    for (const f of e.from) { if (!by.has(f.c)) by.set(f.c, []); by.get(f.c).push(f); }
+    const parts = [];
+    for (const [no, list] of by) {
+        const secs = list.map(f => `<a href="${classHref(no, f.url)}">${secNo(f.s)}</a>`);
+        parts.push(`<span title="${classTitle(no).replace(/"/g, '&quot;')}">${classLabel(no)}, section${secs.length > 1 ? 's' : ''} ${secs.length > 1 ? secs.slice(0, -1).join(', ') + ' and ' + secs.at(-1) : secs[0]}</span>`);
+    }
+    return 'Taught in ' + parts.join('; ') + '.' + (e.allen ? ` Go deeper: Allen, <i>Middle Egyptian</i>, ${e.allen}.` : '');
+}
+const topics = $('#topics');
+const bar = $('#bar');
+for (const s of free.sections) {
+    const list = entries.filter(e => e.sec === s.id);
+    if (!list.length) continue;
+    bar.append(el('li', {}, el('a', { href: '#' + s.id }, s.title)));
+    const sec = el('section', { class: 'step', id: s.id }, el('h2', {}, s.title), el('p', { class: 'lead' }, s.intro));
+    for (const e of list) {
+        if (e.locked) {
+            sec.append(el('article', { class: 'g-entry g-locked', id: 'e-' + e.id },
+                el('h3', {}, '🔒 ' + e.title),
+                el('div', { class: 'g-src', html: `${classLabel(e.cls)}, for members · <a href="${membersUrl}">unlock</a>` })));
+            continue;
+        }
+        sec.append(el('article', { class: 'g-entry', id: 'e-' + e.id },
+            el('h3', {}, e.title, el('a', { class: 'g-hash', href: '#e-' + e.id, 'aria-label': 'Link to this entry' }, '#')),
+            el('div', { html: e.html }),
+            el('div', { class: 'g-src', html: sources(e) })));
+    }
+    topics.append(sec);
+}
+H.render(topics);
+
+// Highlight the topic in view.
+const links = [...bar.querySelectorAll('a')];
+const io = new IntersectionObserver((list) => {
+    for (const x of list) if (x.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + x.target.id));
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('#lookup, #topics > section').forEach(s => io.observe(s));
+
+// A link to an entry or topic: the content is drawn now, so scroll to it.
+if (location.hash) { const t = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); }
+
+H.initPage('grammar', { searchHost: document.getElementById('search-host') });
+})();
+</script>
+</body>
+</html>

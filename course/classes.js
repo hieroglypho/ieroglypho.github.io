@@ -15,6 +15,15 @@ window.HQ_CLASSES = {
         d: 'Module D · Clauses and real reading',
         e: 'Bonus · Reading a queen’s tomb'
     },
+    // What's new, newest first. A returning learner sees the newest entry they haven't seen yet,
+    // once, as a note in the corner of the next course page they open (course.js, whatsNew).
+    // Add one, with the next id, when a deploy brings something learners will notice: a new page
+    // or feature, a class reworked. Fixes need none. Only the newest is shown, so keep it the one
+    // worth reading. Plain text; link (optional) is a course page, like 'grammar/'.
+    NEWS: [
+        { id: 1, date: '2026-11-27', text: '📖 The grammar lookup: every grammar point from the classes on one page, with a “What’s this?” list for the small signs and endings. In a class, it is in the “Class ▾” menu at the top.',
+            link: 'grammar/', linkText: 'Open the grammar lookup' }
+    ],
     // [module, no, title, blurb, folder or null]
     LIST: [
         ['a', 1, 'Read Like Champollion', 'How the script works · direction & groups · crack four royal cartouches', 'class-01/'],

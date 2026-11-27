@@ -342,6 +342,19 @@ table.plain .gl, table.plain td.gl { font-size: 30px; }
 .tts-bar .btn { padding: 6px 10px; font-size: 14px; }
 .tts-label { font-size: 13px; color: var(--muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* what's new (course.js, whatsNew) */
+.news-toast { position: fixed; right: 16px; bottom: 16px; z-index: 110; width: 360px; max-width: calc(100vw - 32px); box-sizing: border-box;
+  background: var(--card); color: var(--text); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px;
+  padding: 12px 40px 14px 16px; box-shadow: 0 8px 28px rgba(0,0,0,.22); font-size: 15px; line-height: 1.45; animation: news-in .25s ease-out; }
+.news-toast p { margin: 0 0 8px; }
+.news-toast .news-head { font-weight: 700; color: var(--gold); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.news-toast .btn { padding: 6px 12px; font-size: 14px; }
+.news-x { position: absolute; top: 6px; right: 8px; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; border-radius: 6px; }
+.news-x:hover, .news-x:focus-visible { color: var(--text); background: var(--primary-bg); }
+@keyframes news-in { from { opacity: 0; transform: translateY(12px); } }
+@media (prefers-reduced-motion: reduce) { .news-toast { animation: none; } }
+@media (max-width: 640px) { .news-toast { left: 16px; right: 16px; width: auto; max-width: none; } }
+
 /* community */
 .community { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: #5865f2; color: #fff; border-radius: 12px; padding: 16px 18px; margin: 18px 0; }
 .community p { margin: 0; flex: 1; min-width: 220px; }

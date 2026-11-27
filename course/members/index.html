@@ -11,6 +11,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../course.css">
+<style>
+.consent { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer; line-height: 1.5; }
+.consent input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--button-bg); cursor: pointer; }
+#buy-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.consent-hint { color: var(--bad); font-weight: 600; margin: 6px 0 0; }
+</style>
 </head>
 <body>
 <nav class="nav-tabs">
@@ -61,12 +67,16 @@
         <li>The same kind of class as Module A: a lesson you can listen to, games and drills, missions in the ΙΕΡΟΓΛΥΦΩ editor, a review deck and an exit check.</li>
     </ul>
     <p><b>One payment, no subscription.</b> <span id="price-line"></span>Your access does not run out. Use it on any device: on a new one, sign in with the email address you paid with.</p>
-    <div class="row-btns" id="buy-row">
-        <a class="btn" id="buy-btn" href="#">Unlock the full course →</a>
+    <div id="buy-row">
+        <label class="consent"><input type="checkbox" id="consent-box"> <span>I want my access to start as soon as I have paid, and I understand that I then lose my 14-day right to cancel (right of withdrawal).</span></label>
+        <div class="row-btns">
+            <a class="btn" id="buy-btn" href="#" aria-disabled="true">Unlock the full course →</a>
+        </div>
+        <p class="consent-hint" id="consent-hint" role="alert" hidden>Please tick the box above first: your access starts straight after payment.</p>
     </div>
     <p class="lead" id="buy-soon" hidden>The members' course opens soon. Classes 1 to 5 are free and open now: <a href="../">start there</a>.</p>
     <div data-early-access="members" hidden></div>
-    <p class="cite" id="buy-terms" style="white-space:normal">The course is sold through Link, Stripe's checkout service, which takes the payment and handles VAT; we never see your card. Your access starts as soon as you have paid. By buying, you ask for it to start straight away, and you accept that once it has started you lose the 14-day right to cancel that applies to online purchases in the EU and the UK. See our <a href="/TOS.html">Terms &amp; Privacy</a>.</p>
+    <p class="cite" id="buy-terms" style="white-space:normal">The course is sold through Link, Stripe's checkout service, which takes the payment and handles VAT; we never see your card. After paying you get an email confirming your purchase and the request you ticked above. See our <a href="/TOS.html#course-membership">Terms &amp; Privacy</a>.</p>
 </section>
 
 <section class="step" id="signin">
@@ -121,10 +131,28 @@ if (wanted && $('notice').hidden) {
 }
 if (wanted) $('member-continue').href = `../${wanted}/`, $('member-continue').textContent = `Continue to Class ${Number(wanted.slice(6))} →`;
 
-// Buying
+// Buying. The button stays off until the box is ticked (EU: the buyer must expressly ask for access
+// to start at once and acknowledge losing the right to cancel). The tick travels to Stripe as
+// client_reference_id; the Worker stores it and repeats it in the confirmation email. Keep the
+// version in step with CONSENT_REF in course-worker/src/index.js.
 if (open) {
-    $('buy-btn').href = CFG.paymentLink;
-    $('buy-btn').addEventListener('click', () => HQ.track('unlock_click', { c: 'members' }));
+    const box = $('consent-box'), btn = $('buy-btn');
+    const sync = () => {
+        if (box.checked) {
+            const u = new URL(CFG.paymentLink);
+            u.searchParams.set('client_reference_id', 'withdrawal-v1-' + Date.now());
+            btn.href = u.href; btn.removeAttribute('aria-disabled'); $('consent-hint').hidden = true;
+        } else {
+            btn.href = '#'; btn.setAttribute('aria-disabled', 'true');
+        }
+    };
+    box.addEventListener('change', sync);
+    addEventListener('pageshow', sync);          // the browser may restore the tick on Back
+    sync();
+    btn.addEventListener('click', (e) => {
+        if (!box.checked) { e.preventDefault(); $('consent-hint').hidden = false; box.focus(); return; }
+        HQ.track('unlock_click', { c: 'members' });
+    });
     if (CFG.memberPrice) $('price-line').textContent = CFG.memberPrice + ', once. ';
 } else {
     $('buy-row').hidden = true; $('buy-terms').hidden = true; $('buy-soon').hidden = false;
